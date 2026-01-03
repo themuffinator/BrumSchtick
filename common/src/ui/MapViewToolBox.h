@@ -39,6 +39,7 @@ namespace ui
 {
 class ClipTool;
 class AssembleBrushTool;
+class BrushBuilderTool;
 class CreateEntityTool;
 class DrawShapeTool;
 class MapDocument;
@@ -58,6 +59,7 @@ private:
 
   std::unique_ptr<ClipTool> m_clipTool;
   std::unique_ptr<AssembleBrushTool> m_assembleBrushTool;
+  std::unique_ptr<BrushBuilderTool> m_brushBuilderTool;
   std::unique_ptr<CreateEntityTool> m_createEntityTool;
   std::unique_ptr<DrawShapeTool> m_drawShapeTool;
   std::unique_ptr<MoveObjectsTool> m_moveObjectsTool;
@@ -78,6 +80,7 @@ public:
 public: // tools
   ClipTool& clipTool();
   AssembleBrushTool& assembleBrushTool();
+  BrushBuilderTool& brushBuilderTool();
   CreateEntityTool& createEntityTool();
   DrawShapeTool& drawShapeTool();
   MoveObjectsTool& moveObjectsTool();
@@ -92,6 +95,9 @@ public: // tools
   void toggleAssembleBrushTool();
   bool assembleBrushToolActive() const;
   void performAssembleBrush();
+
+  void toggleBrushBuilderTool();
+  bool brushBuilderToolActive() const;
 
   void toggleClipTool();
   bool clipToolActive() const;

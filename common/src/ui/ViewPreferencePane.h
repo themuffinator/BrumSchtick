@@ -42,6 +42,7 @@ private:
   QCheckBox* m_showAxes = nullptr;
   QComboBox* m_filterModeCombo = nullptr;
   QCheckBox* m_enableMsaa = nullptr;
+  QComboBox* m_languageCombo = nullptr;
   QComboBox* m_themeCombo = nullptr;
   QComboBox* m_materialBrowserIconSizeCombo = nullptr;
   QComboBox* m_rendererFontSizeCombo = nullptr;
@@ -71,6 +72,7 @@ private slots:
   void showAxesChanged(int state);
   void enableMsaaChanged(int state);
   void filterModeChanged(int index);
+  void languageChanged(int index);
   void themeChanged(int index);
   void materialBrowserIconSizeChanged(int index);
   void rendererFontSizeChanged(const QString& text);

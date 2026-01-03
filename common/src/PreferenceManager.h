@@ -35,8 +35,7 @@
 #include "kd/reflection_decl.h"
 #include "kd/vector_set.h"
 
-#include <fmt/format.h>
-#include <fmt/std.h>
+#include <format>
 
 #include <filesystem>
 #include <iosfwd>

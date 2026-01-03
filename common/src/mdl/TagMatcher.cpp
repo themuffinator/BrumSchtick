@@ -41,6 +41,7 @@
 #include "kd/ranges/to.h"
 #include "kd/string_compare.h"
 #include "kd/struct_io.h"
+#include "kd/vector_utils.h"
 
 #include <algorithm>
 #include <ostream>
@@ -484,7 +485,8 @@ void EntityClassNameTagMatcher::disable(TagMatcherCallback&, Map& map) const
 {
   // entities will be removed automatically when they become empty
 
-  const auto selectedBrushes = map.selection().nodes;
+  const auto selectedBrushes = map.selection().allBrushes();
+  const auto selectedBrushNodes = kdl::vec_static_cast<Node*>(selectedBrushes);
   auto detailBrushes = std::vector<Node*>{};
   for (auto* brush : selectedBrushes)
   {
@@ -499,9 +501,8 @@ void EntityClassNameTagMatcher::disable(TagMatcherCallback&, Map& map) const
     return;
   }
   deselectAll(map);
-  reparentNodes(map, {{parentForNodes(map, selectedBrushes), detailBrushes}});
-  selectNodes(
-    map, std::vector<Node*>(std::begin(detailBrushes), std::end(detailBrushes)));
+  reparentNodes(map, {{parentForNodes(map, selectedBrushNodes), detailBrushes}});
+  selectNodes(map, detailBrushes);
 }
 
 bool EntityClassNameTagMatcher::canEnable() const

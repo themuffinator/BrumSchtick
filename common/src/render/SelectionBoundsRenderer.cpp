@@ -26,13 +26,14 @@
 #include "render/RenderService.h"
 #include "render/TextAnchor.h"
 
+#include "kd/string_utils.h"
+
 #include "vm/bbox.h"
 #include "vm/util.h"
 #include "vm/vec.h"
 #include "vm/vec_io.h" // IWYU pragma: keep
 
-#include <fmt/format.h>
-#include <fmt/ostream.h>
+#include <format>
 
 #include <array>
 
@@ -412,7 +413,7 @@ void SelectionBoundsRenderer::renderSize2D(
     if (direction[i] == 0.0f)
     {
       renderService.renderString(
-        fmt::format("{}: {}", labels[i], boundsSize[i]),
+        std::format("{}: {}", labels[i], boundsSize[i]),
         SizeTextAnchor2D{m_bounds, i, camera});
     }
   }
@@ -435,7 +436,7 @@ void SelectionBoundsRenderer::renderSize3D(
   for (size_t i = 0; i < 3; ++i)
   {
     renderService.renderString(
-      fmt::format("{}: {}", labels[i], boundsSize[i]),
+      std::format("{}: {}", labels[i], boundsSize[i]),
       SizeTextAnchor3D{m_bounds, i, renderContext.camera()});
   }
 }
@@ -452,11 +453,11 @@ void SelectionBoundsRenderer::renderMinMax(
   renderService.setShowOccludedObjects();
 
   renderService.renderString(
-    fmt::format("Min: {}", fmt::streamed(vm::correct(m_bounds.min))),
+    std::format("Min: {}", kdl::str_to_string(vm::correct(m_bounds.min))),
     MinMaxTextAnchor3D{m_bounds, corner::min, renderContext.camera()});
 
   renderService.renderString(
-    fmt::format("Max: {}", fmt::streamed(vm::correct(m_bounds.max))),
+    std::format("Max: {}", kdl::str_to_string(vm::correct(m_bounds.max))),
     MinMaxTextAnchor3D{m_bounds, corner::max, renderContext.camera()});
 }
 

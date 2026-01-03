@@ -7,6 +7,6 @@ add_library(TbFsTestUtilsLib STATIC
 target_include_directories(TbFsTestUtilsLib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 target_link_libraries(TbFsTestUtilsLib PRIVATE CompilerConfig PrecompileStdHeaders)
-target_link_libraries(TbFsTestUtilsLib PUBLIC TbFsLib fmt::fmt-header-only)
+target_link_libraries(TbFsTestUtilsLib PUBLIC TbFsLib)
 
 add_subdirectory(test)

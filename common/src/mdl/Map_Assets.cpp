@@ -37,8 +37,7 @@
 #include "kd/ranges/to.h"
 #include "kd/string_utils.h"
 
-#include <fmt/format.h>
-#include <fmt/std.h>
+#include <format>
 
 #include <ranges>
 #include <vector>

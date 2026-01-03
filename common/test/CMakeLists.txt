@@ -168,7 +168,7 @@ target_include_directories(common-test-utils PUBLIC ${COMMON_TEST_SOURCE_DIR})
 target_link_libraries(common-test-utils PRIVATE common TbBaseTestUtilsLib TbFsTestUtilsLib Catch2::Catch2 Qt6::Test)
 
 macro(configure_test_target TARGET)
-    target_link_libraries(${TARGET} PRIVATE common common-test-utils TbBaseTestUtilsLib TbElTestUtilsLib TbFsTestUtilsLib Catch2::Catch2 UpdateLib fmt::fmt-header-only)
+    target_link_libraries(${TARGET} PRIVATE common common-test-utils TbBaseTestUtilsLib TbElTestUtilsLib TbFsTestUtilsLib Catch2::Catch2 UpdateLib)
     set_target_properties(${TARGET} PROPERTIES AUTOMOC TRUE)
 
     target_link_libraries(${TARGET} PRIVATE CompilerConfig)

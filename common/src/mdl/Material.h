@@ -24,14 +24,28 @@
 
 #include "kd/reflection_decl.h"
 
+#include "vm/vec.h"
+
 #include <atomic>
 #include <filesystem>
 #include <memory>
 #include <set>
 #include <string>
+#include <vector>
 
 namespace tb::mdl
 {
+
+struct HotspotRect
+{
+  vm::vec2f min;
+  vm::vec2f size;
+  bool tileU = false;
+  bool tileV = false;
+  float weight = 1.0f;
+
+  kdl_reflect_decl(HotspotRect, min, size, tileU, tileV, weight);
+};
 
 enum class TextureType
 {
@@ -93,6 +107,7 @@ private:
   std::shared_ptr<TextureResource> m_textureResource;
 
   mutable std::atomic<size_t> m_usageCount = 0;
+  std::vector<HotspotRect> m_hotspots;
 
   // Quake 3 surface parameters; move these to materials when we add proper support for
   // those.
@@ -113,6 +128,7 @@ private:
     m_relativePath,
     m_textureResource,
     m_usageCount,
+    m_hotspots,
     m_surfaceParms,
     m_culling,
     m_blendFunc);
@@ -149,6 +165,10 @@ public:
   Texture* texture();
 
   const TextureResource& textureResource() const;
+
+  const std::vector<HotspotRect>& hotspots() const;
+  bool hasHotspots() const;
+  void setHotspots(std::vector<HotspotRect> hotspots);
 
   const std::set<std::string>& surfaceParms() const;
   void setSurfaceParms(std::set<std::string> surfaceParms);

@@ -260,6 +260,70 @@ void Entity::addOrUpdateProperty(
   m_cachedModelTransformation = std::nullopt;
 }
 
+bool Entity::updatePropertyValue(const size_t index, std::string value)
+{
+  if (index >= m_properties.size())
+  {
+    return false;
+  }
+
+  auto& property = m_properties[index];
+  if (property.value() == value)
+  {
+    return true;
+  }
+
+  property.setValue(std::move(value));
+
+  m_cachedClassname = std::nullopt;
+  m_cachedOrigin = std::nullopt;
+  m_cachedRotation = std::nullopt;
+  m_cachedModelTransformation = std::nullopt;
+
+  return true;
+}
+
+bool Entity::updatePropertyKey(const size_t index, std::string key)
+{
+  if (index >= m_properties.size())
+  {
+    return false;
+  }
+
+  auto& property = m_properties[index];
+  if (property.key() == key)
+  {
+    return true;
+  }
+
+  property.setKey(std::move(key));
+
+  m_cachedClassname = std::nullopt;
+  m_cachedOrigin = std::nullopt;
+  m_cachedRotation = std::nullopt;
+  m_cachedModelTransformation = std::nullopt;
+
+  return true;
+}
+
+bool Entity::removePropertyAt(const size_t index)
+{
+  if (index >= m_properties.size())
+  {
+    return false;
+  }
+
+  m_properties.erase(
+    m_properties.begin() + static_cast<std::vector<EntityProperty>::difference_type>(index));
+
+  m_cachedClassname = std::nullopt;
+  m_cachedOrigin = std::nullopt;
+  m_cachedRotation = std::nullopt;
+  m_cachedModelTransformation = std::nullopt;
+
+  return true;
+}
+
 void Entity::renameProperty(const std::string& oldKey, std::string newKey)
 {
   if (oldKey == newKey)
@@ -267,38 +331,47 @@ void Entity::renameProperty(const std::string& oldKey, std::string newKey)
     return;
   }
 
-  const auto oldIt = findEntityProperty(m_properties, oldKey);
-  if (oldIt != std::end(m_properties))
+  auto updated = false;
+  for (auto& property : m_properties)
   {
-    if (const auto protIt = std::ranges::find(m_protectedProperties, oldKey);
-        protIt != std::end(m_protectedProperties))
+    if (property.hasKey(oldKey))
+    {
+      property.setKey(newKey);
+      updated = true;
+    }
+  }
+
+  if (!updated)
+  {
+    return;
+  }
+
+  if (const auto protIt = std::ranges::find(m_protectedProperties, oldKey);
+      protIt != std::end(m_protectedProperties))
+  {
+    if (!kdl::vec_contains(m_protectedProperties, newKey))
+    {
+      *protIt = newKey;
+    }
+    else
     {
       m_protectedProperties.erase(protIt);
-      m_protectedProperties.push_back(newKey);
     }
-
-    const auto newIt = findEntityProperty(m_properties, newKey);
-    if (newIt != std::end(m_properties))
-    {
-      m_properties.erase(newIt);
-    }
-
-    oldIt->setKey(std::move(newKey));
-
-    m_cachedClassname = std::nullopt;
-    m_cachedOrigin = std::nullopt;
-    m_cachedRotation = std::nullopt;
-    m_cachedModelTransformation = std::nullopt;
   }
+
+  m_cachedClassname = std::nullopt;
+  m_cachedOrigin = std::nullopt;
+  m_cachedRotation = std::nullopt;
+  m_cachedModelTransformation = std::nullopt;
 }
 
 void Entity::removeProperty(const std::string& key)
 {
-  const auto it = findEntityProperty(m_properties, key);
-  if (it != std::end(m_properties))
-  {
-    m_properties.erase(it);
+  const auto erasedPropertyCount =
+    std::erase_if(m_properties, [&](const auto& property) { return property.hasKey(key); });
 
+  if (erasedPropertyCount)
+  {
     m_cachedClassname = std::nullopt;
     m_cachedOrigin = std::nullopt;
     m_cachedRotation = std::nullopt;
@@ -328,8 +401,9 @@ bool Entity::hasProperty(const std::string& key) const
 
 bool Entity::hasProperty(const std::string& key, const std::string& value) const
 {
-  const auto it = findEntityProperty(m_properties, key);
-  return it != std::end(m_properties) && it->hasValue(value);
+  return std::ranges::any_of(m_properties, [&](const auto& property) {
+    return property.hasKeyAndValue(key, value);
+  });
 }
 
 bool Entity::hasPropertyWithPrefix(
@@ -352,6 +426,11 @@ const std::string* Entity::property(const std::string& key) const
 {
   const auto it = findEntityProperty(m_properties, key);
   return it != std::end(m_properties) ? &it->value() : nullptr;
+}
+
+const EntityProperty* Entity::propertyAt(const size_t index) const
+{
+  return index < m_properties.size() ? &m_properties[index] : nullptr;
 }
 
 std::vector<std::string> Entity::propertyKeys() const

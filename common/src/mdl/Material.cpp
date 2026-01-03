@@ -30,6 +30,8 @@
 namespace tb::mdl
 {
 
+kdl_reflect_impl(HotspotRect);
+
 std::ostream& operator<<(std::ostream& lhs, const TextureType& rhs)
 {
   switch (rhs)
@@ -106,6 +108,7 @@ Material::Material(Material&& other)
   , m_relativePath{std::move(other.m_relativePath)}
   , m_textureResource{std::move(other.m_textureResource)}
   , m_usageCount{static_cast<size_t>(other.m_usageCount)}
+  , m_hotspots{std::move(other.m_hotspots)}
   , m_surfaceParms{std::move(other.m_surfaceParms)}
   , m_culling{std::move(other.m_culling)}
   , m_blendFunc{std::move(other.m_blendFunc)}
@@ -120,6 +123,7 @@ Material& Material::operator=(Material&& other)
   m_relativePath = std::move(other.m_relativePath);
   m_textureResource = std::move(other.m_textureResource);
   m_usageCount = static_cast<size_t>(other.m_usageCount);
+  m_hotspots = std::move(other.m_hotspots);
   m_surfaceParms = std::move(other.m_surfaceParms);
   m_culling = std::move(other.m_culling);
   m_blendFunc = std::move(other.m_blendFunc);
@@ -174,6 +178,21 @@ Texture* Material::texture()
 const TextureResource& Material::textureResource() const
 {
   return *m_textureResource;
+}
+
+const std::vector<HotspotRect>& Material::hotspots() const
+{
+  return m_hotspots;
+}
+
+bool Material::hasHotspots() const
+{
+  return !m_hotspots.empty();
+}
+
+void Material::setHotspots(std::vector<HotspotRect> hotspots)
+{
+  m_hotspots = std::move(hotspots);
 }
 
 const std::set<std::string>& Material::surfaceParms() const

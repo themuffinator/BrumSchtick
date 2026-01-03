@@ -27,6 +27,12 @@ class QAbstractButton;
 class QLabel;
 class QLineEdit;
 class QGridLayout;
+class QSpinBox;
+
+namespace tb::mdl
+{
+enum class TextureAlignMode;
+}
 
 namespace tb::ui
 {
@@ -70,6 +76,14 @@ private:
   QLineEdit* m_colorEditor = nullptr;
   QAbstractButton* m_colorUnsetButton = nullptr;
 
+  QAbstractButton* m_alignTextureButton = nullptr;
+  QAbstractButton* m_fitTextureButton = nullptr;
+  QAbstractButton* m_rotateTextureButton = nullptr;
+  QAbstractButton* m_fitScaleUButton = nullptr;
+  QAbstractButton* m_fitScaleVButton = nullptr;
+  QSpinBox* m_fitRepeatUEditor = nullptr;
+  QSpinBox* m_fitRepeatVEditor = nullptr;
+
   SignalDelayer* m_updateControlsSignalDelayer = nullptr;
 
   NotifierConnection m_notifierConnection;
@@ -90,6 +104,7 @@ private:
   void contentFlagChanged(size_t index, int value, int setFlag, int mixedFlag);
   void surfaceValueChanged(double value);
   void colorValueChanged(const QString& text);
+  void alignTexturesPressed(mdl::TextureAlignMode mode);
   void surfaceFlagsUnset();
   void contentFlagsUnset();
   void surfaceValueUnset();

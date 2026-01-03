@@ -29,6 +29,7 @@
 #include "Preferences.h"
 #include "render/GL.h"
 #include "ui/FormWithSectionsLayout.h"
+#include "ui/Localization.h"
 #include "ui/QtUtils.h"
 #include "ui/SliderWithLabel.h"
 #include "ui/ViewConstants.h"
@@ -102,6 +103,22 @@ QWidget* ViewPreferencePane::createViewPreferences()
 
   auto* viewPrefsHeader = new QLabel{"Map Views"};
   makeEmphasized(viewPrefsHeader);
+
+  m_languageCombo = new QComboBox{};
+  m_languageCombo->setToolTip(tr("Select the language for the user interface."));
+  m_languageCombo->addItem(tr("System (Auto)"), systemLanguageId());
+  for (const auto& language : supportedLanguages())
+  {
+    m_languageCombo->addItem(language.name, language.id);
+  }
+  auto* languageInfo = new QLabel{};
+  languageInfo->setText(tr("Requires restart after changing"));
+  makeInfo(languageInfo);
+  auto* languageLayout = new QHBoxLayout{};
+  languageLayout->addWidget(m_languageCombo);
+  languageLayout->addSpacing(LayoutConstants::NarrowHMargin);
+  languageLayout->addWidget(languageInfo);
+  languageLayout->setContentsMargins(0, 0, 0, 0);
 
   m_themeCombo = new QComboBox{};
   m_themeCombo->addItems({Preferences::systemTheme(), Preferences::darkTheme()});
@@ -187,6 +204,7 @@ QWidget* ViewPreferencePane::createViewPreferences()
   layout->setFieldGrowthPolicy(QFormLayout::ExpandingFieldsGrow);
 
   layout->addSection("User Interface");
+  layout->addRow("Language", languageLayout);
   layout->addRow("Theme", themeLayout);
 
   layout->addSection("Map Views");
@@ -245,6 +263,11 @@ void ViewPreferencePane::bindEvents()
     this,
     &ViewPreferencePane::enableMsaaChanged);
   connect(
+    m_languageCombo,
+    QOverload<int>::of(&QComboBox::activated),
+    this,
+    &ViewPreferencePane::languageChanged);
+  connect(
     m_themeCombo,
     QOverload<int>::of(&QComboBox::activated),
     this,
@@ -283,6 +306,7 @@ void ViewPreferencePane::doResetToDefaults()
   prefs.resetToDefault(Preferences::EnableMSAA);
   prefs.resetToDefault(Preferences::TextureMinFilter);
   prefs.resetToDefault(Preferences::TextureMagFilter);
+  prefs.resetToDefault(Preferences::Language);
   prefs.resetToDefault(Preferences::Theme);
   prefs.resetToDefault(Preferences::MaterialBrowserIconSize);
   prefs.resetToDefault(Preferences::RendererFontSize);
@@ -304,6 +328,8 @@ void ViewPreferencePane::updateControls()
 
   m_showAxes->setChecked(pref(Preferences::ShowAxes));
   m_enableMsaa->setChecked(pref(Preferences::EnableMSAA));
+  const auto languageIndex = m_languageCombo->findData(pref(Preferences::Language));
+  m_languageCombo->setCurrentIndex(languageIndex >= 0 ? languageIndex : 0);
   m_themeCombo->setCurrentIndex(findThemeIndex(pref(Preferences::Theme)));
 
   const auto materialBrowserIconSize = pref(Preferences::MaterialBrowserIconSize);
@@ -417,6 +443,16 @@ void ViewPreferencePane::filterModeChanged(const int value)
   auto& prefs = PreferenceManager::instance();
   prefs.set(Preferences::TextureMinFilter, minFilter);
   prefs.set(Preferences::TextureMagFilter, magFilter);
+}
+
+void ViewPreferencePane::languageChanged(int /*index*/)
+{
+  const auto languageId = m_languageCombo->currentData().toString();
+  if (!languageId.isEmpty())
+  {
+    auto& prefs = PreferenceManager::instance();
+    prefs.set(Preferences::Language, languageId);
+  }
 }
 
 void ViewPreferencePane::themeChanged(int /*index*/)

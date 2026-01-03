@@ -23,10 +23,10 @@
 
 #include "ui/CompilationRun.h"
 
+#include <string_view>
+
 class QLabel;
 class QPushButton;
-class QTextEdit;
-
 namespace tb
 {
 namespace mdl
@@ -36,6 +36,7 @@ struct CompilationProfile;
 
 namespace ui
 {
+class CompilationOutput;
 class CompilationProfileManager;
 class MapFrame;
 
@@ -51,11 +52,12 @@ private:
   QPushButton* m_stopCompileButton = nullptr;
   QPushButton* m_closeButton = nullptr;
   QLabel* m_currentRunLabel = nullptr;
-  QTextEdit* m_output = nullptr;
+  CompilationOutput* m_output = nullptr;
   CompilationRun m_run;
 
 public:
   explicit CompilationDialog(MapFrame* mapFrame);
+  bool startCompilationForProfile(std::string_view profileName, bool test);
 
 private:
   void createGui();

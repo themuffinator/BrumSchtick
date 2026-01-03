@@ -93,6 +93,7 @@ struct EntityPropertyConfig
 };
 
 bool isNumberedProperty(std::string_view prefix, std::string_view key);
+bool isTBPropertyKey(std::string_view key);
 
 class EntityProperty
 {

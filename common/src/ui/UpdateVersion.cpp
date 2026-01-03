@@ -197,20 +197,23 @@ namespace
 {
 auto buildAssetPattern()
 {
+  const auto versionPattern =
+    QString{R"(v[0-9]+(?:\.[0-9]+){1,2}(?:-RC[0-9]+)?)"};
 #if defined(_WIN32)
   return QRegularExpression{
-    R"(TrenchBroom-Win64-AMD64-v\d{4}\.\d+(?:-RC(\d+))?-Release.zip)"};
+    QString{R"(BrumSchtick-Win64-(?:AMD64|x86_64)-%1-Release\.zip)"}.arg(
+      versionPattern)};
 #elif defined(__APPLE__)
 #if defined(__arm64__)
   return QRegularExpression{
-    R"(TrenchBroom-macOS-arm64-v\d{4}\.\d+(?:-RC(\d+))?-Release.zip)"};
+    QString{R"(BrumSchtick-macOS-arm64-%1-Release\.zip)"}.arg(versionPattern)};
 #else
   return QRegularExpression{
-    R"(TrenchBroom-macOS-x86_64-v\d{4}\.\d+(?:-RC(\d+))?-Release.zip)"};
+    QString{R"(BrumSchtick-macOS-x86_64-%1-Release\.zip)"}.arg(versionPattern)};
 #endif
 #else
   return QRegularExpression{
-    R"(TrenchBroom-Linux-x86_64-v\d{4}\.\d+(?:-RC(\d+))?-Release.zip)"};
+    QString{R"(BrumSchtick-Linux-x86_64-%1-Release\.zip)"}.arg(versionPattern)};
 #endif
 }
 } // namespace

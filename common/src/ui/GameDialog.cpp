@@ -67,7 +67,7 @@ std::optional<std::tuple<std::string, mdl::MapFormat>> GameDialog::showOpenDocum
 {
   auto dialog = GameDialog{
     "Select Game",
-    R"(TrenchBroom was unable to detect the game for the map document. Please choose a game in the game list and click OK.)",
+    R"(BrümSchtick was unable to detect the game for the map document. Please choose a game in the game list and click OK.)",
     GameDialog::DialogType::Open,
     parent};
 

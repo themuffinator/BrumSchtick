@@ -43,13 +43,16 @@ class GameManager
 private:
   std::unique_ptr<fs::WritableFileSystem> m_configFs;
   std::vector<GameInfo> m_gameInfos;
+  Logger& m_logger;
 
 public:
   GameManager(
-    std::unique_ptr<fs::WritableFileSystem> configFs, std::vector<GameInfo> gameInfos);
+    std::unique_ptr<fs::WritableFileSystem> configFs,
+    std::vector<GameInfo> gameInfos,
+    Logger& logger);
 
   GameManager(GameManager&&) noexcept;
-  GameManager& operator=(GameManager&&) noexcept;
+  GameManager& operator=(GameManager&&) noexcept = delete;
 
   ~GameManager();
 
@@ -59,16 +62,17 @@ public:
   GameInfo* gameInfo(std::string_view gameName);
 
   Result<void> updateCompilationConfig(
-    std::string_view gameName, CompilationConfig compilationConfig, Logger& logger);
+    std::string_view gameName, CompilationConfig compilationConfig);
 
   Result<void> updateGameEngineConfig(
-    std::string_view gameName, GameEngineConfig gameEngineConfig, Logger& logger);
+    std::string_view gameName, GameEngineConfig gameEngineConfig);
 };
 
 
 Result<kdl::multi_value<GameManager, std::vector<std::string>>> initializeGameManager(
   const std::vector<std::filesystem::path>& gameConfigSearchDirs,
-  const std::filesystem::path& userGameDir);
+  const std::filesystem::path& userGameDir,
+  Logger& logger);
 
 } // namespace mdl
 } // namespace tb

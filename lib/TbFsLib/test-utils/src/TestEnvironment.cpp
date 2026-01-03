@@ -21,7 +21,7 @@
 
 #include "Macros.h"
 
-#include <fmt/format.h>
+#include <format>
 
 #include <algorithm>
 #include <fstream>
@@ -62,7 +62,7 @@ TestEnvironment::TestEnvironment(
 {
   if (!dir.is_relative())
   {
-    throw std::runtime_error{fmt::format("'{}' is not a relative path", dir.string())};
+    throw std::runtime_error{std::format("'{}' is not a relative path", dir.string())};
   }
 
   createTestEnvironment(setup);

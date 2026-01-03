@@ -24,6 +24,7 @@
 #include "Preferences.h"
 #include "mdl/AddRemoveNodesCommand.h"
 #include "mdl/ApplyAndSwap.h"
+#include "mdl/Brush.h"
 #include "mdl/BrushBuilder.h"
 #include "mdl/BrushFace.h"
 #include "mdl/BrushNode.h"
@@ -57,10 +58,346 @@
 #include "kd/string_format.h"
 #include "kd/task_manager.h"
 
+#include "vm/constants.h"
+#include "vm/quat.h"
+
+#include <cmath>
+#include <format>
 #include <ranges>
 
 namespace tb::mdl
 {
+
+namespace
+{
+struct PatchSample
+{
+  vm::vec3d position;
+  vm::vec2d uv;
+};
+
+struct FaceUvMapping
+{
+  vm::vec3d uAxis;
+  vm::vec3d vAxis;
+  vm::vec2f offset;
+};
+
+std::optional<FaceUvMapping> computeFaceUvMapping(
+  const vm::plane3d& plane, const std::vector<PatchSample>& samples)
+{
+  const auto epsilon = vm::constants<double>::point_status_epsilon();
+
+  for (size_t i = 0; i + 2 < samples.size(); ++i)
+  {
+    const auto& s0 = samples[i];
+    for (size_t j = i + 1; j + 1 < samples.size(); ++j)
+    {
+      const auto& s1 = samples[j];
+      for (size_t k = j + 1; k < samples.size(); ++k)
+      {
+        const auto& s2 = samples[k];
+
+        const auto v1 = s1.position - s0.position;
+        const auto v2 = s2.position - s0.position;
+        if (vm::squared_length(vm::cross(v1, v2))
+            <= vm::constants<double>::almost_zero())
+        {
+          continue;
+        }
+
+        auto t1 = vm::normalize(v1);
+        auto t2 = v2 - vm::dot(v2, t1) * t1;
+        if (vm::squared_length(t2) <= vm::constants<double>::almost_zero())
+        {
+          continue;
+        }
+        t2 = vm::normalize(t2);
+
+        const auto a1 = vm::dot(v1, t1);
+        const auto b1 = vm::dot(v1, t2);
+        const auto a2 = vm::dot(v2, t1);
+        const auto b2 = vm::dot(v2, t2);
+        const auto det = a1 * b2 - a2 * b1;
+        if (vm::abs(det) <= epsilon)
+        {
+          continue;
+        }
+
+        const auto du1 = s1.uv.x() - s0.uv.x();
+        const auto dv1 = s1.uv.y() - s0.uv.y();
+        const auto du2 = s2.uv.x() - s0.uv.x();
+        const auto dv2 = s2.uv.y() - s0.uv.y();
+
+        const auto m00 = (du1 * b2 - du2 * b1) / det;
+        const auto m01 = (a1 * du2 - a2 * du1) / det;
+        const auto m10 = (dv1 * b2 - dv2 * b1) / det;
+        const auto m11 = (a1 * dv2 - a2 * dv1) / det;
+
+        const auto uAxis = t1 * m00 + t2 * m01;
+        const auto vAxis = t1 * m10 + t2 * m11;
+        const auto offset = vm::vec2f{
+          float(s0.uv.x() - vm::dot(s0.position, uAxis)),
+          float(s0.uv.y() - vm::dot(s0.position, vAxis))};
+
+        if (vm::abs(plane.point_distance(s0.position)) > epsilon
+            || vm::abs(plane.point_distance(s1.position)) > epsilon
+            || vm::abs(plane.point_distance(s2.position)) > epsilon)
+        {
+          continue;
+        }
+
+        return FaceUvMapping{uAxis, vAxis, offset};
+      }
+    }
+  }
+
+  return std::nullopt;
+}
+
+Result<Brush> applyPatchUvToBrushFaces(
+  const Map& map,
+  const PatchNode& patchNode,
+  const Brush& brush,
+  const std::string& patchMaterial,
+  const std::string& fallbackMaterial)
+{
+  const auto& grid = patchNode.grid();
+  auto samples = std::vector<PatchSample>{};
+  samples.reserve(grid.points.size());
+  for (const auto& point : grid.points)
+  {
+    samples.push_back(PatchSample{point.position, point.uvCoords});
+  }
+
+  auto faces = std::vector<BrushFace>{};
+  faces.reserve(brush.faceCount());
+
+  const auto mapFormat = map.worldNode().mapFormat();
+  const auto pushFallbackFace = [&](const BrushFace& face, const std::string& material) {
+    auto fallback = face;
+    fallback.setAttributes(BrushFaceAttributes{material});
+    faces.push_back(std::move(fallback));
+  };
+
+  for (const auto& face : brush.faces())
+  {
+    const auto mapping = computeFaceUvMapping(face.boundary(), samples);
+    if (!mapping)
+    {
+      auto attributes = BrushFaceAttributes{fallbackMaterial};
+      BrushFace::create(
+        face.points()[0], face.points()[1], face.points()[2], attributes, mapFormat)
+        | kdl::transform([&](auto newFace) { faces.push_back(std::move(newFace)); })
+        | kdl::transform_error([&](auto e) {
+            map.logger().error()
+              << "Could not build fallback face for patch conversion: " << e.msg;
+            pushFallbackFace(face, fallbackMaterial);
+          });
+      continue;
+    }
+
+    auto attributes = BrushFaceAttributes{patchMaterial};
+    attributes.setOffset(mapping->offset);
+    attributes.setScale(vm::vec2f{1.0f, 1.0f});
+    attributes.setRotation(0.0f);
+    attributes.setSurfaceContents(patchNode.patch().surfaceContents());
+    attributes.setSurfaceFlags(patchNode.patch().surfaceFlags());
+    attributes.setSurfaceValue(patchNode.patch().surfaceValue());
+
+    BrushFace::createFromValve(
+      face.points()[0],
+      face.points()[1],
+      face.points()[2],
+      attributes,
+      mapping->uAxis,
+      mapping->vAxis,
+      mapFormat)
+      | kdl::transform([&](auto newFace) { faces.push_back(std::move(newFace)); })
+      | kdl::transform_error([&](auto e) {
+          map.logger().error()
+            << "Could not build face from patch projection: " << e.msg;
+          pushFallbackFace(face, fallbackMaterial);
+        });
+  }
+
+  return Brush::create(map.worldBounds(), std::move(faces));
+}
+
+const BrushEdge* findEdgeByPositions(
+  const Brush& brush, const vm::segment3d& edgePosition, const double epsilon)
+{
+  for (const auto* edge : brush.edges())
+  {
+    if (edge->hasPositions(edgePosition.start(), edgePosition.end(), epsilon))
+    {
+      return edge;
+    }
+  }
+
+  return nullptr;
+}
+
+void setFaceAttributes(const std::vector<BrushFace>& faces, BrushFace& toSet)
+{
+  contract_pre(!faces.empty());
+
+  auto faceIt = std::begin(faces);
+  const auto faceEnd = std::end(faces);
+  auto bestMatch = faceIt++;
+
+  while (faceIt != faceEnd)
+  {
+    const auto& face = *faceIt;
+
+    const auto bestDiff = bestMatch->boundary().normal - toSet.boundary().normal;
+    const auto curDiff = face.boundary().normal - toSet.boundary().normal;
+    if (vm::squared_length(curDiff) < vm::squared_length(bestDiff))
+    {
+      bestMatch = faceIt;
+    }
+
+    ++faceIt;
+  }
+
+  toSet.setAttributes(*bestMatch);
+}
+
+vm::vec3d brushInteriorPoint(const Brush& brush)
+{
+  const auto vertices = brush.vertexPositions();
+  if (vertices.empty())
+  {
+    return brush.bounds().center();
+  }
+
+  auto sum = vm::vec3d{0.0, 0.0, 0.0};
+  for (const auto& vertex : vertices)
+  {
+    sum += vertex;
+  }
+
+  return sum / static_cast<double>(vertices.size());
+}
+
+void orientFaceToBrush(const Brush& brush, BrushFace& face)
+{
+  if (face.boundary().point_distance(brushInteriorPoint(brush)) > 0.0)
+  {
+    face.invert();
+  }
+}
+
+bool chamferBrushEdge(
+  Map& map,
+  Brush& brush,
+  const vm::segment3d& edgePosition,
+  const double distance,
+  const size_t segments,
+  bool& didChamfer)
+{
+  const auto* edge = findEdgeByPositions(
+    brush, edgePosition, vm::constants<double>::point_status_epsilon());
+  if (edge == nullptr || !edge->fullySpecified())
+  {
+    return true;
+  }
+
+  const auto* faceGeometry1 = edge->firstFace();
+  const auto* faceGeometry2 = edge->secondFace();
+  if (faceGeometry1 == nullptr || faceGeometry2 == nullptr)
+  {
+    return true;
+  }
+
+  const auto faceIndex1 = faceGeometry1->payload();
+  const auto faceIndex2 = faceGeometry2->payload();
+  if (!faceIndex1 || !faceIndex2)
+  {
+    return true;
+  }
+
+  const auto& face1 = brush.face(*faceIndex1);
+  const auto& face2 = brush.face(*faceIndex2);
+
+  const auto axis = edge->segment().direction();
+  if (vm::squared_length(axis) <= vm::constants<double>::almost_zero())
+  {
+    return true;
+  }
+
+  auto n1 = face1.normal();
+  auto n2 = face2.normal();
+
+  n1 = n1 - axis * vm::dot(n1, axis);
+  n2 = n2 - axis * vm::dot(n2, axis);
+
+  if (
+    vm::squared_length(n1) <= vm::constants<double>::almost_zero()
+    || vm::squared_length(n2) <= vm::constants<double>::almost_zero())
+  {
+    return true;
+  }
+
+  n1 = vm::normalize(n1);
+  n2 = vm::normalize(n2);
+
+  const auto dotNormals = vm::dot(n1, n2);
+  if (std::abs(dotNormals) >= 1.0 - vm::constants<double>::almost_zero())
+  {
+    return true;
+  }
+
+  const auto angle =
+    std::atan2(vm::dot(axis, vm::cross(n1, n2)), dotNormals);
+  if (std::abs(angle) <= vm::constants<double>::almost_zero())
+  {
+    return true;
+  }
+
+  const auto step = angle / static_cast<double>(segments);
+  const auto start = edge->segment().start();
+  const auto& worldBounds = map.worldBounds();
+
+  for (size_t i = 0; i < segments; ++i)
+  {
+    const auto n0 =
+      vm::quatd{axis, step * static_cast<double>(i)} * n1;
+    const auto n1Step =
+      vm::quatd{axis, step * static_cast<double>(i + 1u)} * n1;
+
+    const auto p0 = start - n0 * distance;
+    const auto p1 = start - n1Step * distance;
+    const auto p2 = p0 + axis;
+
+    const auto success =
+      BrushFace::create(
+        p0,
+        p2,
+        p1,
+        BrushFaceAttributes(map.currentMaterialName()),
+        map.worldNode().mapFormat())
+      | kdl::and_then([&](BrushFace&& clipFace) {
+          orientFaceToBrush(brush, clipFace);
+          setFaceAttributes(brush.faces(), clipFace);
+          return brush.clip(worldBounds, std::move(clipFace));
+        })
+      | kdl::if_error([&](auto e) {
+          map.logger().error() << "Could not chamfer brush edge: " << e.msg;
+        })
+      | kdl::is_success();
+
+    if (!success)
+    {
+      return false;
+    }
+
+    didChamfer = true;
+  }
+
+  return true;
+}
+} // namespace
 
 kdl_reflect_impl(TransformVerticesResult);
 
@@ -233,8 +570,9 @@ TransformVerticesResult transformVertices(
   Map& map, std::vector<vm::vec3d> vertexPositions, const vm::mat4x4d& transform)
 {
   auto newVertexPositions = std::vector<vm::vec3d>{};
+  const auto& selectedBrushes = map.selection().allBrushes();
   auto newNodes = applyToNodeContents(
-    map.selection().nodes,
+    selectedBrushes,
     kdl::overload(
       [](Layer&) { return true; },
       [](Group&) { return true; },
@@ -311,8 +649,9 @@ bool transformEdges(
   Map& map, std::vector<vm::segment3d> edgePositions, const vm::mat4x4d& transform)
 {
   auto newEdgePositions = std::vector<vm::segment3d>{};
+  const auto& selectedBrushes = map.selection().allBrushes();
   auto newNodes = applyToNodeContents(
-    map.selection().nodes,
+    selectedBrushes,
     kdl::overload(
       [](Layer&) { return true; },
       [](Group&) { return true; },
@@ -384,8 +723,9 @@ bool transformFaces(
   Map& map, std::vector<vm::polygon3d> facePositions, const vm::mat4x4d& transform)
 {
   auto newFacePositions = std::vector<vm::polygon3d>{};
+  const auto& selectedBrushes = map.selection().allBrushes();
   auto newNodes = applyToNodeContents(
-    map.selection().nodes,
+    selectedBrushes,
     kdl::overload(
       [](Layer&) { return true; },
       [](Group&) { return true; },
@@ -455,8 +795,9 @@ bool transformFaces(
 
 bool addVertex(Map& map, const vm::vec3d& vertexPosition)
 {
+  const auto& selectedBrushes = map.selection().allBrushes();
   auto newNodes = applyToNodeContents(
-    map.selection().nodes,
+    selectedBrushes,
     kdl::overload(
       [](Layer&) { return true; },
       [](Group&) { return true; },
@@ -505,8 +846,9 @@ bool addVertex(Map& map, const vm::vec3d& vertexPosition)
 bool removeVertices(
   Map& map, const std::string& commandName, std::vector<vm::vec3d> vertexPositions)
 {
+  const auto& selectedBrushes = map.selection().allBrushes();
   auto newNodes = applyToNodeContents(
-    map.selection().nodes,
+    selectedBrushes,
     kdl::overload(
       [](Layer&) { return true; },
       [](Group&) { return true; },
@@ -600,14 +942,14 @@ bool snapVertices(Map& map, const double snapTo)
   }
   if (succeededBrushCount > 0)
   {
-    map.logger().info() << fmt::format(
+    map.logger().info() << std::format(
       "Snapped vertices of {} {}",
       succeededBrushCount,
       kdl::str_plural(succeededBrushCount, "brush", "brushes"));
   }
   if (failedBrushCount > 0)
   {
-    map.logger().info() << fmt::format(
+    map.logger().info() << std::format(
       "Failed to snap vertices of {} {}",
       failedBrushCount,
       kdl::str_plural(failedBrushCount, "brush", "brushes"));
@@ -616,18 +958,79 @@ bool snapVertices(Map& map, const double snapTo)
   return true;
 }
 
+bool chamferEdges(
+  Map& map,
+  std::vector<vm::segment3d> edgePositions,
+  const double distance,
+  const size_t segments)
+{
+  if (edgePositions.empty() || distance <= 0.0 || segments == 0u)
+  {
+    return false;
+  }
+
+  kdl::vec_sort_and_remove_duplicates(edgePositions);
+
+  bool didChamfer = false;
+  const auto& selectedBrushes = map.selection().allBrushes();
+
+  auto newNodes = applyToNodeContents(
+    selectedBrushes,
+    kdl::overload(
+      [](Layer&) { return true; },
+      [](Group&) { return true; },
+      [](Entity&) { return true; },
+      [&](Brush& brush) {
+        const auto edgesToChamfer =
+          edgePositions
+          | std::views::filter([&](const auto& edge) { return brush.hasEdge(edge); })
+          | kdl::ranges::to<std::vector>();
+        if (edgesToChamfer.empty())
+        {
+          return true;
+        }
+
+        for (const auto& edge : edgesToChamfer)
+        {
+          if (!chamferBrushEdge(map, brush, edge, distance, segments, didChamfer))
+          {
+            return false;
+          }
+        }
+
+        return true;
+      },
+      [](BezierPatch&) { return true; }));
+
+  if (!newNodes || !didChamfer)
+  {
+    return false;
+  }
+
+  const auto commandName = kdl::str_plural(
+    edgePositions.size(), "Chamfer Brush Edge", "Chamfer Brush Edges");
+  auto changedLinkedGroups = collectContainingGroups(
+    *newNodes | std::views::keys | kdl::ranges::to<std::vector>());
+
+  return updateNodeContents(
+    map, commandName, std::move(*newNodes), std::move(changedLinkedGroups));
+}
+
 bool csgConvexMerge(Map& map)
 {
-  if (!map.selection().hasBrushFaces() && !map.selection().hasOnlyBrushes())
+  const auto& selection = map.selection();
+  const auto& selectedBrushes = selection.allBrushes();
+
+  if (!selection.hasBrushFaces() && !selection.hasOnlyBrushes())
   {
     return false;
   }
 
   auto points = std::vector<vm::vec3d>{};
 
-  if (map.selection().hasBrushFaces())
+  if (selection.hasBrushFaces())
   {
-    for (const auto& handle : map.selection().brushFaces)
+    for (const auto& handle : selection.brushFaces)
     {
       for (const auto* vertex : handle.face().vertices())
       {
@@ -635,9 +1038,9 @@ bool csgConvexMerge(Map& map)
       }
     }
   }
-  else if (map.selection().hasOnlyBrushes())
+  else if (selection.hasOnlyBrushes())
   {
-    for (const auto* brushNode : map.selection().brushes)
+    for (const auto* brushNode : selectedBrushes)
     {
       for (const auto* vertex : brushNode->brush().vertices())
       {
@@ -658,25 +1061,44 @@ bool csgConvexMerge(Map& map)
     map.gameInfo().gameConfig.faceAttribsConfig.defaults};
   return builder.createBrush(polyhedron, map.currentMaterialName())
          | kdl::transform([&](auto b) {
-             b.cloneFaceAttributesFrom(
-               map.selection().brushes | std::views::transform([](const auto* brushNode) {
-                 return &brushNode->brush();
-               })
-               | kdl::ranges::to<std::vector>());
+             auto attributeBrushes = std::vector<const Brush*>{};
+             if (selection.hasBrushFaces())
+             {
+               auto faceBrushes =
+                 selection.brushFaces
+                 | std::views::transform([](const auto& handle) { return handle.node(); })
+                 | kdl::ranges::to<std::vector>();
+               faceBrushes = kdl::vec_sort_and_remove_duplicates(std::move(faceBrushes));
+               attributeBrushes =
+                 faceBrushes | std::views::transform([](const auto* brushNode) {
+                   return &brushNode->brush();
+                 })
+                 | kdl::ranges::to<std::vector>();
+             }
+             else
+             {
+               attributeBrushes =
+                 selectedBrushes | std::views::transform([](const auto* brushNode) {
+                   return &brushNode->brush();
+                 })
+                 | kdl::ranges::to<std::vector>();
+             }
+             b.cloneFaceAttributesFrom(attributeBrushes);
 
-             // The nodelist is either empty or contains only brushes.
-             const auto toRemove = map.selection().nodes;
+             const auto toRemove = selection.hasBrushFaces()
+                                     ? selection.nodes
+                                     : kdl::vec_static_cast<Node*>(selectedBrushes);
 
              // We could be merging brushes that have different parents; use the parent
              // of the first brush.
              auto* parentNode = static_cast<Node*>(nullptr);
-             if (!map.selection().brushes.empty())
+             if (!selectedBrushes.empty())
              {
-               parentNode = map.selection().brushes.front()->parent();
+               parentNode = selectedBrushes.front()->parent();
              }
-             else if (!map.selection().brushFaces.empty())
+             else if (!selection.brushFaces.empty())
              {
-               parentNode = map.selection().brushFaces.front().node()->parent();
+               parentNode = selection.brushFaces.front().node()->parent();
              }
              else
              {
@@ -703,7 +1125,7 @@ bool csgConvexMerge(Map& map)
 
 bool csgSubtract(Map& map)
 {
-  const auto subtrahendNodes = std::vector<BrushNode*>{map.selection().brushes};
+  const auto subtrahendNodes = map.selection().allBrushes();
   if (subtrahendNodes.empty())
   {
     return false;
@@ -713,7 +1135,7 @@ bool csgSubtract(Map& map)
   // Select touching, but don't delete the subtrahends yet
   selectTouchingNodes(map, false);
 
-  const auto minuendNodes = std::vector<BrushNode*>{map.selection().brushes};
+  const auto minuendNodes = map.selection().allBrushes();
   const auto subtrahends = subtrahendNodes
                            | std::views::transform([](const auto* subtrahendNode) {
                                return &subtrahendNode->brush();
@@ -769,7 +1191,7 @@ bool csgSubtract(Map& map)
 
 bool csgIntersect(Map& map)
 {
-  const auto brushes = map.selection().brushes;
+  const auto brushes = map.selection().allBrushes();
   if (brushes.size() < 2u)
   {
     return false;
@@ -816,7 +1238,7 @@ bool csgIntersect(Map& map)
 
 bool csgHollow(Map& map)
 {
-  const auto brushNodes = map.selection().brushes;
+  const auto brushNodes = map.selection().allBrushes();
   if (brushNodes.empty())
   {
     return false;
@@ -864,6 +1286,73 @@ bool csgHollow(Map& map)
   }
 
   auto transaction = Transaction{map, "CSG Hollow"};
+  deselectAll(map);
+  const auto added = addNodes(map, toAdd);
+  if (added.empty())
+  {
+    transaction.cancel();
+    return false;
+  }
+  removeNodes(map, toRemove);
+  selectNodes(map, added);
+
+  return transaction.commit();
+}
+
+bool convertPatchesToConvexBrushes(Map& map)
+{
+  const auto& selection = map.selection();
+  const auto& patchNodes = selection.allPatches();
+  if (!selection.hasOnlyPatches() || patchNodes.empty())
+  {
+    return false;
+  }
+
+  const auto builder = BrushBuilder{
+    map.worldNode().mapFormat(),
+    map.worldBounds(),
+    map.gameInfo().gameConfig.faceAttribsConfig.defaults};
+
+  auto toAdd = std::map<Node*, std::vector<Node*>>{};
+  auto toRemove = std::vector<Node*>{};
+  size_t convertedCount = 0u;
+
+  for (auto* patchNode : patchNodes)
+  {
+    auto points = std::vector<vm::vec3d>{};
+    points.reserve(patchNode->grid().points.size());
+    for (const auto& point : patchNode->grid().points)
+    {
+      points.push_back(point.position);
+    }
+    kdl::vec_sort_and_remove_duplicates(points);
+
+    const auto patchMaterialName = patchNode->patch().materialName().empty()
+                                     ? map.currentMaterialName()
+                                     : patchNode->patch().materialName();
+
+    builder.createBrush(points, patchMaterialName)
+      | kdl::and_then([&](auto brush) {
+          return applyPatchUvToBrushFaces(
+            map, *patchNode, brush, patchMaterialName, std::string{"common/caulk"});
+        })
+      | kdl::transform([&](auto brush) {
+          auto* brushNode = new BrushNode{std::move(brush)};
+          toAdd[patchNode->parent()].push_back(brushNode);
+          toRemove.push_back(patchNode);
+          convertedCount += 1u;
+        })
+      | kdl::transform_error([&](auto e) {
+          map.logger().error() << "Could not convert patch to brush: " << e.msg;
+        });
+  }
+
+  if (convertedCount == 0u)
+  {
+    return false;
+  }
+
+  auto transaction = Transaction{map, "Convert Patches to Brushes"};
   deselectAll(map);
   const auto added = addNodes(map, toAdd);
   if (added.empty())

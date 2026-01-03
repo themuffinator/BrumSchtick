@@ -25,8 +25,6 @@
 #include "io/MapParser.h"
 #include "mdl/MapFormat.h"
 
-#include "kd/vector_set_forward.h"
-
 #include "vm/vec.h"
 
 #include <string_view>
@@ -79,10 +77,10 @@ class StandardMapParser : public MapParser, public Parser<QuakeMapToken::Type>
 {
 private:
   using Token = QuakeMapTokenizer::Token;
-  using EntityPropertyKeys = kdl::vector_set<std::string>;
 
   static const std::string BrushPrimitiveId;
   static const std::string PatchId;
+  static const std::string Patch3Id;
 
   QuakeMapTokenizer m_tokenizer;
 
@@ -114,13 +112,8 @@ protected:
 private:
   void parseEntity(ParserStatus& status);
   void parseEntityProperties(
-    std::vector<mdl::EntityProperty>& properties,
-    EntityPropertyKeys& keys,
-    ParserStatus& status);
-  void parseEntityProperty(
-    std::vector<mdl::EntityProperty>& properties,
-    EntityPropertyKeys& keys,
-    ParserStatus& status);
+    std::vector<mdl::EntityProperty>& properties, ParserStatus& status);
+  void parseEntityProperty(std::vector<mdl::EntityProperty>& properties, ParserStatus& status);
 
   void parseObjects(ParserStatus& status);
   void parseObject(ParserStatus& status);

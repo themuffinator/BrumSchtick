@@ -47,6 +47,7 @@ private:
   Map* m_map;
   mutable std::optional<std::vector<EntityNodeBase*>> m_cachedAllEntities;
   mutable std::optional<std::vector<BrushNode*>> m_cachedAllBrushes;
+  mutable std::optional<std::vector<PatchNode*>> m_cachedAllPatches;
   mutable std::optional<std::vector<BrushFaceHandle>> m_cachedAllBrushFaces;
 
 public:
@@ -100,6 +101,7 @@ public:
    * attempting to perform commands on all of them will be blocked as a conflict.
    */
   const std::vector<BrushNode*>& allBrushes() const;
+  const std::vector<PatchNode*>& allPatches() const;
 
   const std::vector<BrushFaceHandle>& allBrushFaces() const;
 };

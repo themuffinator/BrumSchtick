@@ -1,0 +1,34 @@
+@SolidClass = worldspawn : "Every map should have exactly one worldspawn."
+[
+	music(string) : "Music" : : "Music wav file"
+	gravity(string) : "Gravity" : : "800 is default gravity"
+	message(string) : "Message" : : "Text to print during connection process"
+	ambient(string) : "Ambient" : : "Ambient light value (must use '_color')"
+	_color(color1) : "RGB color" : "1 1 0.5" : "Ambient light color (must be used with 'ambient')"
+	sun(string) : "Sun" : : "Shader to use for 'sun' image"
+	_blocksize(string) : "_blocksize" : : "q3map always splits the BSP tree along the planes X=blocksize*n and Y=_blocksize*n. Default _blocksize value is 1024. Increase the _blocksize using larger powers of 2 to reduce compile times on very large maps with low structural brush density."
+	gridsize(string) : "Gridsize" : : "granularity of the light grid created by q3map. Values of three intergers by spaces, represents number of units between grid points in X, Y and Z. Default gridsize is 128 128 256. Use larger powers of 2 to reduce BSP size and compile time on very large maps."
+	fogclip(string) : "Fogclip" : : "Uses vis to exclude stuff beyond the specified distance. q3map support varies."
+	mapcoordsmins(string) : "Mapcoordsmins" : : "Top left corner coordinate. Example -256 256."
+	mapcoordsmaxs(string) : "Mapcoordsmaxs" : : "Lower right corner coordinate. Example 256 -256. Both mapcoordsmins and mapcoordsmaxs must be set for command map and auto map to work properly."
+	spawnflags(flags) = 
+	[
+		1 : "no_gt_wolf" : 0 : "regular wolf cannot be played on this map"
+		2 : "no_stopwatch" : 0 : "stopwatch cannot be played on this map"
+		8 : "no_lms" : 0 : "lms cannot be played on this map"
+	]
+]
+
+@PointClass size(-16 -16 -16, 16 16 16) color(255 0 0) model({"path": model, "scale": modelscale, "scale": modelscale_vec }) = misc_model : "Model that will be compiled into the map."
+[
+	model(string) : "Model" : : "arbitrary .md3 file to display"
+	modelscale(string) : "Modelscale" : : "scale multiplier (defaults to 1x)"
+	modelscale_vec(string) : "Modelscale_vec" : : "Set scale per-axis.  Overrides modelscale, so if you have both, the modelscale is ignored"
+]
+@PointClass size(-16 -16 -16, 16 16 16) color(255 0 0) model({"path": model, "skin": skin, "scale": modelscale, "frame": start}) = misc_gamemodel : "md3 placed in the game at runtime (rather than in the bsp)"
+[
+	model(string) : "Model" : : "arbitrary .md3 file to display"
+	modelscale(string) : "Modelscale" : "1" : "scale multiplier (defaults to 1x, and scales uniformly)"
+	skin(string) : "Skin" : : ".skin file used to define shaders for model"
+	start(string) : "Start" : : "frame to start on"
+]

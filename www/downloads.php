@@ -1,5 +1,5 @@
 <?php
-header('Location: https://github.com/kduske/TrenchBroom/releases');
+header('Location: https://github.com/themuffinator/BrumSchtick/releases');
 die();
 
 function has_extension($file, $exts) {

@@ -46,6 +46,7 @@ extern Preference<int> MapViewLayout;
 QString systemTheme();
 QString darkTheme();
 extern Preference<QString> Theme;
+extern Preference<QString> Language;
 
 extern Preference<bool> ShowAxes;
 extern Preference<Color> SoftMapBoundsColor;
@@ -191,6 +192,7 @@ extern Preference<QString> FaceRenderMode;
 extern Preference<bool> ShadeFaces;
 extern Preference<bool> ShowFog;
 extern Preference<bool> ShowEdges;
+extern Preference<bool> ShowLightPreview;
 
 extern Preference<bool> ShowSoftMapBounds;
 

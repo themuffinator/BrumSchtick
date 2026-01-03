@@ -31,7 +31,7 @@
 #include "kd/contracts.h"
 #include "kd/vector_set.h"
 
-#include <fmt/format.h>
+#include <format>
 
 #include <sstream>
 #include <string>

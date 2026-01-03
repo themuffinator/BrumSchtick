@@ -42,6 +42,7 @@
 #include "render/RenderContext.h"
 #include "render/SelectionBoundsRenderer.h"
 #include "ui/AssembleBrushToolController3D.h"
+#include "ui/BrushBuilderToolController3D.h"
 #include "ui/CameraAnimation.h"
 #include "ui/CameraTool3D.h"
 #include "ui/ClipToolController.h"
@@ -108,6 +109,8 @@ void MapView3D::initializeToolChain(MapViewToolBox& toolBox)
   addToolController(std::make_unique<ExtrudeToolController3D>(toolBox.extrudeTool()));
   addToolController(
     std::make_unique<AssembleBrushToolController3D>(toolBox.assembleBrushTool()));
+  addToolController(
+    std::make_unique<BrushBuilderToolController3D>(toolBox.brushBuilderTool()));
   addToolController(std::make_unique<ClipToolController3D>(toolBox.clipTool()));
   addToolController(std::make_unique<VertexToolController>(toolBox.vertexTool()));
   addToolController(std::make_unique<EdgeToolController>(toolBox.edgeTool()));

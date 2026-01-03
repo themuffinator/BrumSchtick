@@ -131,9 +131,11 @@ private:
 public:
   bool cancelDrag();
 
-private:
+protected:
   virtual PickRequest pickRequest(float x, float y) const = 0;
   virtual mdl::PickResult pick(const vm::ray3d& pickRay) const = 0;
+
+private:
   virtual void doShowPopupMenu();
 
   deleteCopyAndMove(ToolBoxConnector);

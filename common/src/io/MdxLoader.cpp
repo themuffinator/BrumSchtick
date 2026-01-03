@@ -31,7 +31,7 @@
 
 #include "kd/path_utils.h"
 
-#include <fmt/core.h>
+#include <format>
 
 #include <string>
 
@@ -438,12 +438,12 @@ Result<mdl::EntityModelData> MdxLoader::load(Logger& logger)
 
     if (ident != MdxLayout::Ident)
     {
-      return Error{fmt::format("Unknown MDX model ident: {}", ident)};
+      return Error{std::format("Unknown MDX model ident: {}", ident)};
     }
 
     if (version != MdxLayout::Version)
     {
-      return Error{fmt::format("Unknown MDX model version: {}", version)};
+      return Error{std::format("Unknown MDX model version: {}", version)};
     }
 
     /*const auto skinWidth =*/reader.readSize<int32_t>();

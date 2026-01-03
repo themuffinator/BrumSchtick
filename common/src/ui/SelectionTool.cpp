@@ -29,6 +29,7 @@
 #include "mdl/Hit.h"
 #include "mdl/HitAdapter.h"
 #include "mdl/HitFilter.h"
+#include "mdl/LayerNode.h"
 #include "mdl/Map.h"
 #include "mdl/Map_Groups.h"
 #include "mdl/Map_Selection.h"
@@ -421,10 +422,70 @@ bool SelectionTool::mouseDoubleClick(const InputState& inputState)
         }
         else
         {
-          const auto* node = mdl::hitToNode(hit);
+          auto* node = mdl::hitToNode(hit);
           if (editorContext.selectable(*node))
           {
             const auto* container = node->parent();
+            const auto topLevelContainer =
+              dynamic_cast<const mdl::LayerNode*>(container) != nullptr;
+            auto* brushNode = dynamic_cast<mdl::BrushNode*>(node);
+            const auto faceHit =
+              firstHit(inputState, type(mdl::BrushNode::BrushHitType));
+            const auto faceHandle = mdl::hitToFaceHandle(faceHit);
+
+            // Avoid selecting every object when double clicking a top-level brush.
+            if (
+              topLevelContainer && brushNode != nullptr && faceHandle != nullptr
+              && faceHandle->node() == brushNode
+              && editorContext.selectable(*brushNode, faceHandle->face()))
+            {
+              if (isMultiClick(inputState))
+              {
+                if (map.selection().hasNodes())
+                {
+                  convertToFaceSelection(map);
+                }
+                selectBrushFaces(map, mdl::toHandles(brushNode));
+              }
+              else
+              {
+                auto transaction = mdl::Transaction{map, "Select Brush Faces"};
+                deselectAll(map);
+                selectBrushFaces(map, mdl::toHandles(brushNode));
+                transaction.commit();
+              }
+              return true;
+            }
+
+            if (topLevelContainer)
+            {
+              if (isMultiClick(inputState))
+              {
+                if (node->selected())
+                {
+                  deselectNodes(map, {node});
+                }
+                else
+                {
+                  auto transaction = mdl::Transaction{map, "Select Object"};
+                  if (map.selection().hasBrushFaces())
+                  {
+                    deselectAll(map);
+                  }
+                  selectNodes(map, {node});
+                  transaction.commit();
+                }
+              }
+              else
+              {
+                auto transaction = mdl::Transaction{map, "Select Object"};
+                deselectAll(map);
+                selectNodes(map, {node});
+                transaction.commit();
+              }
+              return true;
+            }
+
             const auto siblings = collectSelectableChildren(editorContext, container);
             if (isMultiClick(inputState))
             {

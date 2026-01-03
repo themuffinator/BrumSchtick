@@ -1,6 +1,6 @@
-# TrenchBroom Filesystem Library
+# BrümSchtick Filesystem Library
 
-Contains TrenchBroom's filesystem access library. 
+Contains BrümSchtick's filesystem access library. 
 
 ## Platform Independent Filesystem Access
 
@@ -17,3 +17,4 @@ of physical filesystems. The physical filesystems can be backed by the system's 
 or by image files such as zip files, pak files, or wad files. Once instantiated,
 filesystems can be mounted into a virtual filesystem which allows accessing the files.
 The virtual filesystem can also resolve shadowed files correctly.
+

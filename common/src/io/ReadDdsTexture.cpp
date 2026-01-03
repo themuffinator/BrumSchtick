@@ -26,7 +26,7 @@
 #include "mdl/Texture.h"
 #include "mdl/TextureBuffer.h"
 
-#include <fmt/format.h>
+#include <format>
 
 namespace tb::io
 {
@@ -147,7 +147,7 @@ Result<mdl::Texture> readDdsTexture(fs::Reader& reader)
 
     if (!checkTextureDimensions(width, height))
     {
-      return Error{fmt::format("Invalid texture dimensions: {}*{}", width, height)};
+      return Error{std::format("Invalid texture dimensions: {}*{}", width, height)};
     }
 
     reader.seekFromBegin(DdsLayout::PixelFormatOffset);

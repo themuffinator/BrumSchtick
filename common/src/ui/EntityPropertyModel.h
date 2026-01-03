@@ -25,6 +25,7 @@
 
 #include <iosfwd>
 #include <map>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -96,6 +97,7 @@ struct PropertyRow
   std::string key;
   std::string value;
   ValueState valueState = ValueState::Unset;
+  std::optional<size_t> propertyIndex;
 
   bool keyMutable = true;
   bool valueMutable = true;
@@ -108,12 +110,23 @@ struct PropertyRow
     key,
     value,
     valueState,
+    propertyIndex,
     keyMutable,
     valueMutable,
     protection,
     linkType,
     tooltip);
 };
+
+struct PropertyRowId
+{
+  std::string key;
+  std::optional<size_t> propertyIndex;
+
+  bool operator==(const PropertyRowId& other) const = default;
+};
+
+bool operator<(const PropertyRowId& lhs, const PropertyRowId& rhs);
 
 /**
  * Model for the QTableView.
@@ -160,6 +173,8 @@ public:
 
   const PropertyRow* rowForModelIndex(const QModelIndex& index) const;
   int rowIndexForPropertyKey(const std::string& propertyKey) const;
+  PropertyRowId rowId(int row) const;
+  int rowIndexForPropertyId(const PropertyRowId& rowId) const;
 
   QStringList getCompletions(const QModelIndex& index) const;
 
@@ -177,7 +192,7 @@ public: // QAbstractTableModel overrides
 private: // helpers
   std::vector<std::string> propertyKeys(int row, int count) const;
 
-  void setRows(const std::map<std::string, PropertyRow>& newRows);
+  void setRows(std::vector<PropertyRow> newRows);
   bool hasRowWithPropertyKey(const std::string& propertyKey) const;
   bool renameProperty(
     size_t rowIndex,

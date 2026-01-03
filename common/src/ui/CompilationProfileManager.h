@@ -23,6 +23,8 @@
 
 #include "mdl/CompilationConfig.h"
 
+#include <string_view>
+
 class QAbstractButton;
 class QPoint;
 
@@ -60,6 +62,7 @@ public:
 
   const mdl::CompilationProfile* selectedProfile() const;
   const mdl::CompilationConfig& config() const;
+  bool selectProfileByName(std::string_view name);
 
 private:
   void updateGui();

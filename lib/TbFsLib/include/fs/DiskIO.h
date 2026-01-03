@@ -25,8 +25,7 @@
 
 #include "kd/filesystem_utils.h"
 
-#include <fmt/format.h>
-#include <fmt/std.h>
+#include <format>
 
 #include <filesystem>
 #include <fstream>

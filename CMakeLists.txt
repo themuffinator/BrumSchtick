@@ -26,15 +26,15 @@ set(CMAKE_VISIBILITY_INLINES_HIDDEN TRUE)
 # Enable the source_group command for creating IDE folders
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-# Set TrenchBroom item as default single startup project (NOTE: CMake 3.6 and newer)
-set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT TrenchBroom)
+# Set BrumSchtick item as default single startup project (NOTE: CMake 3.6 and newer)
+set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT BrumSchtick)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Using C and CXX because GLEW is C
-project(TrenchBroom C CXX)
+project(BrumSchtick C CXX)
 
 # Configure CCache if available and requested
 if(TB_ENABLE_CCACHE)
@@ -114,6 +114,8 @@ include(cmake/Utils.cmake)
 include(cmake/CompilerConfig.cmake)
 include(cmake/PrecompileHeaders.cmake)
 
+set(APP_VERSION_FILE "${CMAKE_SOURCE_DIR}/version.txt")
+
 # Find Git
 find_package(Git)
 
@@ -144,14 +146,13 @@ find_package(cpptrace CONFIG REQUIRED)
 find_package(freeimage CONFIG REQUIRED)
 find_package(freetype CONFIG REQUIRED)
 find_package(Catch2 CONFIG REQUIRED)
-find_package(fmt CONFIG REQUIRED)
 find_package(GLEW REQUIRED)
 find_package(miniz CONFIG REQUIRED)
 find_package(tinyxml2 CONFIG REQUIRED)
 
 # Find Qt and OpenGL
 find_package(OpenGL REQUIRED)
-find_package(Qt6 COMPONENTS Core Widgets OpenGL OpenGLWidgets Network Svg Test REQUIRED)
+find_package(Qt6 COMPONENTS Core Widgets OpenGL OpenGLWidgets Network Svg Test LinguistTools REQUIRED)
 
 # Find threads lib, needed to work around a gtest bug, see: https://stackoverflow.com/questions/21116622/undefined-reference-to-pthread-key-create-linker-error
 # The googletest target links to this

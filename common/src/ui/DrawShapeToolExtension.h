@@ -34,6 +34,14 @@ namespace tb::ui
 {
 class MapDocument;
 
+enum class StairDirection
+{
+  North,
+  East,
+  South,
+  West
+};
+
 class DrawShapeToolExtensionPage : public QWidget
 {
   Q_OBJECT
@@ -69,6 +77,15 @@ private:
   // For ICO sphere
   size_t m_accuracy = 1;
 
+  // For stairs
+  double m_stepHeight = 16.0;
+  StairDirection m_stairDirection = StairDirection::North;
+
+  // For circular stairs
+  size_t m_stairsPerRotation = 12;
+  double m_stairInnerRadius = 0.0;
+  double m_stairOffsetAngle = 0.0;
+
 public:
   Notifier<> parametersDidChangeNotifier;
 
@@ -89,6 +106,21 @@ public:
 
   size_t accuracy() const;
   void setAccuracy(size_t accuracy);
+
+  double stepHeight() const;
+  void setStepHeight(double stepHeight);
+
+  StairDirection stairDirection() const;
+  void setStairDirection(StairDirection direction);
+
+  size_t stairsPerRotation() const;
+  void setStairsPerRotation(size_t steps);
+
+  double stairInnerRadius() const;
+  void setStairInnerRadius(double radius);
+
+  double stairOffsetAngle() const;
+  void setStairOffsetAngle(double angle);
 };
 
 class DrawShapeToolExtension

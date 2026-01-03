@@ -536,6 +536,7 @@ TEST_CASE("Map_Entities")
       }};
       const auto expectedEntity2 = Entity{{
         {"some_other_key", "some_value"},
+        {"some_other_key", "some_other_value"},
       }};
 
       const auto entityNode1 = new EntityNode{originalEntity1};

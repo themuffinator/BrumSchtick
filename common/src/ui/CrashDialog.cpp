@@ -54,7 +54,7 @@ void CrashDialog::createGui(
   auto* header = new DialogHeader{"Crash Report"};
 
   auto* text1 = new QLabel{
-    tr("TrenchBroom has crashed, but was able to save a crash report,"
+    tr("BrümSchtick has crashed, but was able to save a crash report,"
        "a log file and the current state of the map to the following locations.\n\n"
        "Please create an issue report and upload all three files.")};
   text1->setWordWrap(true);
@@ -89,7 +89,7 @@ void CrashDialog::createGui(
 
   connect(reportButton, &QAbstractButton::clicked, this, []() {
     QDesktopServices::openUrl(
-      QUrl{"https://github.com/TrenchBroom/TrenchBroom/issues/new"});
+      QUrl{"https://github.com/themuffinator/BrumSchtick/issues/new"});
   });
   connect(buttonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
 

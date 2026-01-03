@@ -23,10 +23,9 @@
 
 #include "kd/reflection_impl.h"
 #include "kd/result_fold.h"
+#include "kd/string_utils.h"
 
-#include <fmt/format.h>
-#include <fmt/ostream.h>
-#include <fmt/ranges.h>
+#include <format>
 
 
 namespace tb::mdl
@@ -45,7 +44,7 @@ Result<std::vector<float>> parseExtraColorComponents(const R& parts)
            {
              return value;
            }
-           return Error{fmt::format("Failed to '{}' as float", part)};
+           return Error{std::format("Failed to '{}' as float", part)};
          })
          | kdl::fold;
 }
@@ -70,7 +69,7 @@ std::string entityColorPropertyToString(
   const Rgb& color, const std::vector<float>& extraComponents)
 {
   return !extraComponents.empty()
-           ? fmt::format("{} {}", color.toString(), fmt::join(extraComponents, " "))
+           ? std::format("{} {}", color.toString(), kdl::str_join(extraComponents, " "))
            : color.toString();
 }
 
@@ -98,8 +97,8 @@ Result<EntityColorPropertyValue> parseEntityColorPropertyValue(
           return parseEntityColorPropertyValue<Rgb>(propertyValue);
         },
         [](const auto& valueType) -> Result<EntityColorPropertyValue> {
-          return Error{fmt::format(
-            "Cannot convert property of type {} to color", fmt::streamed(valueType))};
+          return Error{std::format(
+            "Cannot convert property of type {} to color", kdl::str_to_string(valueType))};
         }),
       propertyDefinition->valueType);
   }
@@ -131,9 +130,9 @@ Result<std::string> entityColorPropertyToString(
                  return entityColorPropertyValue.color;
                },
                [](const auto& valueType) -> Result<Rgb> {
-                 return Error{fmt::format(
+                 return Error{std::format(
                    "Cannot convert color property of type {} to string",
-                   fmt::streamed(valueType))};
+                   kdl::str_to_string(valueType))};
                }),
              propertyDefinition->valueType)
            | kdl::transform([&](const auto& color) {

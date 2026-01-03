@@ -456,6 +456,12 @@ void MaterialBrowserView::doContextMenu(
   if (const auto* cell = layout.cellAt(x, y))
   {
     auto menu = QMenu{this};
+    menu.addAction(
+      tr("Find Usages in Map"),
+      this,
+      [&, material = &cellData(*cell)]() {
+        m_document.map().editorContext().setSearchText("texture=" + material->name());
+      });
     menu.addAction(tr("Select Faces"), this, [&, material = &cellData(*cell)]() {
       selectBrushFacesWithMaterial(m_document.map(), material->name());
     });

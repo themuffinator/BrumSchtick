@@ -45,7 +45,7 @@ void contractViolated(
 #else
 #include "ui/CrashReporter.h"
 
-#include <fmt/format.h>
+#include <format>
 
 namespace tb
 {
@@ -60,7 +60,7 @@ void contractViolated(
   const std::string_view condition)
 {
   const auto reason =
-    fmt::format("{} line {}: {} '{}' failed", file, line, type, condition);
+    std::format("{} line {}: {} '{}' failed", file, line, type, condition);
   ui::reportCrashAndExit(reason);
 }
 

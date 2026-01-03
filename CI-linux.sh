@@ -16,7 +16,7 @@ pandoc --version
 ./linuxdeploy-x86_64.AppImage --version
 ./linuxdeploy-plugin-qt-x86_64.AppImage --plugin-version
 
-# Build TB
+# Build BrümSchtick
 
 mkdir cmakebuild
 cd cmakebuild
@@ -65,7 +65,7 @@ xvfb-run -a ./common-test || exit 1
 
 cd "$BUILD_DIR"
 
-ldd --verbose ./app/trenchbroom
+ldd --verbose ./app/brumschtick
 
 cpack || exit 1
 ./app/generate_checksum.sh

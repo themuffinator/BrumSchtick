@@ -29,13 +29,66 @@
 #include "kd/string_format.h"
 #include "kd/string_utils.h"
 
-#include <fmt/format.h>
-#include <fmt/std.h>
+#include <format>
+
+#include <string_view>
 
 namespace tb::fs::Disk
 {
 namespace
 {
+
+#if defined(_WIN32)
+bool isUncPathNative(std::basic_string_view<std::filesystem::path::value_type> native)
+{
+  using Char = std::filesystem::path::value_type;
+  const auto isSep = [](const Char c) { return c == Char('\\') || c == Char('/'); };
+
+  if (native.size() < 2u)
+  {
+    return false;
+  }
+
+  if (!isSep(native[0]) || !isSep(native[1]))
+  {
+    return false;
+  }
+
+  // Exclude extended-length paths like \\?\C:\...
+  if (native.size() >= 4u && native[2] == Char('?') && isSep(native[3]))
+  {
+    return false;
+  }
+
+  return true;
+}
+
+bool isUncPath(const std::filesystem::path& path)
+{
+  return isUncPathNative(path.native());
+}
+
+std::filesystem::path preserveUncPrefix(
+  const std::filesystem::path& original, std::filesystem::path normalized)
+{
+  if (!isUncPath(original) || isUncPathNative(normalized.native()))
+  {
+    return normalized;
+  }
+
+  const auto native = normalized.native();
+  if (!native.empty() && (native[0] == L'\\' || native[0] == L'/'))
+  {
+    std::basic_string<std::filesystem::path::value_type> fixed;
+    fixed.reserve(native.size() + 1u);
+    fixed.push_back(L'\\');
+    fixed.append(native);
+    return std::filesystem::path{fixed};
+  }
+
+  return normalized;
+}
+#endif
 
 bool doCheckCaseSensitive()
 {
@@ -106,7 +159,11 @@ bool isCaseSensitive()
 
 std::filesystem::path fixPath(const std::filesystem::path& path)
 {
-  return fixCase(path.lexically_normal());
+  auto normalized = path.lexically_normal();
+#if defined(_WIN32)
+  normalized = preserveUncPrefix(path, std::move(normalized));
+#endif
+  return fixCase(std::move(normalized));
 }
 
 PathInfo pathInfo(const std::filesystem::path& path)
@@ -123,7 +180,7 @@ Result<std::vector<std::filesystem::path>> find(
   if (pathInfoForFixedPath(fixedPath) != PathInfo::Directory)
   {
     return Error{
-      fmt::format("Failed to open {}: path does not denote a directory", path)};
+      std::format("Failed to open {}: path does not denote a directory", path.string())};
   }
 
   auto error = std::error_code{};
@@ -153,7 +210,7 @@ Result<std::vector<std::filesystem::path>> find(
 
   if (error)
   {
-    return Error{fmt::format("Failed to open {}: {}", path, error.message())};
+    return Error{std::format("Failed to open {}: {}", path.string(), error.message())};
   }
 
   return result;
@@ -164,7 +221,7 @@ Result<std::shared_ptr<CFile>> openFile(const std::filesystem::path& path)
   const auto fixedPath = fixPath(path);
   if (pathInfoForFixedPath(fixedPath) != PathInfo::File)
   {
-    return Error{fmt::format("Failed to open {}: path does not denote a file", path)};
+    return Error{std::format("Failed to open {}: path does not denote a file", path.string())};
   }
 
   return createCFile(fixedPath);
@@ -178,7 +235,7 @@ Result<bool> createDirectory(const std::filesystem::path& path)
   case PathInfo::Directory:
     return false;
   case PathInfo::File:
-    return Error{fmt::format("Failed to create {}: path denotes a file", path)};
+    return Error{std::format("Failed to create {}: path denotes a file", path.string())};
   case PathInfo::Unknown: {
     auto error = std::error_code{};
     const auto created = std::filesystem::create_directories(fixedPath, error);
@@ -186,7 +243,7 @@ Result<bool> createDirectory(const std::filesystem::path& path)
     {
       return created;
     }
-    return Error{fmt::format("Failed to create {}: {}", path, error.message())};
+    return Error{std::format("Failed to create {}: {}", path.string(), error.message())};
   }
     switchDefault();
   }
@@ -198,7 +255,7 @@ Result<bool> deleteFile(const std::filesystem::path& path)
   switch (pathInfoForFixedPath(fixedPath))
   {
   case PathInfo::Directory:
-    return Error{fmt::format("Failed to delete {}: path denotes a directory", path)};
+    return Error{std::format("Failed to delete {}: path denotes a directory", path.string())};
   case PathInfo::File: {
     auto error = std::error_code{};
     if (std::filesystem::remove(fixedPath, error) && !error)
@@ -207,7 +264,7 @@ Result<bool> deleteFile(const std::filesystem::path& path)
     }
     if (error)
     {
-      return Error{fmt::format("Failed to delete {}: {}", path, error.message())};
+      return Error{std::format("Failed to delete {}: {}", path.string(), error.message())};
     }
     return false;
   }
@@ -224,7 +281,7 @@ Result<void> copyFile(
   if (pathInfoForFixedPath(fixedSourcePath) != PathInfo::File)
   {
     return Error{
-      fmt::format("Failed to copy {}: path does not denote a file", sourcePath)};
+      std::format("Failed to copy {}: path does not denote a file", sourcePath.string())};
   }
 
   auto fixedDestPath = fixPath(destPath);
@@ -243,7 +300,7 @@ Result<void> copyFile(
     || error)
   {
     return Error{
-      fmt::format("Failed to copy {} to {}: {}", sourcePath, destPath, error.message())};
+      std::format("Failed to copy {} to {}: {}", sourcePath.string(), destPath.string(), error.message())};
   }
 
   return kdl::void_success;
@@ -256,7 +313,7 @@ Result<void> moveFile(
   if (pathInfoForFixedPath(fixedSourcePath) != PathInfo::File)
   {
     return Error{
-      fmt::format("Failed to move {}: path does not denote a file", sourcePath)};
+      std::format("Failed to move {}: path does not denote a file", sourcePath.string())};
   }
 
   auto fixedDestPath = fixPath(destPath);
@@ -270,7 +327,7 @@ Result<void> moveFile(
   if (error)
   {
     return Error{
-      fmt::format("Failed to move {} to {}: {}", sourcePath, destPath, error.message())};
+      std::format("Failed to move {} to {}: {}", sourcePath.string(), destPath.string(), error.message())};
   }
 
   return kdl::void_success;
@@ -283,22 +340,27 @@ Result<void> renameDirectory(
   if (pathInfoForFixedPath(fixedSourcePath) != PathInfo::Directory)
   {
     return Error{
-      fmt::format("Failed to rename {}: path does not denote a directory", sourcePath)};
+      std::format("Failed to rename {}: path does not denote a directory", sourcePath.string())};
   }
 
   auto fixedDestPath = fixPath(destPath);
   if (pathInfoForFixedPath(fixedDestPath) != PathInfo::Unknown)
   {
-    return Error{fmt::format(
-      "Failed to rename {} to {}: target path already exists", sourcePath, destPath)};
+    return Error{std::format(
+      "Failed to rename {} to {}: target path already exists",
+      sourcePath.string(),
+      destPath.string())};
   }
 
   auto error = std::error_code{};
   std::filesystem::rename(fixedSourcePath, fixedDestPath, error);
   if (error)
   {
-    return Error{fmt::format(
-      "Failed to rename {} to {}: {}", sourcePath, destPath, error.message())};
+    return Error{std::format(
+      "Failed to rename {} to {}: {}",
+      sourcePath.string(),
+      destPath.string(),
+      error.message())};
   }
 
   return kdl::void_success;
@@ -345,8 +407,10 @@ Result<std::filesystem::path> makeUniqueFilename(
 
   if (ec)
   {
-    return Error{fmt::format(
-      "Failed to generate a unique filename at '{}': {}", directoryPath, ec.message())};
+    return Error{std::format(
+      "Failed to generate a unique filename at '{}': {}",
+      directoryPath.string(),
+      ec.message())};
   }
 
   return filename;

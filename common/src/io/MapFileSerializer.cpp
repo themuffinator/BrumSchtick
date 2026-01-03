@@ -22,6 +22,7 @@
 #include "Macros.h"
 #include "mdl/BezierPatch.h"
 #include "mdl/BrushFace.h"
+#include "mdl/BrushFaceAttributes.h"
 #include "mdl/BrushNode.h"
 #include "mdl/EntityNode.h"
 #include "mdl/EntityProperties.h"
@@ -35,17 +36,31 @@
 #include "kd/string_format.h"
 #include "kd/task_manager.h"
 
-#include <fmt/format.h>
+#include <format>
 
 #include <iterator>
 #include <memory>
 #include <sstream>
+#include <string_view>
 #include <utility>
 #include <variant>
 #include <vector>
 
 namespace tb::io
 {
+namespace
+{
+bool shouldQuoteMaterialName(const std::string_view materialName)
+{
+  return materialName.empty()
+         || materialName.find_first_of("\"\\ \t") != std::string::npos;
+}
+
+std::string quoteMaterialName(const std::string_view materialName)
+{
+  return std::format(R"("{}")", kdl::str_escape(materialName, R"(")"));
+}
+} // namespace
 
 class QuakeFileSerializer : public MapFileSerializer
 {
@@ -60,7 +75,7 @@ private:
   {
     writeFacePoints(stream, face);
     writeMaterialInfo(stream, face);
-    fmt::format_to(std::ostreambuf_iterator<char>{stream}, "\n");
+    std::format_to(std::ostreambuf_iterator<char>{stream}, "\n");
   }
 
 protected:
@@ -68,7 +83,7 @@ protected:
   {
     const auto& points = face.points();
 
-    fmt::format_to(
+    std::format_to(
       std::ostreambuf_iterator<char>{stream},
       "( {} {} {} ) ( {} {} {} ) ( {} {} {} )",
       points[0].x(),
@@ -82,24 +97,13 @@ protected:
       points[2].z());
   }
 
-  static bool shouldQuoteMaterialName(const auto& materialName)
-  {
-    return materialName.empty()
-           || materialName.find_first_of("\"\\ \t") != std::string::npos;
-  }
-
-  static std::string quoteMaterialName(const auto& materialName)
-  {
-    return fmt::format(R"("{}")", kdl::str_escape(materialName, R"(")"));
-  }
-
   void writeMaterialInfo(std::ostream& stream, const mdl::BrushFace& face) const
   {
     const auto& materialName = face.attributes().materialName().empty()
                                  ? mdl::BrushFaceAttributes::NoMaterialName
                                  : face.attributes().materialName();
 
-    fmt::format_to(
+    std::format_to(
       std::ostreambuf_iterator<char>{stream},
       " {} {} {} {} {} {}",
       shouldQuoteMaterialName(materialName) ? quoteMaterialName(materialName)
@@ -119,7 +123,7 @@ protected:
     const auto uAxis = face.uAxis();
     const auto vAxis = face.vAxis();
 
-    fmt::format_to(
+    std::format_to(
       std::ostreambuf_iterator<char>{stream},
       " {} [ {} {} {} {} ] [ {} {} {} {} ] {} {} {}",
       shouldQuoteMaterialName(materialName) ? quoteMaterialName(materialName)
@@ -160,13 +164,13 @@ private:
       writeSurfaceAttributes(stream, face);
     }
 
-    fmt::format_to(std::ostreambuf_iterator<char>{stream}, "\n");
+    std::format_to(std::ostreambuf_iterator<char>{stream}, "\n");
   }
 
 protected:
   void writeSurfaceAttributes(std::ostream& stream, const mdl::BrushFace& face) const
   {
-    fmt::format_to(
+    std::format_to(
       std::ostreambuf_iterator<char>{stream},
       " {} {} {}",
       face.resolvedSurfaceContents(),
@@ -194,7 +198,7 @@ private:
       writeSurfaceAttributes(stream, face);
     }
 
-    fmt::format_to(std::ostreambuf_iterator<char>{stream}, "\n");
+    std::format_to(std::ostreambuf_iterator<char>{stream}, "\n");
   }
 };
 
@@ -225,7 +229,7 @@ private:
       writeSurfaceColor(stream, face);
     }
 
-    fmt::format_to(std::ostreambuf_iterator<char>{stream}, "\n");
+    std::format_to(std::ostreambuf_iterator<char>{stream}, "\n");
   }
 
 protected:
@@ -251,7 +255,7 @@ private:
   {
     writeFacePoints(stream, face);
     writeMaterialInfo(stream, face);
-    fmt::format_to(
+    std::format_to(
       std::ostreambuf_iterator<char>{stream}, " 0\n"); // extra value written here
   }
 };
@@ -269,7 +273,7 @@ private:
   {
     writeFacePoints(stream, face);
     writeValveMaterialInfo(stream, face);
-    fmt::format_to(std::ostreambuf_iterator<char>{stream}, "\n");
+    std::format_to(std::ostreambuf_iterator<char>{stream}, "\n");
   }
 };
 
@@ -363,23 +367,23 @@ void MapFileSerializer::doEndFile() {}
 
 void MapFileSerializer::doBeginEntity(const mdl::Node* /* node */)
 {
-  fmt::format_to(std::ostreambuf_iterator<char>{m_stream}, "// entity {}\n", entityNo());
+  std::format_to(std::ostreambuf_iterator<char>{m_stream}, "// entity {}\n", entityNo());
   ++m_line;
   m_startLineStack.push_back(m_line);
-  fmt::format_to(std::ostreambuf_iterator<char>{m_stream}, "{{\n");
+  std::format_to(std::ostreambuf_iterator<char>{m_stream}, "{{\n");
   ++m_line;
 }
 
 void MapFileSerializer::doEndEntity(const mdl::Node* node)
 {
-  fmt::format_to(std::ostreambuf_iterator<char>{m_stream}, "}}\n");
+  std::format_to(std::ostreambuf_iterator<char>{m_stream}, "}}\n");
   ++m_line;
   setFilePosition(node);
 }
 
 void MapFileSerializer::doEntityProperty(const mdl::EntityProperty& attribute)
 {
-  fmt::format_to(
+  std::format_to(
     std::ostreambuf_iterator<char>{m_stream},
     "\"{}\" \"{}\"\n",
     escapeEntityProperties(attribute.key()),
@@ -389,10 +393,10 @@ void MapFileSerializer::doEntityProperty(const mdl::EntityProperty& attribute)
 
 void MapFileSerializer::doBrush(const mdl::BrushNode* brush)
 {
-  fmt::format_to(std::ostreambuf_iterator<char>{m_stream}, "// brush {}\n", brushNo());
+  std::format_to(std::ostreambuf_iterator<char>{m_stream}, "// brush {}\n", brushNo());
   ++m_line;
   m_startLineStack.push_back(m_line);
-  fmt::format_to(std::ostreambuf_iterator<char>{m_stream}, "{{\n");
+  std::format_to(std::ostreambuf_iterator<char>{m_stream}, "{{\n");
   ++m_line;
 
   // write pre-serialized brush faces
@@ -403,7 +407,7 @@ void MapFileSerializer::doBrush(const mdl::BrushNode* brush)
   m_stream << precomputedString.string;
   m_line += precomputedString.lineCount;
 
-  fmt::format_to(std::ostreambuf_iterator<char>{m_stream}, "}}\n");
+  std::format_to(std::ostreambuf_iterator<char>{m_stream}, "}}\n");
   ++m_line;
   setFilePosition(brush);
 }
@@ -418,7 +422,7 @@ void MapFileSerializer::doBrushFace(const mdl::BrushFace& face)
 
 void MapFileSerializer::doPatch(const mdl::PatchNode* patchNode)
 {
-  fmt::format_to(std::ostreambuf_iterator<char>{m_stream}, "// brush {}\n", brushNo());
+  std::format_to(std::ostreambuf_iterator<char>{m_stream}, "// brush {}\n", brushNo());
   ++m_line;
   m_startLineStack.push_back(m_line);
 
@@ -467,48 +471,80 @@ MapFileSerializer::PrecomputedString MapFileSerializer::writePatch(
 {
   size_t lineCount = 0u;
   auto stream = std::stringstream{};
+  const bool writeNormals = patch.hasControlNormals();
 
-  fmt::format_to(std::ostreambuf_iterator<char>{stream}, "{{\n");
+  std::format_to(std::ostreambuf_iterator<char>{stream}, "{{\n");
   ++lineCount;
-  fmt::format_to(std::ostreambuf_iterator<char>{stream}, "patchDef2\n");
-  ++lineCount;
-  fmt::format_to(std::ostreambuf_iterator<char>{stream}, "{{\n");
-  ++lineCount;
-  fmt::format_to(std::ostreambuf_iterator<char>{stream}, "{}\n", patch.materialName());
-  ++lineCount;
-  fmt::format_to(
+  std::format_to(
     std::ostreambuf_iterator<char>{stream},
-    "( {} {} 0 0 0 )\n",
-    patch.pointRowCount(),
-    patch.pointColumnCount());
+    "{}\n",
+    writeNormals ? "patchDef3" : "patchDef2");
   ++lineCount;
-  fmt::format_to(std::ostreambuf_iterator<char>{stream}, "(\n");
+  std::format_to(std::ostreambuf_iterator<char>{stream}, "{{\n");
+  ++lineCount;
+  const auto& materialName = patch.materialName().empty()
+                               ? mdl::BrushFaceAttributes::NoMaterialName
+                               : patch.materialName();
+  std::format_to(
+    std::ostreambuf_iterator<char>{stream},
+    "{}\n",
+    shouldQuoteMaterialName(materialName) ? quoteMaterialName(materialName)
+                                          : materialName);
+  ++lineCount;
+  std::format_to(
+    std::ostreambuf_iterator<char>{stream},
+    "( {} {} {} {} {} )\n",
+    patch.pointRowCount(),
+    patch.pointColumnCount(),
+    patch.surfaceContents(),
+    patch.surfaceFlags(),
+    patch.surfaceValue());
+  ++lineCount;
+  std::format_to(std::ostreambuf_iterator<char>{stream}, "(\n");
   ++lineCount;
 
   for (size_t row = 0u; row < patch.pointRowCount(); ++row)
   {
-    fmt::format_to(std::ostreambuf_iterator<char>{stream}, "( ");
+    std::format_to(std::ostreambuf_iterator<char>{stream}, "( ");
     for (size_t col = 0u; col < patch.pointColumnCount(); ++col)
     {
       const auto& p = patch.controlPoint(row, col);
-      fmt::format_to(
-        std::ostreambuf_iterator<char>{stream},
-        "( {} {} {} {} {} ) ",
-        p[0],
-        p[1],
-        p[2],
-        p[3],
-        p[4]);
+      if (writeNormals)
+      {
+        const auto& n = patch.controlNormal(row, col);
+        std::format_to(
+          std::ostreambuf_iterator<char>{stream},
+          "( {} {} {} {} {} {} {} {} ) ",
+          p[0],
+          p[1],
+          p[2],
+          n.x(),
+          n.y(),
+          n.z(),
+          p[3],
+          p[4]);
+      }
+      else
+      {
+        std::format_to(
+          std::ostreambuf_iterator<char>{stream},
+          "( {} {} {} {} {} ) ",
+          p[0],
+          p[1],
+          p[2],
+          p[3],
+          p[4]);
+      }
     }
-    fmt::format_to(std::ostreambuf_iterator<char>{stream}, ")\n");
+    std::format_to(std::ostreambuf_iterator<char>{stream}, ")\n");
     ++lineCount;
   }
 
-  fmt::format_to(std::ostreambuf_iterator<char>{stream}, ")\n");
+  std::format_to(std::ostreambuf_iterator<char>{stream}, ")\n");
   ++lineCount;
-  fmt::format_to(std::ostreambuf_iterator<char>{stream}, "}}\n");
+  std::format_to(std::ostreambuf_iterator<char>{stream}, "}}\n");
   ++lineCount;
-  fmt::format_to(std::ostreambuf_iterator<char>{stream}, "}}\n");
+  std::format_to(std::ostreambuf_iterator<char>{stream}, "}}\n");
   ++lineCount;
 
   return {stream.str(), lineCount};

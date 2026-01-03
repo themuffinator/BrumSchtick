@@ -105,8 +105,7 @@
 #include "kd/string_utils.h"
 #include "kd/task_manager.h"
 
-#include <fmt/format.h>
-#include <fmt/std.h>
+#include <format>
 
 #include <algorithm>
 #include <cstdlib>
@@ -124,17 +123,16 @@ namespace
 void updateGameFileSystem(
   GameFileSystem& fs,
   const GameInfo& gameInfo,
-  const std::vector<std::filesystem::path>& searchPaths,
-  Logger& logger)
+  const std::vector<std::filesystem::path>& searchPaths)
 {
   const auto gamePath = pref(gameInfo.gamePathPreference);
-  fs.initialize(gameInfo.gameConfig, gamePath, searchPaths, logger);
+  fs.initialize(gameInfo.gameConfig, gamePath, searchPaths);
 }
 
 auto createGameFileSystem(const GameInfo& gameInfo, Logger& logger)
 {
-  auto fs = std::make_unique<GameFileSystem>();
-  updateGameFileSystem(*fs, gameInfo, {}, logger);
+  auto fs = std::make_unique<GameFileSystem>(logger);
+  updateGameFileSystem(*fs, gameInfo, {});
   return fs;
 }
 
@@ -1091,7 +1089,7 @@ void Map::loadEntityDefinitions()
 
     io::loadEntityDefinitions(path, defaultColor, status)
       | kdl::transform([&](auto entityDefinitions) {
-          logger().info() << fmt::format(
+          logger().info() << std::format(
             "Loaded entity definition file {}", path.filename());
 
           addOrSetDefaultEntityLinkProperties(entityDefinitions);
@@ -1145,7 +1143,7 @@ void Map::loadMaterials()
                           | kdl::ranges::to<std::vector<std::filesystem::path>>();
 
     m_gameFileSystem->reloadWads(
-      gameInfo().gameConfig.materialConfig.root, searchPaths, wadPaths, logger());
+      gameInfo().gameConfig.materialConfig.root, searchPaths, wadPaths);
   }
 
   m_materialManager->reload(
@@ -1252,7 +1250,7 @@ void Map::updateGameFileSystem()
     | std::views::transform([](const auto& mod) { return std::filesystem::path{mod}; })
     | kdl::ranges::to<std::vector>();
 
-  mdl::updateGameFileSystem(*m_gameFileSystem, gameInfo(), searchPaths, logger());
+  mdl::updateGameFileSystem(*m_gameFileSystem, gameInfo(), searchPaths);
 }
 
 void Map::initializeNodeIndex()

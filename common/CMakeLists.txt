@@ -21,6 +21,7 @@ set(COMMON_SOURCE
         ${COMMON_SOURCE_DIR}/io/GameConfigParser.cpp
         ${COMMON_SOURCE_DIR}/io/GameEngineConfigParser.cpp
         ${COMMON_SOURCE_DIR}/io/GameEngineConfigWriter.cpp
+        ${COMMON_SOURCE_DIR}/io/HotspotRectParser.cpp
         ${COMMON_SOURCE_DIR}/io/ImageLoader.cpp
         ${COMMON_SOURCE_DIR}/io/ImageLoaderImpl.cpp
         ${COMMON_SOURCE_DIR}/io/ImageSpriteLoader.cpp
@@ -235,6 +236,7 @@ set(COMMON_SOURCE
         ${COMMON_SOURCE_DIR}/render/GridRenderer.cpp
         ${COMMON_SOURCE_DIR}/render/GroupLinkRenderer.cpp
         ${COMMON_SOURCE_DIR}/render/GroupRenderer.cpp
+        ${COMMON_SOURCE_DIR}/render/LightPreview.cpp
         ${COMMON_SOURCE_DIR}/render/IndexArray.cpp
         ${COMMON_SOURCE_DIR}/render/IndexArrayMap.cpp
         ${COMMON_SOURCE_DIR}/render/IndexArrayMapBuilder.cpp
@@ -285,6 +287,10 @@ set(COMMON_SOURCE
         ${COMMON_SOURCE_DIR}/ui/AppInfoPanel.cpp
         ${COMMON_SOURCE_DIR}/ui/AssembleBrushTool.cpp
         ${COMMON_SOURCE_DIR}/ui/AssembleBrushToolController3D.cpp
+        ${COMMON_SOURCE_DIR}/ui/BrushBuilderTool.cpp
+        ${COMMON_SOURCE_DIR}/ui/BrushBuilderToolController2D.cpp
+        ${COMMON_SOURCE_DIR}/ui/BrushBuilderToolController3D.cpp
+        ${COMMON_SOURCE_DIR}/ui/BrushBuilderToolPage.cpp
         ${COMMON_SOURCE_DIR}/ui/BorderLine.cpp
         ${COMMON_SOURCE_DIR}/ui/BorderPanel.cpp
         ${COMMON_SOURCE_DIR}/ui/CameraAnimation.cpp
@@ -305,6 +311,7 @@ set(COMMON_SOURCE
         ${COMMON_SOURCE_DIR}/ui/ColorTable.cpp
         ${COMMON_SOURCE_DIR}/ui/CompilationContext.cpp
         ${COMMON_SOURCE_DIR}/ui/CompilationDialog.cpp
+        ${COMMON_SOURCE_DIR}/ui/CompilationOutput.cpp
         ${COMMON_SOURCE_DIR}/ui/CompilationProfileEditor.cpp
         ${COMMON_SOURCE_DIR}/ui/CompilationProfileListBox.cpp
         ${COMMON_SOURCE_DIR}/ui/CompilationProfileManager.cpp
@@ -385,6 +392,7 @@ set(COMMON_SOURCE
         ${COMMON_SOURCE_DIR}/ui/LayerEditor.cpp
         ${COMMON_SOURCE_DIR}/ui/LayerListBox.cpp
         ${COMMON_SOURCE_DIR}/ui/LimitedKeySequenceEdit.cpp
+        ${COMMON_SOURCE_DIR}/ui/Localization.cpp
         ${COMMON_SOURCE_DIR}/ui/MapDocument.cpp
         ${COMMON_SOURCE_DIR}/ui/MapFrame.cpp
         ${COMMON_SOURCE_DIR}/ui/MapInspector.cpp
@@ -435,8 +443,10 @@ set(COMMON_SOURCE
         ${COMMON_SOURCE_DIR}/ui/SmartColorEditor.cpp
         ${COMMON_SOURCE_DIR}/ui/SmartDefaultPropertyEditor.cpp
         ${COMMON_SOURCE_DIR}/ui/SmartFlagsEditor.cpp
+        ${COMMON_SOURCE_DIR}/ui/SmartAngleEditor.cpp
         ${COMMON_SOURCE_DIR}/ui/SmartPropertyEditor.cpp
         ${COMMON_SOURCE_DIR}/ui/SmartPropertyEditorManager.cpp
+        ${COMMON_SOURCE_DIR}/ui/SmartVectorEditor.cpp
         ${COMMON_SOURCE_DIR}/ui/SmartWadEditor.cpp
         ${COMMON_SOURCE_DIR}/ui/SpinControl.cpp
         ${COMMON_SOURCE_DIR}/ui/Splitter.cpp
@@ -499,6 +509,7 @@ set(COMMON_HEADER
         ${COMMON_SOURCE_DIR}/io/GameConfigParser.h
         ${COMMON_SOURCE_DIR}/io/GameEngineConfigParser.h
         ${COMMON_SOURCE_DIR}/io/GameEngineConfigWriter.h
+        ${COMMON_SOURCE_DIR}/io/HotspotRectParser.h
         ${COMMON_SOURCE_DIR}/io/ImageLoader.h
         ${COMMON_SOURCE_DIR}/io/ImageLoaderImpl.h
         ${COMMON_SOURCE_DIR}/io/ImageSpriteLoader.h
@@ -746,6 +757,7 @@ set(COMMON_HEADER
         ${COMMON_SOURCE_DIR}/render/GridRenderer.h
         ${COMMON_SOURCE_DIR}/render/GroupLinkRenderer.h
         ${COMMON_SOURCE_DIR}/render/GroupRenderer.h
+        ${COMMON_SOURCE_DIR}/render/LightPreview.h
         ${COMMON_SOURCE_DIR}/render/IndexArray.h
         ${COMMON_SOURCE_DIR}/render/IndexArrayMap.h
         ${COMMON_SOURCE_DIR}/render/IndexArrayMapBuilder.h
@@ -801,6 +813,10 @@ set(COMMON_HEADER
         ${COMMON_SOURCE_DIR}/ui/AppInfoPanel.h
         ${COMMON_SOURCE_DIR}/ui/AssembleBrushTool.h
         ${COMMON_SOURCE_DIR}/ui/AssembleBrushToolController3D.h
+        ${COMMON_SOURCE_DIR}/ui/BrushBuilderTool.h
+        ${COMMON_SOURCE_DIR}/ui/BrushBuilderToolController2D.h
+        ${COMMON_SOURCE_DIR}/ui/BrushBuilderToolController3D.h
+        ${COMMON_SOURCE_DIR}/ui/BrushBuilderToolPage.h
         ${COMMON_SOURCE_DIR}/ui/BorderLine.h
         ${COMMON_SOURCE_DIR}/ui/BorderPanel.h
         ${COMMON_SOURCE_DIR}/ui/CameraAnimation.h
@@ -821,6 +837,7 @@ set(COMMON_HEADER
         ${COMMON_SOURCE_DIR}/ui/ColorTable.h
         ${COMMON_SOURCE_DIR}/ui/CompilationContext.h
         ${COMMON_SOURCE_DIR}/ui/CompilationDialog.h
+        ${COMMON_SOURCE_DIR}/ui/CompilationOutput.h
         ${COMMON_SOURCE_DIR}/ui/CompilationProfileEditor.h
         ${COMMON_SOURCE_DIR}/ui/CompilationProfileListBox.h
         ${COMMON_SOURCE_DIR}/ui/CompilationProfileManager.h
@@ -900,6 +917,7 @@ set(COMMON_HEADER
         ${COMMON_SOURCE_DIR}/ui/LayerEditor.h
         ${COMMON_SOURCE_DIR}/ui/LayerListBox.h
         ${COMMON_SOURCE_DIR}/ui/LimitedKeySequenceEdit.h
+        ${COMMON_SOURCE_DIR}/ui/Localization.h
         ${COMMON_SOURCE_DIR}/ui/MapDocument.h
         ${COMMON_SOURCE_DIR}/ui/MapFrame.h
         ${COMMON_SOURCE_DIR}/ui/MapInspector.h
@@ -951,8 +969,10 @@ set(COMMON_HEADER
         ${COMMON_SOURCE_DIR}/ui/SmartColorEditor.h
         ${COMMON_SOURCE_DIR}/ui/SmartDefaultPropertyEditor.h
         ${COMMON_SOURCE_DIR}/ui/SmartFlagsEditor.h
+        ${COMMON_SOURCE_DIR}/ui/SmartAngleEditor.h
         ${COMMON_SOURCE_DIR}/ui/SmartPropertyEditor.h
         ${COMMON_SOURCE_DIR}/ui/SmartPropertyEditorManager.h
+        ${COMMON_SOURCE_DIR}/ui/SmartVectorEditor.h
         ${COMMON_SOURCE_DIR}/ui/SmartWadEditor.h
         ${COMMON_SOURCE_DIR}/ui/SpinControl.h
         ${COMMON_SOURCE_DIR}/ui/Splitter.h
@@ -1001,7 +1021,7 @@ set_target_properties(common PROPERTIES AUTOMOC TRUE)
 target_include_directories(common PUBLIC ${COMMON_SOURCE_DIR})
 target_link_libraries(common 
   PUBLIC TbBaseLib TbElLib TbFsLib KdLib VmLib Qt6::Widgets Qt6::OpenGL Qt6::OpenGLWidgets Qt6::Svg
-  PRIVATE GLEW::GLEW OpenGL::GL UpdateLib cpptrace::cpptrace tinyxml2::tinyxml2 miniz::miniz freeimage::FreeImage freetype assimp::assimp fmt::fmt-header-only)
+  PRIVATE GLEW::GLEW OpenGL::GL UpdateLib cpptrace::cpptrace tinyxml2::tinyxml2 miniz::miniz freeimage::FreeImage freetype assimp::assimp)
 
 target_link_libraries(common PRIVATE CompilerConfig PrecompileStdHeaders PrecompileQtHeaders)
 
@@ -1018,6 +1038,7 @@ target_include_directories(common PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 add_custom_target(generate_version ${CMAKE_COMMAND}
   -D UTILS="${CMAKE_SOURCE_DIR}/cmake/Utils.cmake"
   -D APP_BUILD_TYPE="${APP_BUILD_TYPE}"
+  -D APP_VERSION_FILE="${APP_VERSION_FILE}"
   -D SRC="${COMMON_SOURCE_DIR}/Version.h.in"
   -D DST="${CMAKE_CURRENT_BINARY_DIR}/Version.h"
   -D GIT_EXECUTABLE="${GIT_EXECUTABLE}"

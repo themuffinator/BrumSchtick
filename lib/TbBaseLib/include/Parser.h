@@ -24,7 +24,7 @@
 
 #include "kd/string_utils.h"
 
-#include <fmt/format.h>
+#include <format>
 
 #include <string>
 #include <vector>
@@ -48,7 +48,7 @@ protected:
     {
       throw ParserException{
         token.location(),
-        fmt::format("Expected string '{}', but got '{}'", expected, token.data())};
+        std::format("Expected string '{}', but got '{}'", expected, token.data())};
     }
   }
 
@@ -63,7 +63,7 @@ protected:
     }
     throw ParserException{
       token.location(),
-      fmt::format(
+      std::format(
         "Expected string '{}', but got '{}'",
         kdl::str_join(expected, "', '", "', or '", "' or '"),
         token.data())};

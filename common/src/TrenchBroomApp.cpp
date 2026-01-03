@@ -19,6 +19,7 @@
 
 #include "TrenchBroomApp.h"
 
+#include "FileLogger.h"
 #include "PreferenceManager.h"
 #include "Preferences.h"
 #include "Result.h"
@@ -37,6 +38,7 @@
 #include "ui/CrashReporter.h"
 #include "ui/FrameManager.h"
 #include "ui/GameDialog.h"
+#include "ui/Localization.h"
 #include "ui/MapDocument.h"
 #include "ui/MapFrame.h"
 #include "ui/MapViewBase.h"
@@ -49,6 +51,7 @@
 #include "update/Updater.h"
 
 #include "kd/contracts.h"
+#include "kd/string_utils.h"
 #include "kd/vector_utils.h"
 #ifdef __APPLE__
 #include "ui/ActionBuilder.h"
@@ -62,16 +65,17 @@
 #include <QFileDialog>
 #include <QMenuBar>
 #include <QMessageBox>
+#include <QLocale>
 #include <QNetworkAccessManager>
 #include <QPalette>
 #include <QProxyStyle>
 #include <QStandardPaths>
 #include <QSysInfo>
 #include <QTimer>
+#include <QTranslator>
 #include <QUrl>
 
-#include <fmt/format.h>
-#include <fmt/std.h>
+#include <format>
 
 #include <chrono>
 #include <csignal>
@@ -145,11 +149,13 @@ TrenchBroomApp::TrenchBroomApp(int& argc, char** argv)
 
   setupCrashReporter();
 
-  setApplicationName("TrenchBroom");
+  setApplicationName("BrumSchtick");
   // Needs to be "" otherwise Qt adds this to the paths returned by QStandardPaths
   // which would cause preferences to move from where they were with wx
   setOrganizationName("");
-  setOrganizationDomain("io.github.trenchbroom");
+  setOrganizationDomain("io.github.themuffinator");
+
+  applyLanguagePreference();
 
   m_gameManager = createGameManager();
 
@@ -214,28 +220,29 @@ std::unique_ptr<mdl::GameManager> TrenchBroomApp::createGameManager()
 {
   return mdl::initializeGameManager(
            io::SystemPaths::findResourceDirectories("games"),
-           io::SystemPaths::userGamesDirectory())
+           io::SystemPaths::userGamesDirectory(),
+           FileLogger::instance())
          | kdl::transform([](auto gameManager, const auto& warnings) {
              if (!warnings.empty())
              {
-               const auto msg = fmt::format(
+               const auto msg = std::format(
                  R"(Some game configurations could not be loaded. The following errors occurred:
 
 {})",
                  kdl::str_join(warnings, "\n\n"));
 
                QMessageBox::critical(
-                 nullptr, "TrenchBroom", QString::fromStdString(msg), QMessageBox::Ok);
+                 nullptr, "BrümSchtick", QString::fromStdString(msg), QMessageBox::Ok);
              }
 
              return std::make_unique<mdl::GameManager>(std::move(gameManager));
            })
          | kdl::if_error([](auto e) {
              const auto msg =
-               fmt::format(R"(Game configurations could not be loaded: {})", e.msg);
+               std::format(R"(Game configurations could not be loaded: {})", e.msg);
 
              QMessageBox::critical(
-               nullptr, "TrenchBroom", QString::fromStdString(msg), QMessageBox::Ok);
+               nullptr, "BrümSchtick", QString::fromStdString(msg), QMessageBox::Ok);
              QCoreApplication::exit(1);
            })
          | kdl::value();
@@ -250,9 +257,9 @@ void TrenchBroomApp::askForAutoUpdates()
     const auto enableAutoCheck =
       QMessageBox::question(
         nullptr,
-        "TrenchBroom",
+        "BrümSchtick",
         tr(
-          R"(TrenchBroom can check for updates automatically. Would you like to enable this now?)"),
+          R"(BrümSchtick can check for updates automatically. Would you like to enable this now?)"),
         QMessageBox::Yes | QMessageBox::No)
       == QMessageBox::Yes;
 
@@ -364,7 +371,7 @@ bool TrenchBroomApp::loadStyleSheets()
 
 void TrenchBroomApp::loadStyle()
 {
-  // We can't use auto mnemonics in TrenchBroom. e.g. by default with Qt, Alt+D opens
+  // We can't use auto mnemonics in BrümSchtick. e.g. by default with Qt, Alt+D opens
   // the "Debug" menu, Alt+S activates the "Show default properties" checkbox in the
   // entity inspector. Flying with Alt held down and pressing WASD is a fundamental
   // behaviour in TB, so we can't have shortcuts randomly activating.
@@ -412,6 +419,48 @@ void TrenchBroomApp::loadStyle()
   }
 }
 
+void TrenchBroomApp::applyLanguagePreference()
+{
+  const auto languageId = ui::resolveLanguageId(pref(Preferences::Language));
+  const auto locale = ui::localeForLanguageId(languageId);
+  QLocale::setDefault(locale);
+  installTranslations(languageId);
+}
+
+void TrenchBroomApp::installTranslations(const QString& languageId)
+{
+  if (m_appTranslator)
+  {
+    removeTranslator(m_appTranslator.get());
+    m_appTranslator.reset();
+  }
+
+  if (m_qtTranslator)
+  {
+    removeTranslator(m_qtTranslator.get());
+    m_qtTranslator.reset();
+  }
+
+  if (languageId == ui::defaultLanguageId())
+  {
+    return;
+  }
+
+  auto qtTranslator = std::make_unique<QTranslator>();
+  if (ui::loadQtTranslation(*qtTranslator, languageId))
+  {
+    installTranslator(qtTranslator.get());
+    m_qtTranslator = std::move(qtTranslator);
+  }
+
+  auto appTranslator = std::make_unique<QTranslator>();
+  if (ui::loadAppTranslation(*appTranslator, languageId))
+  {
+    installTranslator(appTranslator.get());
+    m_appTranslator = std::move(appTranslator);
+  }
+}
+
 std::vector<std::filesystem::path> TrenchBroomApp::recentDocuments() const
 {
   return m_recentDocuments->recentDocuments();
@@ -442,7 +491,7 @@ bool TrenchBroomApp::openDocument(const std::filesystem::path& path)
   const auto checkFileExists = [&]() {
     return fs::Disk::pathInfo(absPath) == fs::PathInfo::File
              ? Result<void>{}
-             : Result<void>{Error{fmt::format("{} not found", path)}};
+             : Result<void>{Error{std::format("{} not found", path.string())}};
   };
 
   return checkFileExists() | kdl::or_else([&](const auto& e) {
@@ -473,7 +522,7 @@ bool TrenchBroomApp::openDocument(const std::filesystem::path& path)
            })
          | kdl::transform_error([&](const auto& e) {
              QMessageBox::critical(
-               nullptr, "TrenchBroom", e.msg.c_str(), QMessageBox::Ok);
+               nullptr, "BrümSchtick", e.msg.c_str(), QMessageBox::Ok);
              return false;
            })
          | kdl::value();
@@ -510,7 +559,7 @@ bool TrenchBroomApp::newDocument()
            })
          | kdl::transform_error([&](const auto& e) {
              QMessageBox::critical(
-               nullptr, "TrenchBroom", e.msg.c_str(), QMessageBox::Ok);
+               nullptr, "BrümSchtick", e.msg.c_str(), QMessageBox::Ok);
              return false;
            })
          | kdl::value();

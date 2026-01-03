@@ -19,8 +19,10 @@
 
 #include "FaceAttribsEditor.h"
 
+#include <QGridLayout>
 #include <QLabel>
 #include <QLineEdit>
+#include <QSpinBox>
 #include <QToolButton>
 #include <QVBoxLayout>
 #include <QtGlobal>
@@ -40,6 +42,8 @@
 #include "ui/BorderLine.h"
 #include "ui/FlagsPopupEditor.h"
 #include "ui/MapDocument.h"
+#include "ui/MapFrame.h"
+#include "ui/MapViewBase.h"
 #include "ui/QtUtils.h"
 #include "ui/SignalDelayer.h"
 #include "ui/SpinControl.h"
@@ -221,6 +225,34 @@ void FaceAttribsEditor::colorValueChanged(const QString& /* text */)
   }
 }
 
+void FaceAttribsEditor::alignTexturesPressed(mdl::TextureAlignMode mode)
+{
+  auto& map = m_document.map();
+  if (!map.selection().hasBrushFaces())
+  {
+    return;
+  }
+
+  auto options = mdl::TextureAlignOptions{};
+  options.mode = mode;
+  options.scaleU = m_fitScaleUButton->isChecked();
+  options.scaleV = m_fitScaleVButton->isChecked();
+  options.repeats = vm::vec2i{m_fitRepeatUEditor->value(), m_fitRepeatVEditor->value()};
+
+  auto cameraUp = vm::vec3f{0.0f, 0.0f, 1.0f};
+  auto cameraRight = vm::vec3f{1.0f, 0.0f, 0.0f};
+  if (auto* mapFrame = findMapFrame(this))
+  {
+    if (auto* mapView = mapFrame->currentMapViewBase())
+    {
+      cameraUp = mapView->camera().up();
+      cameraRight = mapView->camera().right();
+    }
+  }
+
+  alignTexturesToFaceEdge(map, cameraUp, cameraRight, options);
+}
+
 void FaceAttribsEditor::surfaceFlagsUnset()
 {
   auto& map = m_document.map();
@@ -297,6 +329,16 @@ static QWidget* createUnsetButtonLayout(QWidget* expandWidget, QWidget* button)
   rowLayout->addWidget(button);
   wrapper->setLayout(rowLayout);
   return wrapper;
+}
+
+static QToolButton* createTextToolButton(
+  const QString& text, const QString& tooltip, QWidget* parent)
+{
+  auto* button = new QToolButton{parent};
+  button->setText(text);
+  button->setToolTip(tooltip);
+  button->setObjectName("toolButton_borderless");
+  return button;
 }
 
 void FaceAttribsEditor::createGui(GLContextManager& contextManager)
@@ -380,6 +422,29 @@ void FaceAttribsEditor::createGui(GLContextManager& contextManager)
   m_colorUnsetButton = createBitmapButton("ResetUV.svg", tr("Unset color"));
   m_colorEditorLayout = createUnsetButtonLayout(m_colorEditor, m_colorUnsetButton);
 
+  m_alignTextureButton =
+    createTextToolButton(tr("Align"), tr("Align texture to face edge"), this);
+  m_fitTextureButton =
+    createTextToolButton(tr("Fit"), tr("Fit texture to face edge"), this);
+  m_rotateTextureButton =
+    createTextToolButton(tr("Rotate"), tr("Rotate texture to face edge"), this);
+
+  m_fitScaleUButton =
+    createTextToolButton(tr("U"), tr("Scale U axis when fitting"), this);
+  m_fitScaleUButton->setCheckable(true);
+  m_fitScaleUButton->setChecked(true);
+  m_fitScaleVButton =
+    createTextToolButton(tr("V"), tr("Scale V axis when fitting"), this);
+  m_fitScaleVButton->setCheckable(true);
+  m_fitScaleVButton->setChecked(true);
+
+  m_fitRepeatUEditor = new QSpinBox{};
+  m_fitRepeatUEditor->setRange(1, 64);
+  m_fitRepeatUEditor->setValue(1);
+  m_fitRepeatVEditor = new QSpinBox{};
+  m_fitRepeatVEditor->setRange(1, 64);
+  m_fitRepeatVEditor->setValue(1);
+
   const Qt::Alignment LabelFlags = Qt::AlignVCenter | Qt::AlignRight;
   const Qt::Alignment ValueFlags = Qt::AlignVCenter;
 
@@ -441,12 +506,42 @@ void FaceAttribsEditor::createGui(GLContextManager& contextManager)
   faceAttribsLayout->setColumnStretch(1, 1);
   faceAttribsLayout->setColumnStretch(3, 1);
 
+  auto* scaleLabel = new QLabel{"Scale"};
+  makeEmphasized(scaleLabel);
+  auto* repeatLabel = new QLabel{"Repeat"};
+  makeEmphasized(repeatLabel);
+
+  auto* textureAlignLayout = new QGridLayout{};
+  textureAlignLayout->setContentsMargins(
+    LayoutConstants::NarrowHMargin,
+    LayoutConstants::MediumVMargin,
+    LayoutConstants::NarrowHMargin,
+    LayoutConstants::MediumVMargin);
+  textureAlignLayout->setHorizontalSpacing(LayoutConstants::MediumHMargin);
+  textureAlignLayout->setVerticalSpacing(LayoutConstants::NarrowVMargin);
+
+  textureAlignLayout->addWidget(m_alignTextureButton, 0, 0);
+  textureAlignLayout->addWidget(m_fitTextureButton, 0, 1);
+  textureAlignLayout->addWidget(m_rotateTextureButton, 0, 2);
+  textureAlignLayout->addWidget(scaleLabel, 0, 3, LabelFlags);
+  textureAlignLayout->addWidget(m_fitScaleUButton, 0, 4);
+  textureAlignLayout->addWidget(m_fitScaleVButton, 0, 5);
+
+  textureAlignLayout->addWidget(repeatLabel, 1, 0, LabelFlags);
+  textureAlignLayout->addWidget(new QLabel{"U"}, 1, 1, LabelFlags);
+  textureAlignLayout->addWidget(m_fitRepeatUEditor, 1, 2);
+  textureAlignLayout->addWidget(new QLabel{"V"}, 1, 3, LabelFlags);
+  textureAlignLayout->addWidget(m_fitRepeatVEditor, 1, 4);
+  textureAlignLayout->setColumnStretch(6, 1);
+
   auto* outerLayout = new QVBoxLayout{};
   outerLayout->setContentsMargins(0, 0, 0, 0);
   outerLayout->setSpacing(LayoutConstants::NarrowVMargin);
   outerLayout->addWidget(m_uvEditor, 1);
   outerLayout->addWidget(new BorderLine{});
   outerLayout->addLayout(faceAttribsLayout);
+  outerLayout->addWidget(new BorderLine{});
+  outerLayout->addLayout(textureAlignLayout);
 
   setLayout(outerLayout);
 }
@@ -520,6 +615,16 @@ void FaceAttribsEditor::bindEvents()
     &SignalDelayer::processSignal,
     this,
     &FaceAttribsEditor::updateControls);
+
+  connect(m_alignTextureButton, &QAbstractButton::clicked, this, [&]() {
+    alignTexturesPressed(mdl::TextureAlignMode::Align);
+  });
+  connect(m_fitTextureButton, &QAbstractButton::clicked, this, [&]() {
+    alignTexturesPressed(mdl::TextureAlignMode::Fit);
+  });
+  connect(m_rotateTextureButton, &QAbstractButton::clicked, this, [&]() {
+    alignTexturesPressed(mdl::TextureAlignMode::Rotate);
+  });
 }
 
 void FaceAttribsEditor::connectObservers()
@@ -668,6 +773,13 @@ void FaceAttribsEditor::updateControls()
     m_surfaceFlagsEditor->setEnabled(true);
     m_contentFlagsEditor->setEnabled(true);
     m_colorEditor->setEnabled(true);
+    m_alignTextureButton->setEnabled(true);
+    m_fitTextureButton->setEnabled(true);
+    m_rotateTextureButton->setEnabled(true);
+    m_fitScaleUButton->setEnabled(true);
+    m_fitScaleVButton->setEnabled(true);
+    m_fitRepeatUEditor->setEnabled(true);
+    m_fitRepeatVEditor->setEnabled(true);
 
     if (materialMulti)
     {
@@ -749,6 +861,13 @@ void FaceAttribsEditor::updateControls()
     m_colorEditor->setText("");
     m_colorEditor->setPlaceholderText("n/a");
     m_colorEditor->setEnabled(false);
+    m_alignTextureButton->setEnabled(false);
+    m_fitTextureButton->setEnabled(false);
+    m_rotateTextureButton->setEnabled(false);
+    m_fitScaleUButton->setEnabled(false);
+    m_fitScaleVButton->setEnabled(false);
+    m_fitRepeatUEditor->setEnabled(false);
+    m_fitRepeatVEditor->setEnabled(false);
 
     m_surfaceValueUnsetButton->setEnabled(false);
     m_surfaceFlagsUnsetButton->setEnabled(false);

@@ -189,7 +189,7 @@ void AppPreferenceManager::showErrorAndDisableFileReadWrite(
   const auto message =
     tr(
       "%1\n\n"
-      "%2\n\nPlease correct the problem (%3) and restart TrenchBroom.\n"
+      "%2\n\nPlease correct the problem (%3) and restart BrümSchtick.\n"
       "Further settings changes will not be saved this session.")
       .arg(reason)
       .arg(io::pathAsQString(m_preferencesFilePath))
@@ -197,7 +197,7 @@ void AppPreferenceManager::showErrorAndDisableFileReadWrite(
 
   QTimer::singleShot(0, [=] {
     auto dialog = QMessageBox(
-      QMessageBox::Icon::Critical, tr("TrenchBroom"), message, QMessageBox::Ok);
+      QMessageBox::Icon::Critical, tr("BrümSchtick"), message, QMessageBox::Ok);
     dialog.exec();
   });
 }

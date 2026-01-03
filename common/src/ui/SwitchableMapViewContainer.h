@@ -74,6 +74,10 @@ public:
   bool canToggleAssembleBrushTool() const;
   void toggleAssembleBrushTool();
 
+  bool brushBuilderToolActive() const;
+  bool canToggleBrushBuilderTool() const;
+  void toggleBrushBuilderTool();
+
   bool clipToolActive() const;
   bool canToggleClipTool() const;
   void toggleClipTool();

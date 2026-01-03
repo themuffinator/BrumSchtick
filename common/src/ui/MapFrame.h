@@ -29,6 +29,7 @@
 #include <chrono>
 #include <filesystem>
 #include <memory>
+#include <optional>
 #include <string>
 #include <unordered_map>
 
@@ -36,11 +37,13 @@ class QAction;
 class QComboBox;
 class QDialog;
 class QDropEvent;
+class QMenu;
 class QMenuBar;
 class QLabel;
 class QSplitter;
 class QTimer;
 class QToolBar;
+class QToolButton;
 
 namespace tb
 {
@@ -103,6 +106,12 @@ private:
   Inspector* m_inspector = nullptr;
 
   QComboBox* m_gridChoice = nullptr;
+  QToolButton* m_quickCompileButton = nullptr;
+  QToolButton* m_quickLaunchButton = nullptr;
+  QMenu* m_quickCompileMenu = nullptr;
+  QMenu* m_quickLaunchMenu = nullptr;
+  std::optional<std::string> m_quickCompileProfileName;
+  std::optional<std::string> m_quickLaunchProfileName;
   QLabel* m_statusBarLabel = nullptr;
 
   QPointer<QDialog> m_compilationDialog;
@@ -154,6 +163,11 @@ private: // menu bar
 private: // tool bar
   void createToolBar();
   void updateToolBarWidgets();
+  void updateQuickRunButtons();
+  void rebuildQuickCompileMenu();
+  void rebuildQuickLaunchMenu();
+  void quickCompileSelectedProfile();
+  void quickLaunchSelectedProfile();
 
 private: // status bar
   void createStatusBar();
@@ -280,6 +294,10 @@ public:
   bool canToggleAssembleBrushTool() const;
   bool assembleBrushToolActive() const;
 
+  void toggleBrushBuilderTool();
+  bool canToggleBrushBuilderTool() const;
+  bool brushBuilderToolActive() const;
+
   void toggleClipTool();
   bool canToggleClipTool() const;
   bool clipToolActive() const;
@@ -322,9 +340,15 @@ public:
   void csgIntersect();
   bool canDoCsgIntersect() const;
 
+  void convertPatchesToConvexBrushes();
+  bool canConvertPatchesToConvexBrushes() const;
+
   void snapVerticesToInteger();
   void snapVerticesToGrid();
   bool canSnapVertices() const;
+
+  void chamferEdges();
+  bool canChamferEdges() const;
 
   void replaceMaterial();
 

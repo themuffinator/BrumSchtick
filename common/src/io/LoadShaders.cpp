@@ -34,7 +34,7 @@
 #include "kd/task_manager.h"
 #include "kd/vector_utils.h"
 
-#include <fmt/format.h>
+#include <format>
 
 #include <vector>
 

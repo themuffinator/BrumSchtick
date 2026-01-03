@@ -23,6 +23,7 @@
 #include "mdl/BrushGeometry.h"
 #include "mdl/BrushNode.h"
 #include "mdl/Polyhedron.h"
+#include "render/LightPreview.h"
 
 #include "kd/contracts.h"
 
@@ -48,17 +49,22 @@ BrushRendererBrushCache::BrushRendererBrushCache()
 void BrushRendererBrushCache::invalidateVertexCache()
 {
   m_rendererCacheValid = false;
+  m_lightPreviewRevision = 0;
   m_cachedVertices.clear();
   m_cachedEdges.clear();
   m_cachedFacesSortedByMaterial.clear();
 }
 
-void BrushRendererBrushCache::validateVertexCache(const mdl::BrushNode& brushNode)
+void BrushRendererBrushCache::validateVertexCache(
+  const mdl::BrushNode& brushNode, const LightPreview* lightPreview)
 {
-  if (m_rendererCacheValid)
+  const auto revision = lightPreview ? lightPreview->revision() : 0u;
+  if (m_rendererCacheValid && m_lightPreviewRevision == revision)
   {
     return;
   }
+
+  m_lightPreviewRevision = revision;
 
   // build vertex cache and face cache
   const auto& brush = brushNode.brush();
@@ -88,8 +94,17 @@ void BrushRendererBrushCache::validateVertexCache(const mdl::BrushNode& brushNod
       vertex->setPayload(static_cast<GLuint>(currentIndex));
 
       const auto& position = vertex->position();
+      const auto lightColor =
+        lightPreview
+          ? lightPreview->lightingAt(
+              vm::vec3f{position}, vm::vec3f{face.boundary().normal}, &face, nullptr)
+          : vm::vec3f{1.0f, 1.0f, 1.0f};
+      const auto vertexColor = vm::vec4f{lightColor, 1.0f};
       m_cachedVertices.emplace_back(
-        vm::vec3f{position}, vm::vec3f{face.boundary().normal}, face.uvCoords(position));
+        vm::vec3f{position},
+        vm::vec3f{face.boundary().normal},
+        face.uvCoords(position),
+        vertexColor);
 
       currentHalfEdge = currentHalfEdge->previous();
     }

@@ -25,7 +25,7 @@
 #include "io/LegacyModelDefinitionParser.h"
 #include "mdl/ModelDefinition.h"
 
-#include <fmt/format.h>
+#include <format>
 
 namespace tb::io
 {
@@ -82,7 +82,7 @@ auto parseLegacyModelExpression(
          | kdl::transform([&](auto expression) {
              status.warn(
                location,
-               fmt::format(
+               std::format(
                  "Legacy model expressions are deprecated, replace with '{}'",
                  expression.asString()));
 

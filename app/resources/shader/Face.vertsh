@@ -25,6 +25,7 @@ uniform vec3 CameraPosition;
 varying vec4 modelCoordinates;
 varying vec3 modelNormal;
 varying vec4 faceColor;
+varying vec4 lightPreviewColor;
 varying vec3 viewVector;
 
 void main(void) {
@@ -33,5 +34,6 @@ void main(void) {
 	modelCoordinates = gl_Vertex;
 	modelNormal = gl_Normal;
 	faceColor = Color;
+	lightPreviewColor = gl_Color;
 	viewVector = CameraPosition - gl_Vertex.xyz;
 }

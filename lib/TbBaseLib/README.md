@@ -1,3 +1,4 @@
-# TrenchBroom Base Library
+# BrümSchtick Base Library
 
-Contains generic utilities used by all components in TrenchBroom.
+Contains generic utilities used by all components in BrümSchtick.
+

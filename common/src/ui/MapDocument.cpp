@@ -33,6 +33,7 @@
 #include "mdl/Grid.h"
 #include "mdl/LinkedGroupUtils.h"
 #include "mdl/Map.h"
+#include "mdl/Map_Entities.h"
 #include "mdl/MaterialManager.h"
 #include "mdl/PortalFile.h"
 #include "mdl/PushSelection.h"
@@ -45,12 +46,12 @@
 
 #include "kd/contracts.h"
 #include "kd/result.h"
+#include "kd/string_utils.h"
 #include "kd/task_manager.h"
 
 #include "vm/polygon.h"
 
-#include <fmt/format.h>
-#include <fmt/std.h>
+#include <format>
 
 #include <algorithm>
 #include <cstdlib>
@@ -326,6 +327,43 @@ void MapDocument::unloadPortalFile()
 
   logger().info() << "Unloaded portal file";
   portalFileWasUnloadedNotifier();
+}
+
+bool MapDocument::hasEntityPropertyPickRequest() const
+{
+  return m_entityPropertyPickRequest.has_value();
+}
+
+void MapDocument::startEntityPropertyPick(
+  std::string propertyKey, std::vector<mdl::EntityNodeBase*> nodes)
+{
+  if (propertyKey.empty() || nodes.empty())
+  {
+    m_entityPropertyPickRequest = std::nullopt;
+    return;
+  }
+
+  m_entityPropertyPickRequest =
+    EntityPropertyPickRequest{std::move(propertyKey), std::move(nodes)};
+}
+
+void MapDocument::cancelEntityPropertyPick()
+{
+  m_entityPropertyPickRequest = std::nullopt;
+}
+
+bool MapDocument::applyEntityPropertyPick(const vm::vec3d& position)
+{
+  if (!m_entityPropertyPickRequest)
+  {
+    return false;
+  }
+
+  auto request = std::move(*m_entityPropertyPickRequest);
+  m_entityPropertyPickRequest = std::nullopt;
+
+  const auto value = kdl::str_to_string(vm::correct(position));
+  return mdl::setEntityProperty(map(), request.nodes, request.propertyKey, value);
 }
 
 void MapDocument::connectObservers()

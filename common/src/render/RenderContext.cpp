@@ -20,6 +20,7 @@
 #include "RenderContext.h"
 
 #include "render/Camera.h"
+#include "render/LightPreview.h"
 
 namespace tb::render
 {
@@ -231,6 +232,21 @@ const vm::bbox3f& RenderContext::softMapBounds() const
 void RenderContext::setSoftMapBounds(const vm::bbox3f& softMapBounds)
 {
   m_softMapBounds = softMapBounds;
+}
+
+const LightPreview* RenderContext::lightPreview() const
+{
+  return m_lightPreview.get();
+}
+
+uint64_t RenderContext::lightPreviewRevision() const
+{
+  return m_lightPreview ? m_lightPreview->revision() : 0u;
+}
+
+void RenderContext::setLightPreview(std::shared_ptr<const LightPreview> lightPreview)
+{
+  m_lightPreview = std::move(lightPreview);
 }
 
 bool RenderContext::hideSelection() const

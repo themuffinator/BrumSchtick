@@ -19,6 +19,8 @@
 
 #include "EntityBrowserView.h"
 
+#include <QMenu>
+
 #include "PreferenceManager.h"
 #include "Preferences.h"
 #include "el/VariableStore.h"
@@ -431,6 +433,22 @@ vm::mat4x4f EntityBrowserView::itemTransformation(
 QString EntityBrowserView::tooltip(const Cell& cell)
 {
   return QString::fromStdString(cellData(cell).entityDefinition.name);
+}
+
+void EntityBrowserView::doContextMenu(
+  Layout& layout, float x, float y, QContextMenuEvent* event)
+{
+  if (const auto* cell = layout.cellAt(x, y))
+  {
+    auto menu = QMenu{this};
+    menu.addAction(
+      tr("Find Usages in Map"),
+      this,
+      [&, name = cellData(*cell).entityDefinition.name]() {
+        m_document.map().editorContext().setSearchText("classname=" + name);
+      });
+    menu.exec(event->globalPos());
+  }
 }
 
 const EntityCellData& EntityBrowserView::cellData(const Cell& cell) const

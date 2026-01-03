@@ -25,11 +25,15 @@
 
 #include "vm/bbox.h"
 
+#include <cstdint>
+#include <memory>
+
 namespace tb::render
 {
 class Camera;
 class FontManager;
 class ShaderManager;
+class LightPreview;
 
 enum class RenderMode
 {
@@ -83,6 +87,8 @@ private:
 
   ShowSelectionGuide m_showSelectionGuide = ShowSelectionGuide::Hide;
   vm::bbox3f m_softMapBounds;
+
+  std::shared_ptr<const LightPreview> m_lightPreview;
 
 public:
   RenderContext(
@@ -143,6 +149,10 @@ public:
 
   const vm::bbox3f& softMapBounds() const;
   void setSoftMapBounds(const vm::bbox3f& softMapBounds);
+
+  const LightPreview* lightPreview() const;
+  uint64_t lightPreviewRevision() const;
+  void setLightPreview(std::shared_ptr<const LightPreview> lightPreview);
 
   double gridSize() const;
   void setGridSize(double gridSize);

@@ -29,7 +29,7 @@
 
 #include "kd/cmd_utils.h"
 
-#include <fmt/format.h>
+#include <format>
 
 namespace tb::ui
 {
@@ -101,7 +101,7 @@ Result<void> launchGameEngineProfile(
          })
          | kdl::or_else([](const auto& e) {
              return Result<void>{
-               Error{fmt::format("Failed to launch game engine: {}", e.msg)}};
+               Error{std::format("Failed to launch game engine: {}", e.msg)}};
            });
 }
 

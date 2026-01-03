@@ -60,7 +60,7 @@ struct PatchGrid
 
 // public for testing
 std::vector<vm::vec3d> computeGridNormals(
-  std::vector<BezierPatch::Point> patchGrid,
+  const std::vector<BezierPatch::Point>& patchGrid,
   size_t pointRowCount,
   size_t pointColumnCount);
 

@@ -26,8 +26,9 @@
 #include "el/Value.h"
 #include "el/VariableStore.h"
 
-#include <fmt/ostream.h>
+#include "kd/string_utils.h"
 
+#include <format>
 #include <string>
 #include <vector>
 
@@ -61,41 +62,41 @@ std::vector<std::string> preorderVisit(const std::string& str)
 
   ELParser::parseStrict(str).value().accept(kdl::overload(
     [&](const LiteralExpression& literalExpression) {
-      result.push_back(fmt::format("{}", fmt::streamed(literalExpression)));
+      result.push_back(std::format("{}", kdl::str_to_string(literalExpression)));
     },
     [&](const VariableExpression& variableExpression) {
-      result.push_back(fmt::format("{}", fmt::streamed(variableExpression)));
+      result.push_back(std::format("{}", kdl::str_to_string(variableExpression)));
     },
     [&](const auto& thisLambda, const ArrayExpression& arrayExpression) {
-      result.push_back(fmt::format("{}", fmt::streamed(arrayExpression)));
+      result.push_back(std::format("{}", kdl::str_to_string(arrayExpression)));
       for (const auto& element : arrayExpression.elements)
       {
         element.accept(thisLambda);
       }
     },
     [&](const auto& thisLambda, const MapExpression& mapExpression) {
-      result.push_back(fmt::format("{}", fmt::streamed(mapExpression)));
+      result.push_back(std::format("{}", kdl::str_to_string(mapExpression)));
       for (const auto& [key, element] : mapExpression.elements)
       {
         element.accept(thisLambda);
       }
     },
     [&](const auto& thisLambda, const UnaryExpression& unaryExpression) {
-      result.push_back(fmt::format("{}", fmt::streamed(unaryExpression)));
+      result.push_back(std::format("{}", kdl::str_to_string(unaryExpression)));
       unaryExpression.operand.accept(thisLambda);
     },
     [&](const auto& thisLambda, const BinaryExpression& binaryExpression) {
-      result.push_back(fmt::format("{}", fmt::streamed(binaryExpression)));
+      result.push_back(std::format("{}", kdl::str_to_string(binaryExpression)));
       binaryExpression.leftOperand.accept(thisLambda);
       binaryExpression.rightOperand.accept(thisLambda);
     },
     [&](const auto& thisLambda, const SubscriptExpression& subscriptExpression) {
-      result.push_back(fmt::format("{}", fmt::streamed(subscriptExpression)));
+      result.push_back(std::format("{}", kdl::str_to_string(subscriptExpression)));
       subscriptExpression.leftOperand.accept(thisLambda);
       subscriptExpression.rightOperand.accept(thisLambda);
     },
     [&](const auto& thisLambda, const SwitchExpression& switchExpression) {
-      result.push_back(fmt::format("{}", fmt::streamed(switchExpression)));
+      result.push_back(std::format("{}", kdl::str_to_string(switchExpression)));
       for (const auto& caseExpression : switchExpression.cases)
       {
         caseExpression.accept(thisLambda);

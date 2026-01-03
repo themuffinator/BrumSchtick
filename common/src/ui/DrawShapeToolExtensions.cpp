@@ -22,11 +22,15 @@
 #include <QButtonGroup>
 #include <QCheckBox>
 #include <QComboBox>
+#include <QDoubleSpinBox>
 #include <QLabel>
 #include <QSpinBox>
 #include <QStackedWidget>
 #include <QToolButton>
 
+#include <cmath>
+
+#include "Error.h"
 #include "mdl/BrushBuilder.h"
 #include "mdl/GameConfig.h"
 #include "mdl/GameInfo.h"
@@ -35,8 +39,49 @@
 #include "ui/MapDocument.h"
 #include "ui/QtUtils.h"
 
+#include "kd/result_fold.h"
+
+#include "vm/scalar.h"
+
 namespace tb::ui
 {
+
+namespace
+{
+struct StairRun
+{
+  vm::axis::type axis;
+  double direction;
+};
+
+StairRun stairRunForDirection(const StairDirection direction)
+{
+  switch (direction)
+  {
+  case StairDirection::North:
+    return {vm::axis::y, 1.0};
+  case StairDirection::East:
+    return {vm::axis::x, 1.0};
+  case StairDirection::South:
+    return {vm::axis::y, -1.0};
+  case StairDirection::West:
+    return {vm::axis::x, -1.0};
+  }
+
+  return {vm::axis::y, 1.0};
+}
+
+size_t stairStepCount(const double height, const double stepHeight)
+{
+  if (height <= 0.0 || stepHeight <= 0.0)
+  {
+    return 0u;
+  }
+
+  const auto steps = static_cast<size_t>(std::ceil(height / stepHeight));
+  return steps > 0u ? steps : 1u;
+}
+} // namespace
 
 DrawShapeToolCuboidExtension::DrawShapeToolCuboidExtension(MapDocument& document)
   : DrawShapeToolExtension{document}
@@ -73,6 +118,309 @@ Result<std::vector<mdl::Brush>> DrawShapeToolCuboidExtension::createBrushes(
 
   return builder.createCuboid(bounds, map.currentMaterialName())
     .transform([](auto brush) { return std::vector{std::move(brush)}; });
+}
+
+DrawShapeToolStairsExtensionPage::DrawShapeToolStairsExtensionPage(
+  MapDocument& document, ShapeParameters& parameters, QWidget* parent)
+  : DrawShapeToolExtensionPage{parent}
+  , m_parameters{parameters}
+{
+  auto* stepHeightLabel = new QLabel{tr("Step Height: ")};
+  auto* stepHeightBox = new QDoubleSpinBox{};
+  stepHeightBox->setRange(1.0, 4096.0);
+  stepHeightBox->setSingleStep(1.0);
+
+  auto* directionLabel = new QLabel{tr("Orientation: ")};
+  auto* directionBox = new QComboBox{};
+  directionBox->addItems({tr("North"), tr("East"), tr("South"), tr("West")});
+
+  connect(
+    stepHeightBox,
+    QOverload<double>::of(&QDoubleSpinBox::valueChanged),
+    this,
+    [&](const auto stepHeight) { m_parameters.setStepHeight(stepHeight); });
+  connect(
+    directionBox,
+    QOverload<int>::of(&QComboBox::currentIndexChanged),
+    this,
+    [&](const auto index) {
+      m_parameters.setStairDirection(static_cast<StairDirection>(index));
+    });
+
+  addWidget(stepHeightLabel);
+  addWidget(stepHeightBox);
+  addWidget(directionLabel);
+  addWidget(directionBox);
+  addApplyButton(document);
+
+  const auto updateWidgets = [=, this]() {
+    stepHeightBox->setValue(m_parameters.stepHeight());
+    directionBox->setCurrentIndex(static_cast<int>(m_parameters.stairDirection()));
+  };
+  updateWidgets();
+
+  m_notifierConnection +=
+    m_parameters.parametersDidChangeNotifier.connect(std::move(updateWidgets));
+}
+
+DrawShapeToolStairsExtension::DrawShapeToolStairsExtension(MapDocument& document)
+  : DrawShapeToolExtension{document}
+{
+}
+
+const std::string& DrawShapeToolStairsExtension::name() const
+{
+  static const auto name = std::string{"Stairs"};
+  return name;
+}
+
+const std::filesystem::path& DrawShapeToolStairsExtension::iconPath() const
+{
+  static const auto path = std::filesystem::path{"ShapeTool_Stairs.svg"};
+  return path;
+}
+
+DrawShapeToolExtensionPage* DrawShapeToolStairsExtension::createToolPage(
+  ShapeParameters& parameters, QWidget* parent)
+{
+  return new DrawShapeToolStairsExtensionPage{m_document, parameters, parent};
+}
+
+Result<std::vector<mdl::Brush>> DrawShapeToolStairsExtension::createBrushes(
+  const vm::bbox3d& bounds, const ShapeParameters& parameters) const
+{
+  auto& map = m_document.map();
+  const auto builder = mdl::BrushBuilder{
+    map.worldNode().mapFormat(),
+    map.worldBounds(),
+    map.gameInfo().gameConfig.faceAttribsConfig.defaults};
+
+  const auto stepHeight = parameters.stepHeight();
+  const auto totalHeight = bounds.size().z();
+  const auto steps = stairStepCount(totalHeight, stepHeight);
+  if (steps == 0u)
+  {
+    return Error{"Step height and bounds height must be greater than zero"};
+  }
+
+  const auto run = stairRunForDirection(parameters.stairDirection());
+  const auto axisIndex = static_cast<size_t>(run.axis);
+  const auto runLength = bounds.max[axisIndex] - bounds.min[axisIndex];
+  if (runLength <= 0.0)
+  {
+    return Error{"Bounds size must be greater than zero"};
+  }
+
+  const auto stepDepth = runLength / static_cast<double>(steps);
+  const auto runStart = run.direction > 0.0 ? bounds.min[axisIndex] : bounds.max[axisIndex];
+  const auto baseZ = bounds.min.z();
+
+  auto results = std::vector<Result<mdl::Brush>>{};
+  results.reserve(steps);
+
+  for (size_t i = 0u; i < steps; ++i)
+  {
+    const auto stepBottom = baseZ + stepHeight * static_cast<double>(i);
+    const auto stepTop = (i + 1u == steps) ? bounds.max.z()
+                                           : baseZ + stepHeight * static_cast<double>(i + 1u);
+    const auto stepStart = runStart + run.direction * stepDepth * static_cast<double>(i);
+    const auto stepEnd = runStart + run.direction * stepDepth * static_cast<double>(i + 1u);
+
+    auto stepBounds = bounds;
+    stepBounds.min[axisIndex] = vm::min(stepStart, stepEnd);
+    stepBounds.max[axisIndex] = vm::max(stepStart, stepEnd);
+    stepBounds.min[2] = stepBottom;
+    stepBounds.max[2] = stepTop;
+
+    results.push_back(builder.createCuboid(stepBounds, map.currentMaterialName()));
+  }
+
+  return results | kdl::fold;
+}
+
+DrawShapeToolCircularStairsExtensionPage::DrawShapeToolCircularStairsExtensionPage(
+  MapDocument& document, ShapeParameters& parameters, QWidget* parent)
+  : DrawShapeToolExtensionPage{parent}
+  , m_parameters{parameters}
+{
+  auto* stepHeightLabel = new QLabel{tr("Step Height: ")};
+  auto* stepHeightBox = new QDoubleSpinBox{};
+  stepHeightBox->setRange(1.0, 4096.0);
+  stepHeightBox->setSingleStep(1.0);
+
+  auto* stepsPerRotationLabel = new QLabel{tr("Steps per Rotation: ")};
+  auto* stepsPerRotationBox = new QSpinBox{};
+  stepsPerRotationBox->setRange(1, 256);
+
+  auto* innerRadiusLabel = new QLabel{tr("Inner Radius: ")};
+  auto* innerRadiusBox = new QDoubleSpinBox{};
+  innerRadiusBox->setRange(0.0, 4096.0);
+  innerRadiusBox->setSingleStep(1.0);
+
+  auto* offsetAngleLabel = new QLabel{tr("Offset Angle: ")};
+  auto* offsetAngleBox = new QDoubleSpinBox{};
+  offsetAngleBox->setRange(-360.0, 360.0);
+  offsetAngleBox->setSingleStep(5.0);
+
+  connect(
+    stepHeightBox,
+    QOverload<double>::of(&QDoubleSpinBox::valueChanged),
+    this,
+    [&](const auto stepHeight) { m_parameters.setStepHeight(stepHeight); });
+  connect(
+    stepsPerRotationBox,
+    QOverload<int>::of(&QSpinBox::valueChanged),
+    this,
+    [&](const auto steps) { m_parameters.setStairsPerRotation(size_t(steps)); });
+  connect(
+    innerRadiusBox,
+    QOverload<double>::of(&QDoubleSpinBox::valueChanged),
+    this,
+    [&](const auto radius) { m_parameters.setStairInnerRadius(radius); });
+  connect(
+    offsetAngleBox,
+    QOverload<double>::of(&QDoubleSpinBox::valueChanged),
+    this,
+    [&](const auto angle) { m_parameters.setStairOffsetAngle(angle); });
+
+  addWidget(stepHeightLabel);
+  addWidget(stepHeightBox);
+  addWidget(stepsPerRotationLabel);
+  addWidget(stepsPerRotationBox);
+  addWidget(innerRadiusLabel);
+  addWidget(innerRadiusBox);
+  addWidget(offsetAngleLabel);
+  addWidget(offsetAngleBox);
+  addApplyButton(document);
+
+  const auto updateWidgets = [=, this]() {
+    stepHeightBox->setValue(m_parameters.stepHeight());
+    stepsPerRotationBox->setValue(int(m_parameters.stairsPerRotation()));
+    innerRadiusBox->setValue(m_parameters.stairInnerRadius());
+    offsetAngleBox->setValue(m_parameters.stairOffsetAngle());
+  };
+  updateWidgets();
+
+  m_notifierConnection +=
+    m_parameters.parametersDidChangeNotifier.connect(std::move(updateWidgets));
+}
+
+DrawShapeToolCircularStairsExtension::DrawShapeToolCircularStairsExtension(
+  MapDocument& document)
+  : DrawShapeToolExtension{document}
+{
+}
+
+const std::string& DrawShapeToolCircularStairsExtension::name() const
+{
+  static const auto name = std::string{"Circular Stairs"};
+  return name;
+}
+
+const std::filesystem::path& DrawShapeToolCircularStairsExtension::iconPath() const
+{
+  static const auto path = std::filesystem::path{"ShapeTool_CircularStairs.svg"};
+  return path;
+}
+
+DrawShapeToolExtensionPage* DrawShapeToolCircularStairsExtension::createToolPage(
+  ShapeParameters& parameters, QWidget* parent)
+{
+  return new DrawShapeToolCircularStairsExtensionPage{m_document, parameters, parent};
+}
+
+Result<std::vector<mdl::Brush>> DrawShapeToolCircularStairsExtension::createBrushes(
+  const vm::bbox3d& bounds, const ShapeParameters& parameters) const
+{
+  auto& map = m_document.map();
+  const auto builder = mdl::BrushBuilder{
+    map.worldNode().mapFormat(),
+    map.worldBounds(),
+    map.gameInfo().gameConfig.faceAttribsConfig.defaults};
+
+  const auto stepHeight = parameters.stepHeight();
+  const auto totalHeight = bounds.size().z();
+  const auto steps = stairStepCount(totalHeight, stepHeight);
+  if (steps == 0u)
+  {
+    return Error{"Step height and bounds height must be greater than zero"};
+  }
+
+  const auto stepsPerRotation = parameters.stairsPerRotation();
+  if (stepsPerRotation == 0u)
+  {
+    return Error{"Steps per rotation must be greater than zero"};
+  }
+
+  const auto boundsXY = bounds.xy();
+  const auto halfSize = boundsXY.size() / 2.0;
+  const auto outerRadius = vm::min(halfSize.x(), halfSize.y());
+  if (outerRadius <= 0.0)
+  {
+    return Error{"Bounds size must be greater than zero"};
+  }
+
+  auto innerRadius = parameters.stairInnerRadius();
+  if (innerRadius < 0.0 || innerRadius >= outerRadius)
+  {
+    innerRadius = 0.0;
+  }
+
+  const auto stepAngle = vm::Cd::two_pi() / static_cast<double>(stepsPerRotation);
+  const auto angleOffset = vm::to_radians(parameters.stairOffsetAngle());
+  const auto baseZ = bounds.min.z();
+  const auto center = boundsXY.center();
+
+  auto results = std::vector<Result<mdl::Brush>>{};
+  results.reserve(steps);
+
+  for (size_t i = 0u; i < steps; ++i)
+  {
+    const auto stepBottom = baseZ + stepHeight * static_cast<double>(i);
+    const auto stepTop = (i + 1u == steps) ? bounds.max.z()
+                                           : baseZ + stepHeight * static_cast<double>(i + 1u);
+    const auto angle0 = angleOffset + stepAngle * static_cast<double>(i);
+    const auto angle1 = angle0 + stepAngle;
+
+    const auto outerStart =
+      center + vm::vec2d{std::cos(angle0), std::sin(angle0)} * outerRadius;
+    const auto outerEnd =
+      center + vm::vec2d{std::cos(angle1), std::sin(angle1)} * outerRadius;
+
+    std::vector<vm::vec3d> vertices;
+    if (innerRadius <= 0.0)
+    {
+      const auto bottomCenter = vm::vec3d{center, stepBottom};
+      const auto topCenter = vm::vec3d{center, stepTop};
+      vertices = {
+        {outerStart, stepBottom},
+        {outerStart, stepTop},
+        {outerEnd, stepBottom},
+        {outerEnd, stepTop},
+        bottomCenter,
+        topCenter};
+    }
+    else
+    {
+      const auto innerStart =
+        center + vm::vec2d{std::cos(angle0), std::sin(angle0)} * innerRadius;
+      const auto innerEnd =
+        center + vm::vec2d{std::cos(angle1), std::sin(angle1)} * innerRadius;
+      vertices = {
+        {outerStart, stepBottom},
+        {outerStart, stepTop},
+        {outerEnd, stepBottom},
+        {outerEnd, stepTop},
+        {innerStart, stepBottom},
+        {innerStart, stepTop},
+        {innerEnd, stepBottom},
+        {innerEnd, stepTop}};
+    }
+
+    results.push_back(builder.createBrush(vertices, map.currentMaterialName()));
+  }
+
+  return results | kdl::fold;
 }
 
 DrawShapeToolAxisAlignedShapeExtensionPage::DrawShapeToolAxisAlignedShapeExtensionPage(
@@ -499,6 +847,8 @@ std::vector<std::unique_ptr<DrawShapeToolExtension>> createDrawShapeToolExtensio
 {
   auto result = std::vector<std::unique_ptr<DrawShapeToolExtension>>{};
   result.push_back(std::make_unique<DrawShapeToolCuboidExtension>(document));
+  result.push_back(std::make_unique<DrawShapeToolStairsExtension>(document));
+  result.push_back(std::make_unique<DrawShapeToolCircularStairsExtension>(document));
   result.push_back(std::make_unique<DrawShapeToolCylinderExtension>(document));
   result.push_back(std::make_unique<DrawShapeToolConeExtension>(document));
   result.push_back(std::make_unique<DrawShapeToolUVSphereExtension>(document));

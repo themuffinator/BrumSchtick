@@ -77,7 +77,6 @@ TEST_CASE("GameConfigParser")
     const std::string config(R"(
 {
     "version": 9,
-    "unexpectedKey": [],
     "name": "Quake",
     "icon": "Icon.png",
     "fileformats": [
@@ -940,6 +939,35 @@ TEST_CASE("GameConfigParser")
         std::nullopt, // soft map bounds
         {}            // compilation tools
       });
+  }
+
+  SECTION("rejectUnexpectedEntityKeys")
+  {
+    const std::string config(R"(
+{
+    "version": 9,
+    "name": "Test",
+    "fileformats": [
+        { "format": "Standard" }
+    ],
+    "filesystem": {
+        "searchpath": "id1",
+        "packageformat": { "extension": "pak", "format": "idpak" }
+    },
+    "materials": {
+        "root": "textures",
+        "extensions": ["D"]
+    },
+    "entities": {
+        "definitions": [ "Test.fgd" ],
+        "defaultcolor": "0 0 0 1.0",
+        "unexpected": true
+    }
+}
+)");
+
+    GameConfigParser parser(config);
+    CHECK(parser.parse().is_error());
   }
 }
 

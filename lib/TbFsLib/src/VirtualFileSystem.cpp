@@ -31,8 +31,7 @@
 #include "kd/result_fold.h"
 #include "kd/vector_utils.h"
 
-#include <fmt/format.h>
-#include <fmt/std.h>
+#include <format>
 
 #include <algorithm>
 #include <optional>
@@ -101,7 +100,7 @@ Result<std::filesystem::path> VirtualFileSystem::makeAbsolute(
     }
   }
 
-  return Error{fmt::format("Failed to make absolute path of {}", path)};
+  return Error{std::format("Failed to make absolute path of {}", path.string())};
 }
 
 PathInfo VirtualFileSystem::pathInfo(const std::filesystem::path& path) const
@@ -315,7 +314,7 @@ Result<std::shared_ptr<File>> VirtualFileSystem::doOpenFile(
     }
   }
 
-  return Error{fmt::format("{} not found", path)};
+  return Error{std::format("{} not found", path.string())};
 }
 
 WritableVirtualFileSystem::WritableVirtualFileSystem(

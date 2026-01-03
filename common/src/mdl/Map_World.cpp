@@ -30,6 +30,8 @@
 #include "mdl/Transaction.h"
 #include "mdl/WorldNode.h"
 
+#include "kd/string_utils.h"
+
 namespace tb::mdl
 {
 namespace

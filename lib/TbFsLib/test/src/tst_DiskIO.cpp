@@ -23,8 +23,7 @@
 #include "fs/TestEnvironment.h"
 #include "fs/TraversalMode.h"
 
-#include <fmt/format.h>
-#include <fmt/std.h>
+#include <format>
 
 #include <filesystem>
 #include <iostream>
@@ -137,14 +136,14 @@ TEST_CASE("DiskIO")
   {
     CHECK(
       fs::Disk::find("asdf/bleh", fs::TraversalMode::Flat)
-      == Result<std::vector<std::filesystem::path>>{Error{fmt::format(
+      == Result<std::vector<std::filesystem::path>>{Error{std::format(
         "Failed to open {}: path does not denote a directory",
-        std::filesystem::path{"asdf/bleh"})}});
+        std::filesystem::path{"asdf/bleh"}.string())}});
     CHECK(
       fs::Disk::find(env.dir() / "does/not/exist", fs::TraversalMode::Flat)
-      == Result<std::vector<std::filesystem::path>>{Error{fmt::format(
+      == Result<std::vector<std::filesystem::path>>{Error{std::format(
         "Failed to open {}: path does not denote a directory",
-        env.dir() / "does/not/exist")}});
+        (env.dir() / "does/not/exist").string())}});
 
     CHECK_THAT(
       fs::Disk::find(env.dir(), fs::TraversalMode::Flat) | kdl::value(),
@@ -207,20 +206,20 @@ TEST_CASE("DiskIO")
 
     CHECK(
       fs::Disk::openFile("asdf/bleh")
-      == Result<std::shared_ptr<CFile>>{Error{fmt::format(
+      == Result<std::shared_ptr<CFile>>{Error{std::format(
         "Failed to open {}: path does not denote a file",
-        std::filesystem::path{"asdf/bleh"})}});
+        std::filesystem::path{"asdf/bleh"}.string())}});
     CHECK(
       fs::Disk::openFile(env.dir() / "does/not/exist")
-      == Result<std::shared_ptr<CFile>>{Error{fmt::format(
+      == Result<std::shared_ptr<CFile>>{Error{std::format(
         "Failed to open {}: path does not denote a file",
-        env.dir() / "does/not/exist")}});
+        (env.dir() / "does/not/exist").string())}});
 
     CHECK(
       fs::Disk::openFile(env.dir() / "does_not_exist.txt")
-      == Result<std::shared_ptr<CFile>>{Error{fmt::format(
+      == Result<std::shared_ptr<CFile>>{Error{std::format(
         "Failed to open {}: path does not denote a file",
-        env.dir() / "does_not_exist.txt")}});
+        (env.dir() / "does_not_exist.txt").string())}});
 
     CHECK(fs::Disk::openFile(env.dir() / "test.txt"));
     CHECK(fs::Disk::openFile(env.dir() / "anotherDir/subDirTest/test2.map"));
@@ -290,8 +289,9 @@ TEST_CASE("DiskIO")
 
     CHECK(
       fs::Disk::createDirectory(env.dir() / "test.txt")
-      == Result<bool>{Error{fmt::format(
-        "Failed to create {}: path denotes a file", env.dir() / "test.txt")}});
+      == Result<bool>{Error{std::format(
+        "Failed to create {}: path denotes a file",
+        (env.dir() / "test.txt").string())}});
 
 #ifndef _WIN32
     // These tests don't work on Windows due to differences in permissions
@@ -309,8 +309,9 @@ TEST_CASE("DiskIO")
 
     CHECK(
       fs::Disk::deleteFile(env.dir() / "anotherDir")
-      == Result<bool>{Error{fmt::format(
-        "Failed to delete {}: path denotes a directory", env.dir() / "anotherDir")}});
+      == Result<bool>{Error{std::format(
+        "Failed to delete {}: path denotes a directory",
+        (env.dir() / "anotherDir").string())}});
     CHECK(fs::Disk::deleteFile(env.dir() / "does_not_exist") == Result<bool>{false});
 
 #ifndef _WIN32
@@ -348,9 +349,9 @@ TEST_CASE("DiskIO")
 
       CHECK(
         fs::Disk::copyFile(env.dir() / "does_not_exist.txt", env.dir() / "dir1")
-        == Result<void>{Error{fmt::format(
+        == Result<void>{Error{std::format(
           "Failed to copy {}: path does not denote a file",
-          env.dir() / "does_not_exist.txt")}});
+          (env.dir() / "does_not_exist.txt").string())}});
     }
 
     SECTION("copy directory")
@@ -359,8 +360,9 @@ TEST_CASE("DiskIO")
 
       CHECK(
         fs::Disk::copyFile(env.dir() / "anotherDir", env.dir() / "dir1")
-        == Result<void>{Error{fmt::format(
-          "Failed to copy {}: path does not denote a file", env.dir() / "anotherDir")}});
+        == Result<void>{Error{std::format(
+          "Failed to copy {}: path does not denote a file",
+          (env.dir() / "anotherDir").string())}});
     }
 
     SECTION("copy file into directory")
@@ -461,9 +463,9 @@ TEST_CASE("DiskIO")
 
       CHECK(
         fs::Disk::moveFile(env.dir() / "does_not_exist.txt", env.dir() / "dir1")
-        == Result<void>{Error{fmt::format(
+        == Result<void>{Error{std::format(
           "Failed to move {}: path does not denote a file",
-          env.dir() / "does_not_exist.txt")}});
+          (env.dir() / "does_not_exist.txt").string())}});
     }
 
     SECTION("move directory")
@@ -472,8 +474,9 @@ TEST_CASE("DiskIO")
 
       CHECK(
         fs::Disk::moveFile(env.dir() / "anotherDir", env.dir() / "dir1")
-        == Result<void>{Error{fmt::format(
-          "Failed to move {}: path does not denote a file", env.dir() / "anotherDir")}});
+        == Result<void>{Error{std::format(
+          "Failed to move {}: path does not denote a file",
+          (env.dir() / "anotherDir").string())}});
       CHECK(fs::Disk::pathInfo(env.dir() / "anotherDir") == fs::PathInfo::Directory);
     }
 
@@ -575,9 +578,9 @@ TEST_CASE("DiskIO")
       CHECK(
         fs::Disk::renameDirectory(
           env.dir() / "does_not_exist", env.dir() / "dir1/does_not_exist")
-        == Result<void>{Error{fmt::format(
+        == Result<void>{Error{std::format(
           "Failed to rename {}: path does not denote a directory",
-          env.dir() / "does_not_exist")}});
+          (env.dir() / "does_not_exist").string())}});
     }
 
     SECTION("rename file")
@@ -586,9 +589,9 @@ TEST_CASE("DiskIO")
 
       CHECK(
         fs::Disk::renameDirectory(env.dir() / "test.txt", env.dir() / "dir1")
-        == Result<void>{Error{fmt::format(
+        == Result<void>{Error{std::format(
           "Failed to rename {}: path does not denote a directory",
-          env.dir() / "test.txt")}});
+          (env.dir() / "test.txt").string())}});
       CHECK(fs::Disk::pathInfo(env.dir() / "test.txt") == fs::PathInfo::File);
     }
 
@@ -599,10 +602,10 @@ TEST_CASE("DiskIO")
 
       CHECK(
         fs::Disk::renameDirectory(env.dir() / "anotherDir", env.dir() / "test.txt")
-        == Result<void>{Error{fmt::format(
+        == Result<void>{Error{std::format(
           "Failed to rename {} to {}: target path already exists",
-          env.dir() / "anotherDir",
-          env.dir() / "test.txt")}});
+          (env.dir() / "anotherDir").string(),
+          (env.dir() / "test.txt").string())}});
 
       CHECK(fs::Disk::pathInfo(env.dir() / "anotherDir") == fs::PathInfo::Directory);
       CHECK(fs::Disk::pathInfo(env.dir() / "test.txt") == fs::PathInfo::File);
@@ -615,10 +618,10 @@ TEST_CASE("DiskIO")
 
       CHECK(
         fs::Disk::renameDirectory(env.dir() / "anotherDir", env.dir() / "dir1")
-        == Result<void>{Error{fmt::format(
+        == Result<void>{Error{std::format(
           "Failed to rename {} to {}: target path already exists",
-          env.dir() / "anotherDir",
-          env.dir() / "dir1")}});
+          (env.dir() / "anotherDir").string(),
+          (env.dir() / "dir1").string())}});
 
       CHECK(fs::Disk::pathInfo(env.dir() / "anotherDir") == fs::PathInfo::Directory);
       CHECK(fs::Disk::pathInfo(env.dir() / "dir1") == fs::PathInfo::Directory);

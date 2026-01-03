@@ -23,6 +23,8 @@
 
 #include "catch/CatchConfig.h"
 
+#include <format>
+
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_range_equals.hpp>
 
@@ -40,7 +42,7 @@ void writeGameConfig(
   env.createDirectory(gamesPath / gameDirectory);
   env.createFile(
     gamesPath / gameDirectory / "GameConfig.cfg",
-    fmt::format(
+    std::format(
       R"({{
     "version": 9,
     "name": "{}",
@@ -132,7 +134,7 @@ TEST_CASE("GameManager")
       const auto expectedGameConfigPath =
         gameConfigSearchDirs.front() / "Quake" / "GameConfig.cfg";
 
-      initializeGameManager(gameConfigSearchDirs, userGameDir)
+      initializeGameManager(gameConfigSearchDirs, userGameDir, logger)
         | kdl::transform([&](const auto& gameManager, const auto&) {
             const auto& gameInfos = gameManager.gameInfos();
             REQUIRE(gameInfos.size() == 1);
@@ -174,7 +176,7 @@ TEST_CASE("GameManager")
       const auto expectedGameConfigPath =
         gameConfigSearchDirs.front() / "Quake" / "GameConfig.cfg";
 
-      initializeGameManager(gameConfigSearchDirs, userGameDir)
+      initializeGameManager(gameConfigSearchDirs, userGameDir, logger)
         | kdl::transform([&](const auto& gameManager, const auto&) {
             const auto& gameInfos = gameManager.gameInfos();
             REQUIRE(gameInfos.size() == 1);
@@ -207,7 +209,7 @@ TEST_CASE("GameManager")
       const auto expectedGameConfigPath =
         gameConfigSearchDirs.front() / "Quake" / "GameConfig.cfg";
 
-      initializeGameManager(gameConfigSearchDirs, userGameDir)
+      initializeGameManager(gameConfigSearchDirs, userGameDir, logger)
         | kdl::transform([&](const auto& gameManager, const auto&) {
             const auto& gameInfos = gameManager.gameInfos();
             REQUIRE(gameInfos.size() == 1);
@@ -250,7 +252,7 @@ TEST_CASE("GameManager")
       const auto expectedGameConfigPath =
         gameConfigSearchDirs.front() / "Quake" / "GameConfig.cfg";
 
-      initializeGameManager(gameConfigSearchDirs, userGameDir)
+      initializeGameManager(gameConfigSearchDirs, userGameDir, logger)
         | kdl::transform([&](const auto& gameManager, const auto&) {
             const auto& gameInfos = gameManager.gameInfos();
             CHECK_THAT(
@@ -298,7 +300,7 @@ TEST_CASE("GameManager")
     const auto expectedGameConfigPath =
       gameConfigSearchDirs.front() / "Quake" / "GameConfig.cfg";
 
-    initializeGameManager(gameConfigSearchDirs, userGameDir)
+    initializeGameManager(gameConfigSearchDirs, userGameDir, logger)
       | kdl::transform([&](auto gameManager, const auto&) {
           const auto compilationConfig = CompilationConfig{
             .profiles = {
@@ -309,8 +311,8 @@ TEST_CASE("GameManager")
               },
             }};
 
-          REQUIRE(gameManager.updateCompilationConfig("Quake", compilationConfig, logger)
-                    .is_success());
+          REQUIRE(
+            gameManager.updateCompilationConfig("Quake", compilationConfig).is_success());
 
           const auto* gameInfo = gameManager.gameInfo("Quake");
           REQUIRE(gameInfo != nullptr);
@@ -334,7 +336,7 @@ TEST_CASE("GameManager")
     const auto expectedGameConfigPath =
       gameConfigSearchDirs.front() / "Quake" / "GameConfig.cfg";
 
-    initializeGameManager(gameConfigSearchDirs, userGameDir)
+    initializeGameManager(gameConfigSearchDirs, userGameDir, logger)
       | kdl::transform([&](auto gameManager, const auto&) {
           const auto gameEngineConfig = GameEngineConfig{
             .profiles = {
@@ -345,8 +347,8 @@ TEST_CASE("GameManager")
               },
             }};
 
-          REQUIRE(gameManager.updateGameEngineConfig("Quake", gameEngineConfig, logger)
-                    .is_success());
+          REQUIRE(
+            gameManager.updateGameEngineConfig("Quake", gameEngineConfig).is_success());
 
           const auto* gameInfo = gameManager.gameInfo("Quake");
           REQUIRE(gameInfo != nullptr);

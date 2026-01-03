@@ -35,8 +35,7 @@
 
 #include "kd/ranges/to.h"
 
-#include <fmt/format.h>
-#include <fmt/std.h>
+#include <format>
 
 #include <cassert>
 #include <filesystem>
@@ -131,7 +130,7 @@ void MissingModValidator::doValidate(
       issues.push_back(std::make_unique<MissingModIssue>(
         entityNode,
         mod,
-        fmt::format("Mod '{}' could not be used (directory not found)", mod)));
+        std::format("Mod '{}' could not be used (directory not found)", mod)));
     }
   }
 

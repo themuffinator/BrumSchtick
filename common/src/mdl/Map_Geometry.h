@@ -68,10 +68,17 @@ bool removeVertices(
 
 bool snapVertices(Map& map, double snapTo);
 
+bool chamferEdges(
+  Map& map,
+  std::vector<vm::segment3d> edgePositions,
+  double distance,
+  size_t segments);
+
 bool csgConvexMerge(Map& map);
 bool csgSubtract(Map& map);
 bool csgIntersect(Map& map);
 bool csgHollow(Map& map);
+bool convertPatchesToConvexBrushes(Map& map);
 
 bool extrudeBrushes(
   Map& map, const std::vector<vm::polygon3d>& faces, const vm::vec3d& delta);

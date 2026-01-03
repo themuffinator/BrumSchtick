@@ -32,7 +32,7 @@
 
 #include "kd/path_utils.h"
 
-#include <fmt/format.h>
+#include <format>
 
 #include <string>
 
@@ -445,12 +445,12 @@ Result<mdl::EntityModelData> Md2Loader::load(Logger& logger)
 
     if (ident != Md2Layout::Ident)
     {
-      return Error{fmt::format("Unknown MD2 model ident: {}", ident)};
+      return Error{std::format("Unknown MD2 model ident: {}", ident)};
     }
 
     if (version != Md2Layout::Version)
     {
-      return Error{fmt::format("Unknown MD2 model version: {}", version)};
+      return Error{std::format("Unknown MD2 model version: {}", version)};
     }
 
     /*const auto skinWidth =*/reader.readSize<int32_t>();

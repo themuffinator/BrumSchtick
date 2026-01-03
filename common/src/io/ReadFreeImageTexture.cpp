@@ -34,7 +34,7 @@
 #include "kd/string_utils.h"
 #include "kd/vector_utils.h"
 
-#include <fmt/format.h>
+#include <format>
 
 #include <stdexcept>
 #include <string>
@@ -139,7 +139,7 @@ Result<mdl::Texture> readFreeImageTextureFromMemory(
     if (!checkTextureDimensions(imageWidth, imageHeight))
     {
       return Error{
-        fmt::format("Invalid texture dimensions: {}*{}", imageWidth, imageHeight)};
+        std::format("Invalid texture dimensions: {}*{}", imageWidth, imageHeight)};
     }
 
     // This is supposed to indicate whether any pixels are transparent (alpha < 100%)

@@ -26,6 +26,7 @@
 #include "render/EdgeRenderer.h"
 #include "render/FaceRenderer.h"
 
+#include <cstdint>
 #include <memory>
 #include <tuple>
 #include <unordered_map>
@@ -43,6 +44,7 @@ class EditorContext;
 
 namespace render
 {
+class LightPreview;
 
 class BrushRenderer
 {
@@ -169,6 +171,7 @@ private:
   float m_transparencyAlpha = 1.0f;
 
   bool m_showHiddenBrushes = false;
+  uint64_t m_lightPreviewRevision = 0;
 
 public:
   template <typename FilterT>
@@ -278,6 +281,7 @@ public: // rendering
   void renderTransparent(RenderContext& renderContext, RenderBatch& renderBatch);
 
 private:
+  void ensureLightPreviewRevision(const RenderContext& renderContext);
   void renderOpaqueFaces(RenderBatch& renderBatch);
   void renderTransparentFaces(RenderBatch& renderBatch);
   void renderEdges(RenderBatch& renderBatch);
@@ -286,12 +290,12 @@ public:
   /**
    * Only exposed for benchmarking.
    */
-  void validate();
+  void validate(const LightPreview* lightPreview = nullptr);
 
 private:
   bool shouldDrawFaceInTransparentPass(
     const mdl::BrushNode& brushNode, const mdl::BrushFace& face) const;
-  void validateBrush(const mdl::BrushNode& brushNode);
+  void validateBrush(const mdl::BrushNode& brushNode, const LightPreview* lightPreview);
 
 public:
   /**

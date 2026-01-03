@@ -34,7 +34,7 @@
 
 #include "vm/vec_io.h" // IWYU pragma: keep
 
-#include <fmt/format.h>
+#include <format>
 
 #include <string>
 
@@ -215,6 +215,10 @@ void NodeSerializer::entityProperties(const std::vector<mdl::EntityProperty>& pr
 
 void NodeSerializer::entityProperty(const mdl::EntityProperty& property)
 {
+  if (m_exporting && mdl::isTBPropertyKey(property.key()))
+  {
+    return;
+  }
   doEntityProperty(property);
 }
 
@@ -328,7 +332,7 @@ std::vector<mdl::EntityProperty> NodeSerializer::groupProperties(
   const auto& transformation = groupNode->group().transformation();
   if (transformation != vm::mat4x4d::identity())
   {
-    const auto transformationStr = fmt::format(
+    const auto transformationStr = std::format(
       "{} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {}",
       transformation[0][0],
       transformation[1][0],

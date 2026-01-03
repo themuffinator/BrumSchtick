@@ -22,7 +22,7 @@
 #include <QJsonValue>
 #include <QString>
 
-#include <fmt/format.h>
+#include <format>
 
 #include "catch/CatchConfig.h"
 
@@ -45,7 +45,7 @@ struct StringMaker<QJsonValue>
   static std::string convert(QJsonValue const& value)
   {
     const auto asVariant = value.toVariant();
-    return fmt::format(
+    return std::format(
       "QJsonValue<{}>({})", asVariant.typeName(), qUtf8Printable(asVariant.toString()));
   }
 };

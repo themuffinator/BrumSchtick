@@ -87,7 +87,7 @@ void GameEngineDialog::saveConfig()
   auto& app = TrenchBroomApp::instance();
   auto& gameManager = app.gameManager();
 
-  gameManager.updateGameEngineConfig(m_gameName, m_profileManager->config(), m_logger)
+  gameManager.updateGameEngineConfig(m_gameName, m_profileManager->config())
     | kdl::transform_error([&](const auto& e) { m_logger.error() << e.msg; });
 }
 

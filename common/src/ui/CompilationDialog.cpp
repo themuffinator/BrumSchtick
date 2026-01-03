@@ -25,7 +25,6 @@
 #include <QLabel>
 #include <QMessageBox>
 #include <QPushButton>
-#include <QTextEdit>
 
 #include "Logger.h"
 #include "TrenchBroomApp.h"
@@ -33,6 +32,7 @@
 #include "mdl/GameInfo.h"
 #include "mdl/GameManager.h"
 #include "mdl/Map.h"
+#include "ui/CompilationOutput.h"
 #include "ui/CompilationProfileManager.h"
 #include "ui/CompilationRunner.h"
 #include "ui/LaunchGameEngineDialog.h"
@@ -60,6 +60,24 @@ CompilationDialog::CompilationDialog(MapFrame* mapFrame)
   updateCompileButtons();
 }
 
+bool CompilationDialog::startCompilationForProfile(
+  const std::string_view profileName, const bool test)
+{
+  if (!m_profileManager->selectProfileByName(profileName))
+  {
+    return false;
+  }
+
+  const auto* profile = m_profileManager->selectedProfile();
+  if (!profile || profile->tasks.empty())
+  {
+    return false;
+  }
+
+  startCompilation(test);
+  return true;
+}
+
 void CompilationDialog::createGui()
 {
   setWindowIconTB(this);
@@ -71,7 +89,7 @@ void CompilationDialog::createGui()
   m_profileManager = new CompilationProfileManager{document, compilationConfig};
 
   auto* outputPanel = new TitledPanel{tr("Output")};
-  m_output = new QTextEdit{};
+  m_output = new CompilationOutput{m_mapFrame};
   m_output->setReadOnly(true);
   m_output->setFont(Fonts::fixedWidthFont());
 
@@ -263,8 +281,7 @@ void CompilationDialog::saveProfile()
 
   auto& app = TrenchBroomApp::instance();
   auto& gameManager = app.gameManager();
-  gameManager.updateCompilationConfig(
-    gameName, m_profileManager->config(), m_mapFrame->logger())
+  gameManager.updateCompilationConfig(gameName, m_profileManager->config())
     | kdl::transform_error([&](const auto& e) { m_mapFrame->logger().error() << e.msg; });
 }
 

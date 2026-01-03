@@ -26,6 +26,8 @@
 
 #include "kd/path_utils.h"
 
+#include <format>
+
 namespace tb::io
 {
 namespace
@@ -61,7 +63,7 @@ Result<std::vector<mdl::EntityDefinition>> loadEntityDefinitions(
     return loadEntityDefinitions<EntParser>(path, status, defaultColor);
   }
 
-  return Error{fmt::format("Unknown entity definition format: {}", path)};
+  return Error{std::format("Unknown entity definition format: {}", path.string())};
 }
 
 } // namespace tb::io

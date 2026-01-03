@@ -20,6 +20,7 @@
 #include "MapFrame.h"
 
 #include <QApplication>
+#include <QActionGroup>
 #include <QChildEvent>
 #include <QClipboard>
 #include <QComboBox>
@@ -28,6 +29,7 @@
 #include <QLabel>
 #include <QMessageBox>
 #include <QMimeData>
+#include <QMenu>
 #include <QPushButton>
 #include <QStatusBar>
 #include <QString>
@@ -35,8 +37,11 @@
 #include <QTableWidget>
 #include <QTimer>
 #include <QToolBar>
+#include <QToolButton>
 #include <QVBoxLayout>
 #include <QtGlobal>
+
+#include <cmath>
 
 #include "Console.h"
 #include "PreferenceManager.h"
@@ -78,6 +83,7 @@
 #include "ui/ClipTool.h"
 #include "ui/ColorButton.h"
 #include "ui/CompilationDialog.h"
+#include "ui/CompilationVariables.h"
 #include "ui/CrashReporter.h"
 #include "ui/EdgeTool.h"
 #include "ui/FaceInspector.h"
@@ -86,6 +92,7 @@
 #include "ui/GLContextManager.h"
 #include "ui/InfoPanel.h"
 #include "ui/Inspector.h"
+#include "ui/LaunchGameEngine.h"
 #include "ui/LaunchGameEngineDialog.h"
 #include "ui/MapDocument.h"
 #include "ui/MapView2D.h"
@@ -112,8 +119,7 @@
 #include "vm/vec.h"
 #include "vm/vec_io.h"
 
-#include <fmt/format.h>
-#include <fmt/std.h>
+#include <format>
 
 #include <algorithm>
 #include <chrono>
@@ -258,7 +264,7 @@ void MapFrame::updateTitle()
 {
   const auto& map = m_document->map();
   setWindowModified(map.modified());
-  setWindowTitle(tr("%1[*] - TrenchBroom").arg(io::pathAsQString(map.filename())));
+  setWindowTitle(tr("%1[*] - BrümSchtick").arg(io::pathAsQString(map.filename())));
   setWindowFilePath(io::pathAsQPath(map.path()));
 }
 
@@ -372,7 +378,7 @@ void MapFrame::updateRecentDocumentsMenu()
 void MapFrame::createGui()
 {
   setWindowIconTB(this);
-  setWindowTitle("TrenchBroom");
+  setWindowTitle("BrümSchtick");
 
   m_hSplitter = new Splitter{Qt::Horizontal, DrawKnob::No};
   m_hSplitter->setChildrenCollapsible(false);
@@ -455,6 +461,32 @@ void MapFrame::createToolBar()
     tbAction.execute(context);
   });
 
+  m_toolBar->addSeparator();
+
+  m_quickCompileButton = new QToolButton{};
+  m_quickCompileButton->setText(tr("Compile"));
+  m_quickCompileButton->setToolButtonStyle(Qt::ToolButtonTextOnly);
+  m_quickCompileButton->setPopupMode(QToolButton::MenuButtonPopup);
+  m_quickCompileMenu = new QMenu{m_quickCompileButton};
+  m_quickCompileButton->setMenu(m_quickCompileMenu);
+  connect(
+    m_quickCompileButton, &QToolButton::clicked, this, &MapFrame::quickCompileSelectedProfile);
+  connect(
+    m_quickCompileMenu, &QMenu::aboutToShow, this, &MapFrame::rebuildQuickCompileMenu);
+  m_toolBar->addWidget(m_quickCompileButton);
+
+  m_quickLaunchButton = new QToolButton{};
+  m_quickLaunchButton->setText(tr("Launch"));
+  m_quickLaunchButton->setToolButtonStyle(Qt::ToolButtonTextOnly);
+  m_quickLaunchButton->setPopupMode(QToolButton::MenuButtonPopup);
+  m_quickLaunchMenu = new QMenu{m_quickLaunchButton};
+  m_quickLaunchButton->setMenu(m_quickLaunchMenu);
+  connect(
+    m_quickLaunchButton, &QToolButton::clicked, this, &MapFrame::quickLaunchSelectedProfile);
+  connect(
+    m_quickLaunchMenu, &QMenu::aboutToShow, this, &MapFrame::rebuildQuickLaunchMenu);
+  m_toolBar->addWidget(m_quickLaunchButton);
+
   m_gridChoice = new QComboBox{};
   for (int i = mdl::Grid::MinSize; i <= mdl::Grid::MaxSize; ++i)
   {
@@ -464,6 +496,8 @@ void MapFrame::createToolBar()
   }
 
   m_toolBar->addWidget(m_gridChoice);
+
+  updateQuickRunButtons();
 }
 
 void MapFrame::updateToolBarWidgets()
@@ -472,6 +506,246 @@ void MapFrame::updateToolBarWidgets()
   const auto& grid = map.grid();
   const auto sizeIndex = grid.size() - mdl::Grid::MinSize;
   m_gridChoice->setCurrentIndex(sizeIndex);
+
+  updateQuickRunButtons();
+}
+
+namespace
+{
+
+const mdl::CompilationProfile* resolveCompilationProfile(
+  const std::vector<mdl::CompilationProfile>& profiles,
+  std::optional<std::string>& preferredName)
+{
+  if (profiles.empty())
+  {
+    preferredName.reset();
+    return nullptr;
+  }
+
+  if (preferredName)
+  {
+    for (const auto& profile : profiles)
+    {
+      if (profile.name == *preferredName)
+      {
+        return &profile;
+      }
+    }
+  }
+
+  for (const auto& profile : profiles)
+  {
+    if (!profile.tasks.empty())
+    {
+      preferredName = profile.name;
+      return &profile;
+    }
+  }
+
+  preferredName = profiles.front().name;
+  return &profiles.front();
+}
+
+const mdl::GameEngineProfile* resolveLaunchProfile(
+  const std::vector<mdl::GameEngineProfile>& profiles,
+  std::optional<std::string>& preferredName)
+{
+  if (profiles.empty())
+  {
+    preferredName.reset();
+    return nullptr;
+  }
+
+  if (preferredName)
+  {
+    for (const auto& profile : profiles)
+    {
+      if (profile.name == *preferredName)
+      {
+        return &profile;
+      }
+    }
+  }
+
+  preferredName = profiles.front().name;
+  return &profiles.front();
+}
+
+} // namespace
+
+void MapFrame::updateQuickRunButtons()
+{
+  if (!m_quickCompileButton || !m_quickLaunchButton)
+  {
+    return;
+  }
+
+  const auto& gameInfo = document().map().gameInfo();
+  const auto* compileProfile = resolveCompilationProfile(
+    gameInfo.compilationConfig.profiles, m_quickCompileProfileName);
+  const auto* launchProfile =
+    resolveLaunchProfile(gameInfo.gameEngineConfig.profiles, m_quickLaunchProfileName);
+
+  if (compileProfile)
+  {
+    const auto label = QString::fromStdString(compileProfile->name);
+    if (compileProfile->tasks.empty())
+    {
+      m_quickCompileButton->setEnabled(false);
+      m_quickCompileButton->setToolTip(
+        tr("Compile using '%1' (no tasks configured)").arg(label));
+    }
+    else
+    {
+      m_quickCompileButton->setEnabled(true);
+      m_quickCompileButton->setToolTip(tr("Compile using '%1'").arg(label));
+    }
+  }
+  else
+  {
+    m_quickCompileButton->setEnabled(false);
+    m_quickCompileButton->setToolTip(tr("No compilation profiles configured"));
+  }
+
+  if (launchProfile)
+  {
+    const auto label = QString::fromStdString(launchProfile->name);
+    m_quickLaunchButton->setEnabled(true);
+    m_quickLaunchButton->setToolTip(tr("Launch '%1'").arg(label));
+  }
+  else
+  {
+    m_quickLaunchButton->setEnabled(false);
+    m_quickLaunchButton->setToolTip(tr("No game engine profiles configured"));
+  }
+}
+
+void MapFrame::rebuildQuickCompileMenu()
+{
+  if (!m_quickCompileMenu)
+  {
+    return;
+  }
+
+  m_quickCompileMenu->clear();
+
+  const auto& profiles = document().map().gameInfo().compilationConfig.profiles;
+  const auto* selectedProfile =
+    resolveCompilationProfile(profiles, m_quickCompileProfileName);
+
+  if (profiles.empty())
+  {
+    auto* action = m_quickCompileMenu->addAction(tr("No compilation profiles"));
+    action->setEnabled(false);
+    return;
+  }
+
+  auto* actionGroup = new QActionGroup{m_quickCompileMenu};
+  actionGroup->setExclusive(true);
+
+  for (const auto& profile : profiles)
+  {
+    const auto profileName = profile.name;
+    auto* action =
+      m_quickCompileMenu->addAction(QString::fromStdString(profile.name));
+    action->setCheckable(true);
+    action->setEnabled(!profile.tasks.empty());
+    action->setChecked(selectedProfile && selectedProfile->name == profile.name);
+    actionGroup->addAction(action);
+    connect(action, &QAction::triggered, this, [this, profileName]() {
+      m_quickCompileProfileName = profileName;
+      updateQuickRunButtons();
+    });
+  }
+}
+
+void MapFrame::rebuildQuickLaunchMenu()
+{
+  if (!m_quickLaunchMenu)
+  {
+    return;
+  }
+
+  m_quickLaunchMenu->clear();
+
+  const auto& profiles = document().map().gameInfo().gameEngineConfig.profiles;
+  const auto* selectedProfile = resolveLaunchProfile(profiles, m_quickLaunchProfileName);
+
+  if (profiles.empty())
+  {
+    auto* action = m_quickLaunchMenu->addAction(tr("No game engine profiles"));
+    action->setEnabled(false);
+    return;
+  }
+
+  auto* actionGroup = new QActionGroup{m_quickLaunchMenu};
+  actionGroup->setExclusive(true);
+
+  for (const auto& profile : profiles)
+  {
+    const auto profileName = profile.name;
+    auto* action = m_quickLaunchMenu->addAction(QString::fromStdString(profile.name));
+    action->setCheckable(true);
+    action->setChecked(selectedProfile && selectedProfile->name == profile.name);
+    actionGroup->addAction(action);
+    connect(action, &QAction::triggered, this, [this, profileName]() {
+      m_quickLaunchProfileName = profileName;
+      updateQuickRunButtons();
+    });
+  }
+}
+
+void MapFrame::quickCompileSelectedProfile()
+{
+  const auto& profiles = document().map().gameInfo().compilationConfig.profiles;
+  const auto* profile = resolveCompilationProfile(profiles, m_quickCompileProfileName);
+  if (!profile || profile->tasks.empty())
+  {
+    showCompileDialog();
+    QMessageBox::information(
+      this,
+      tr("Compile"),
+      tr("No compilation profile with tasks is configured."),
+      QMessageBox::Ok);
+    return;
+  }
+
+  showCompileDialog();
+  if (m_compilationDialog
+      && !m_compilationDialog->startCompilationForProfile(profile->name, false))
+  {
+    QMessageBox::critical(
+      this,
+      tr("Compile"),
+      tr("Could not start compilation for '%1'.")
+        .arg(QString::fromStdString(profile->name)),
+      QMessageBox::Ok);
+  }
+}
+
+void MapFrame::quickLaunchSelectedProfile()
+{
+  const auto& profiles = document().map().gameInfo().gameEngineConfig.profiles;
+  const auto* profile = resolveLaunchProfile(profiles, m_quickLaunchProfileName);
+  if (!profile)
+  {
+    showLaunchEngineDialog();
+    QMessageBox::information(
+      this,
+      tr("Launch Engine"),
+      tr("No game engine profile is configured."),
+      QMessageBox::Ok);
+    return;
+  }
+
+  const auto variables = LaunchGameEngineVariables{document().map()};
+  launchGameEngineProfile(*profile, variables)
+    | kdl::transform_error([](const auto& e) {
+        const auto message = kdl::str_to_string("Could not launch game engine: ", e.msg);
+        QMessageBox::critical(
+          nullptr, "BrümSchtick", QString::fromStdString(message), QMessageBox::Ok);
+      });
 }
 
 void MapFrame::createStatusBar()
@@ -553,6 +827,12 @@ QString describeSelection(const mdl::Map& map)
     const auto openGroupsString =
       QObject::tr("Open groups: %1").arg(openGroups.join(Arrow));
     pipeSeparatedSections << openGroupsString;
+  }
+
+  if (!editorContext.searchText().empty())
+  {
+    pipeSeparatedSections << QObject::tr("Search: %1")
+                               .arg(QString::fromStdString(editorContext.searchText()));
   }
 
   // build a vector of strings describing the things that are selected
@@ -944,7 +1224,7 @@ bool MapFrame::saveDocument()
                  this,
                  "",
                  QString::fromStdString(
-                   fmt::format("Error while saving {}: ", map.path(), e.msg)),
+                   std::format("Error while saving {}: {}", map.path().string(), e.msg)),
                  QMessageBox::Ok);
              })
            | kdl::is_success();
@@ -983,7 +1263,7 @@ bool MapFrame::saveDocumentAs()
                this,
                "",
                QString::fromStdString(
-                 fmt::format("Error while saving {}: ", path, e.msg)),
+                 std::format("Error while saving {}: {}", path.string(), e.msg)),
                QMessageBox::Ok);
            })
          | kdl::is_success();
@@ -1069,7 +1349,7 @@ bool MapFrame::confirmOrDiscardChanges()
 
   const auto result = QMessageBox::question(
     this,
-    "TrenchBroom",
+    "BrümSchtick",
     tr("%1 has been modified. Do you want to save the changes?")
       .arg(io::pathAsQString(map.filename())),
     QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel);
@@ -1093,7 +1373,7 @@ bool MapFrame::confirmRevertDocument()
   }
 
   auto messageBox = QMessageBox{this};
-  messageBox.setWindowTitle("TrenchBroom");
+  messageBox.setWindowTitle("BrümSchtick");
   messageBox.setIcon(QMessageBox::Question);
   messageBox.setText(tr("Revert %1 to %2?")
                        .arg(io::pathAsQString(map.filename()))
@@ -1683,6 +1963,24 @@ bool MapFrame::assembleBrushToolActive() const
   return m_mapView->assembleBrushToolActive();
 }
 
+void MapFrame::toggleBrushBuilderTool()
+{
+  if (canToggleBrushBuilderTool())
+  {
+    m_mapView->toggleBrushBuilderTool();
+  }
+}
+
+bool MapFrame::canToggleBrushBuilderTool() const
+{
+  return m_mapView->canToggleBrushBuilderTool();
+}
+
+bool MapFrame::brushBuilderToolActive() const
+{
+  return m_mapView->brushBuilderToolActive();
+}
+
 void MapFrame::toggleClipTool()
 {
   if (canToggleClipTool())
@@ -1841,8 +2139,9 @@ bool MapFrame::canDoCsgConvexMerge() const
 {
   const auto& map = m_document->map();
   const auto& selection = map.selection();
+  const auto& selectedBrushes = selection.allBrushes();
   return (selection.hasBrushFaces() && selection.brushFaces.size() > 1)
-         || (selection.hasOnlyBrushes() && selection.brushes.size() > 1)
+         || (selection.hasOnlyBrushes() && selectedBrushes.size() > 1)
          || (m_mapView->vertexToolActive() && m_mapView->vertexTool().canDoCsgConvexMerge())
          || (m_mapView->edgeToolActive() && m_mapView->edgeTool().canDoCsgConvexMerge())
          || (m_mapView->faceToolActive() && m_mapView->faceTool().canDoCsgConvexMerge());
@@ -1860,7 +2159,7 @@ bool MapFrame::canDoCsgSubtract() const
 {
   const auto& map = m_document->map();
   const auto& selection = map.selection();
-  return selection.hasOnlyBrushes() && !selection.brushes.empty();
+  return selection.hasOnlyBrushes() && !selection.allBrushes().empty();
 }
 
 void MapFrame::csgHollow()
@@ -1875,7 +2174,7 @@ bool MapFrame::canDoCsgHollow() const
 {
   const auto& map = m_document->map();
   const auto& selection = map.selection();
-  return selection.hasOnlyBrushes() && !selection.brushes.empty();
+  return selection.hasOnlyBrushes() && !selection.allBrushes().empty();
 }
 
 void MapFrame::csgIntersect()
@@ -1890,7 +2189,22 @@ bool MapFrame::canDoCsgIntersect() const
 {
   const auto& map = m_document->map();
   const auto& selection = map.selection();
-  return selection.hasOnlyBrushes() && selection.brushes.size() > 1;
+  return selection.hasOnlyBrushes() && selection.allBrushes().size() > 1;
+}
+
+void MapFrame::convertPatchesToConvexBrushes()
+{
+  if (canConvertPatchesToConvexBrushes())
+  {
+    mdl::convertPatchesToConvexBrushes(m_document->map());
+  }
+}
+
+bool MapFrame::canConvertPatchesToConvexBrushes() const
+{
+  const auto& map = m_document->map();
+  const auto& selection = map.selection();
+  return selection.hasOnlyPatches() && !selection.allPatches().empty();
 }
 
 void MapFrame::snapVerticesToInteger()
@@ -1916,6 +2230,81 @@ bool MapFrame::canSnapVertices() const
   const auto& map = m_document->map();
   const auto& selection = map.selection();
   return !selection.allBrushes().empty();
+}
+
+void MapFrame::chamferEdges()
+{
+  if (!canChamferEdges())
+  {
+    return;
+  }
+
+  auto& map = m_document->map();
+  const auto defaultDistance = map.grid().actualSize();
+  constexpr size_t defaultSegments = 1u;
+
+  auto ok = false;
+  const auto input = QInputDialog::getText(
+    this,
+    "Chamfer Edges",
+    "Enter distance and segments: D N",
+    QLineEdit::Normal,
+    QString{"%1 %2"}.arg(defaultDistance).arg(defaultSegments),
+    &ok);
+  if (!ok)
+  {
+    return;
+  }
+
+  auto distance = 0.0;
+  size_t segments = defaultSegments;
+
+  if (const auto values = parse<double, 2>(input))
+  {
+    distance = values->x();
+    const auto segmentsValue = values->y();
+    const auto rounded = std::llround(segmentsValue);
+    if (std::abs(segmentsValue - static_cast<double>(rounded)) > 1e-6)
+    {
+      QMessageBox::warning(this, "Error", tr("Invalid segments value: '%1'").arg(input));
+      return;
+    }
+    if (rounded < 1)
+    {
+      QMessageBox::warning(this, "Error", tr("Segments must be at least 1."));
+      return;
+    }
+    segments = static_cast<size_t>(rounded);
+  }
+  else if (const auto value = parse<double, 1>(input))
+  {
+    distance = value->x();
+  }
+  else
+  {
+    QMessageBox::warning(this, "Error", tr("Invalid chamfer settings: '%1'").arg(input));
+    return;
+  }
+
+  if (distance <= 0.0)
+  {
+    QMessageBox::warning(this, "Error", tr("Distance must be greater than 0."));
+    return;
+  }
+
+  auto edges = m_mapView->edgeTool().handleManager().selectedHandles();
+  if (edges.empty())
+  {
+    return;
+  }
+
+  mdl::chamferEdges(map, std::move(edges), distance, segments);
+}
+
+bool MapFrame::canChamferEdges() const
+{
+  return m_mapView->edgeToolActive()
+         && m_mapView->edgeTool().handleManager().selectedHandleCount() > 0u;
 }
 
 void MapFrame::toggleAlignmentLock()

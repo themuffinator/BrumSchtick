@@ -23,6 +23,7 @@
 #include "Preferences.h"
 #include "mdl/EditorContext.h"
 #include "mdl/GroupNode.h"
+#include "mdl/ModelUtils.h"
 #include "render/GLVertexType.h"
 #include "render/PrimType.h"
 #include "render/RenderBatch.h"
@@ -30,6 +31,7 @@
 #include "render/RenderService.h"
 #include "render/TextAnchor.h"
 
+#include <unordered_map>
 #include <vector>
 
 namespace tb::render
@@ -65,12 +67,15 @@ GroupRenderer::GroupRenderer(const mdl::EditorContext& editorContext)
 void GroupRenderer::invalidate()
 {
   invalidateBounds();
+  invalidateLinkedGroupIds();
 }
 
 void GroupRenderer::clear()
 {
   m_groups.clear();
   m_boundsRenderer = DirectEdgeRenderer();
+  m_linkedGroupIds.clear();
+  m_linkedGroupIdsValid = true;
 }
 
 void GroupRenderer::addGroup(const mdl::GroupNode* group)
@@ -203,6 +208,69 @@ void GroupRenderer::invalidateBounds()
   m_boundsValid = false;
 }
 
+void GroupRenderer::invalidateLinkedGroupIds()
+{
+  m_linkedGroupIdsValid = false;
+}
+
+void GroupRenderer::validateLinkedGroupIds() const
+{
+  if (m_linkedGroupIdsValid)
+  {
+    return;
+  }
+
+  m_linkedGroupIds.clear();
+  m_linkedGroupIdsValid = true;
+
+  if (m_groups.empty())
+  {
+    return;
+  }
+
+  const mdl::WorldNode* worldNode = nullptr;
+  for (const auto* group : m_groups)
+  {
+    const mdl::Node* current = group;
+    while (current && current->parent())
+    {
+      current = current->parent();
+    }
+    worldNode = dynamic_cast<const mdl::WorldNode*>(current);
+    if (worldNode)
+    {
+      break;
+    }
+  }
+
+  if (!worldNode)
+  {
+    return;
+  }
+
+  const auto allGroups =
+    mdl::collectGroups({const_cast<mdl::WorldNode*>(worldNode)});
+  if (allGroups.size() < 2u)
+  {
+    return;
+  }
+
+  auto linkIdCounts = std::unordered_map<std::string, size_t>{};
+  linkIdCounts.reserve(allGroups.size());
+  for (const auto* group : allGroups)
+  {
+    ++linkIdCounts[group->linkId()];
+  }
+
+  for (const auto& [linkId, count] : linkIdCounts)
+  {
+    if (count > 1u)
+    {
+      m_linkedGroupIds.insert(linkId);
+    }
+  }
+}
+
 void GroupRenderer::validateBounds()
 {
   if (m_overrideColors)
@@ -257,12 +325,24 @@ bool GroupRenderer::shouldRenderGroup(const mdl::GroupNode& groupNode) const
 
 AttrString GroupRenderer::groupString(const mdl::GroupNode& groupNode) const
 {
+  if (isLinkedGroup(groupNode))
+  {
+    return AttrString{groupNode.name() + " (linked)"};
+  }
+
   return AttrString{groupNode.name()};
 }
 
-Color GroupRenderer::groupColor(const mdl::GroupNode&) const
+Color GroupRenderer::groupColor(const mdl::GroupNode& groupNode) const
 {
-  return pref(Preferences::DefaultGroupColor);
+  return isLinkedGroup(groupNode) ? pref(Preferences::LinkedGroupColor)
+                                  : pref(Preferences::DefaultGroupColor);
+}
+
+bool GroupRenderer::isLinkedGroup(const mdl::GroupNode& groupNode) const
+{
+  validateLinkedGroupIds();
+  return m_linkedGroupIds.contains(groupNode.linkId());
 }
 
 } // namespace tb::render

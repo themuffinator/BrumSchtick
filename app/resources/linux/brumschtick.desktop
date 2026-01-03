@@ -1,9 +1,9 @@
 [Desktop Entry]
-Exec=trenchbroom %F
+Exec=brumschtick %F
 GenericName=Level Editor
 Comment=Cross-Platform Level Editor
-Icon=trenchbroom
-Name=TrenchBroom
+Icon=brumschtick
+Name=BrümSchtick
 Terminal=false
 Type=Application
 Categories=Game

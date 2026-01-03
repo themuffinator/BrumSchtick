@@ -89,7 +89,7 @@ kdl_reflect_impl(PatchGrid);
  * sides of the grid coincide, we treat them as one grid point and average their normals.
  */
 std::vector<vm::vec3d> computeGridNormals(
-  const std::vector<BezierPatch::Point> patchGrid,
+  const std::vector<BezierPatch::Point>& patchGrid,
   const size_t pointRowCount,
   const size_t pointColumnCount)
 {
@@ -265,9 +265,20 @@ std::vector<vm::vec3d> computeGridNormals(
   }
 
   // normalize
+  const auto epsilon = vm::constants<double>::almost_zero();
+  auto fallback = vm::vec3d{0.0, 0.0, 1.0};
+  for (const auto& normal : normals)
+  {
+    if (!vm::is_zero(normal, epsilon))
+    {
+      fallback = vm::normalize(normal);
+      break;
+    }
+  }
+
   for (auto& normal : normals)
   {
-    normal = vm::normalize(normal);
+    normal = vm::is_zero(normal, epsilon) ? fallback : vm::normalize(normal);
   }
 
   return normals;
@@ -281,8 +292,29 @@ PatchGrid makePatchGrid(const BezierPatch& patch, const size_t subdivisionsPerSu
     patch.surfaceColumnCount() * (size_t(1) << subdivisionsPerSurface) + 1u;
 
   const auto patchGrid = patch.evaluate(subdivisionsPerSurface);
-  const auto normals =
-    computeGridNormals(patchGrid, gridPointRowCount, gridPointColumnCount);
+  auto normals = std::vector<vm::vec3d>{};
+  if (patch.hasControlNormals())
+  {
+    normals = patch.evaluateNormals(subdivisionsPerSurface);
+    const auto epsilon = vm::constants<double>::almost_zero();
+    auto fallback = vm::vec3d{0.0, 0.0, 1.0};
+    for (const auto& normal : normals)
+    {
+      if (!vm::is_zero(normal, epsilon))
+      {
+        fallback = vm::normalize(normal);
+        break;
+      }
+    }
+    for (auto& normal : normals)
+    {
+      normal = vm::is_zero(normal, epsilon) ? fallback : vm::normalize(normal);
+    }
+  }
+  else
+  {
+    normals = computeGridNormals(patchGrid, gridPointRowCount, gridPointColumnCount);
+  }
   contract_assert(patchGrid.size() == normals.size());
 
   auto points = std::vector<PatchGrid::Point>{};

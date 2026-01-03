@@ -1,10 +1,10 @@
-% TrenchBroom  \_\_TB_VERSION\_\_ Reference Manual
+% BrümSchtick  \_\_TB_VERSION\_\_ Reference Manual
 % Kristian Duske
 % 11-13-2015
 
 # Introduction {#introduction}
 
-TrenchBroom is a level editing program for brush-based game engines such as Quake, Quake 2, and Hexen 2. TrenchBroom is easy to use and provides many simple and advanced tools to create complex and interesting levels with ease. This document contains the manual for TrenchBroom. Reading this document will teach you how to use TrenchBroom and how to use its advanced features.
+BrümSchtick is a level editing program for brush-based game engines such as Quake, Quake 2, and Hexen 2. BrümSchtick is easy to use and provides many simple and advanced tools to create complex and interesting levels with ease. This document contains the manual for BrümSchtick. Reading this document will teach you how to use BrümSchtick and how to use its advanced features.
 
 ## Features {#features}
 
@@ -38,15 +38,15 @@ TrenchBroom is a level editing program for brush-based game engines such as Quak
 
 ## About this Document
 
-This document is intended to help you learn to use the TrenchBroom editor. It is not intended to teach you how to map, and it isn't a tutorial either. If you are having technical problems with your maps, or need information on how to create particular effects or setups for the particular game you are mapping for, you should ask other mappers for help (see [References and Links](#references_and_links) to find mapping communities and such). This document will only teach you how to use this editor.
+This document is intended to help you learn to use the BrümSchtick editor. It is not intended to teach you how to map, and it isn't a tutorial either. If you are having technical problems with your maps, or need information on how to create particular effects or setups for the particular game you are mapping for, you should ask other mappers for help (see [References and Links](#references_and_links) to find mapping communities and such). This document will only teach you how to use this editor.
 
 # Getting Started {#getting_started}
 
-This section starts off with a small introduction to the most important technical terms related to mapping for brush-based engines. Additionally, we introduce some concepts on which TrenchBroom is built. Afterwards, we introduce the welcome window, the game selection dialog, we give an overview of the main window and explain the camera navigation in the 3D and 2D views.
+This section starts off with a small introduction to the most important technical terms related to mapping for brush-based engines. Additionally, we introduce some concepts on which BrümSchtick is built. Afterwards, we introduce the welcome window, the game selection dialog, we give an overview of the main window and explain the camera navigation in the 3D and 2D views.
 
 ## Preliminaries {#preliminaries}
 
-In this section we introduce some technical terms related to mapping in Quake-engine based games. It is not important that you understand every detail of all of these terms, but in order to understand how TrenchBroom works, you should have a general idea how maps are structured and how TrenchBroom views and manages that structure. In particular, this section introduces some concepts that we added to the map structures (without changing the file format, of course). Knowing and understanding these concepts will help you to get a grip on several important aspects of editing levels in TrenchBroom.
+In this section we introduce some technical terms related to mapping in Quake-engine based games. It is not important that you understand every detail of all of these terms, but in order to understand how BrümSchtick works, you should have a general idea how maps are structured and how BrümSchtick views and manages that structure. In particular, this section introduces some concepts that we added to the map structures (without changing the file format, of course). Knowing and understanding these concepts will help you to get a grip on several important aspects of editing levels in BrümSchtick.
 
 ### Map Definitions
 
@@ -64,18 +64,18 @@ Line four defines a **Brush** as a possibly empty sequence of faces (but usually
 
 In this document, we use the term _object_ to refer to entities and brushes.
 
-### TrenchBroom's View of Maps
+### BrümSchtick's View of Maps
 
-TrenchBroom organizes the objects of a map a bit differently than how they are organized in the map files. Firstly, TrenchBroom introduces two additional concepts: [Layers](#layers) and [Groups](#groups). Secondly, the worldspawn entity is hidden from you and its properties are associated with the map. To differentiate TrenchBroom's view from the view that other tools and compilers have, we use the term "world" instead of "map" here. In the remainder of this document, we will use the term "map" again.
+BrümSchtick organizes the objects of a map a bit differently than how they are organized in the map files. Firstly, BrümSchtick introduces two additional concepts: [Layers](#layers) and [Groups](#groups). Secondly, the worldspawn entity is hidden from you and its properties are associated with the map. To differentiate BrümSchtick's view from the view that other tools and compilers have, we use the term "world" instead of "map" here. In the remainder of this document, we will use the term "map" again.
 
     1. `World        = {Property} DefaultLayer {Layer}`
     2. `DefaultLayer = Layer`
     3. `Layer        = Name {Group} {Entity} {Brush}`
     4. `Group        = Name {Group} {Entity} {Brush}`
 
-The first line defines the structure of a map as TrenchBroom sees it. To TrenchBroom, a **World** consists of zero or more properties, a default layer, and zero or more additional layers. The second line specifies that the **DefaultLayer** is just a layer. Then, the third line defines what a **Layer** is: A layer has a name (just a string), and it contains zero or more groups, zero or more entities, and zero or more brushes. In TrenchBroom, layers are used to partition a map into several large areas in order to reduce visual clutter by hiding them. In contrast, groups are used to merge a small number of objects into one object so that they can all be edited as one. Like layers, a **Group** is composed of a name, zero or more groups, zero or more entities, and zero or more brushes. In case you didn't notice, groups induce a hierarchy, that is, a group can contain other sub-groups. All other definitions are exactly the same as in the previous section.
+The first line defines the structure of a map as BrümSchtick sees it. To BrümSchtick, a **World** consists of zero or more properties, a default layer, and zero or more additional layers. The second line specifies that the **DefaultLayer** is just a layer. Then, the third line defines what a **Layer** is: A layer has a name (just a string), and it contains zero or more groups, zero or more entities, and zero or more brushes. In BrümSchtick, layers are used to partition a map into several large areas in order to reduce visual clutter by hiding them. In contrast, groups are used to merge a small number of objects into one object so that they can all be edited as one. Like layers, a **Group** is composed of a name, zero or more groups, zero or more entities, and zero or more brushes. In case you didn't notice, groups induce a hierarchy, that is, a group can contain other sub-groups. All other definitions are exactly the same as in the previous section.
 
-To summarize, TrenchBroom sees a map as a hierarchy (a tree). The root of the hierarchy is called world and represents the entire map. The world consists first of layers, then groups, entities, and brushes, whereby groups can contain more groups, entities, and brushes, and entities can again contain brushes. Because groups can contain other groups, the hierarchy can be arbitrarily deep, although in practice groups will rarely contain more than one additional level of sub groups.
+To summarize, BrümSchtick sees a map as a hierarchy (a tree). The root of the hierarchy is called world and represents the entire map. The world consists first of layers, then groups, entities, and brushes, whereby groups can contain more groups, entities, and brushes, and entities can again contain brushes. Because groups can contain other groups, the hierarchy can be arbitrarily deep, although in practice groups will rarely contain more than one additional level of sub groups.
 
 ### Brush Geometry {#brush_geometry}
 
@@ -92,39 +92,39 @@ The plane points are given as three groups of three numbers. Each group is made 
       |
     p1*--v1--->*p3
 
-The normal of the plane is in the direction of the cross product of v1 and v2. In the diagram above, the plane normal points towards you. Together with its normal, the plane divides three dimensional space into two half spaces: The upper half space above the plane, and the lower half space below the plane. In this interpretation, the volume of the brush is the intersection of the lower half spaces defined by the face planes. This way of defining brushes has the advantage that all brushes are automatically convex. However, this representation of brushes does not directly contain any other geometric information of the brush, particularly its vertices, edges, and facets, which must be computed from the plane representation. In TrenchBroom, the vertices, edges, and facets are called the **brush geometry**. TrenchBroom uses the same method as the BSP compilers to compute the brush geometry. Having the brush geometry is necessary mainly for two things: Rendering and vertex editing.
+The normal of the plane is in the direction of the cross product of v1 and v2. In the diagram above, the plane normal points towards you. Together with its normal, the plane divides three dimensional space into two half spaces: The upper half space above the plane, and the lower half space below the plane. In this interpretation, the volume of the brush is the intersection of the lower half spaces defined by the face planes. This way of defining brushes has the advantage that all brushes are automatically convex. However, this representation of brushes does not directly contain any other geometric information of the brush, particularly its vertices, edges, and facets, which must be computed from the plane representation. In BrümSchtick, the vertices, edges, and facets are called the **brush geometry**. BrümSchtick uses the same method as the BSP compilers to compute the brush geometry. Having the brush geometry is necessary mainly for two things: Rendering and vertex editing.
 
 ### Entity Definitions {#entity_definitions}
 
-To TrenchBroom, entities are just a sequence of properties (key value pairs), most of which are without any special meaning. In particular, the entity properties do not specify which model TrenchBroom should display for the entity in its viewports. Additionally, some property values have specific types, such as color, angle, or position. But these types cannot be hardcoded into the editor, because depending on the game, mod, or entity, a property called "angle" may have a different meaning. To give TrenchBroom more information on how to interpret a particular entity and its properties, an entity definition is necessary. Entity definitions specify the spawnflags of an entity, the names and types of its properties, the model to display in the editor, and other things. They are usually specified in a separate file that you can [load into the editor](#entity_definition_setup).
+To BrümSchtick, entities are just a sequence of properties (key value pairs), most of which are without any special meaning. In particular, the entity properties do not specify which model BrümSchtick should display for the entity in its viewports. Additionally, some property values have specific types, such as color, angle, or position. But these types cannot be hardcoded into the editor, because depending on the game, mod, or entity, a property called "angle" may have a different meaning. To give BrümSchtick more information on how to interpret a particular entity and its properties, an entity definition is necessary. Entity definitions specify the spawnflags of an entity, the names and types of its properties, the model to display in the editor, and other things. They are usually specified in a separate file that you can [load into the editor](#entity_definition_setup).
 
 ### Mods {#mods}
 
-A mod (short for game modification) is a way of extending a Quake-engine based game with custom gameplay and assets. Custom assets include models, sounds, and materials. From the perspective of the game, a mod is a subdirectory in the game directory where the additional assets reside in the form of loose files or archives such as pak files. As far as TrenchBroom is concerned, a mod just provides assets, some of which replace existing assets from the game and some of which are new. For example, a mod might provide a new model for an entity, or it provides an entirely new entity. In order to make these new entities usable in TrenchBroom, two things are required: First, TrenchBroom needs an entity definition for these entities, and TrenchBroom needs to know where it should look for the models to display in the viewports. The first issue can be addressed by pointing TrenchBroom to an alternate [entity definition file](#entity_definitions), and the second issue can be addressed by [adding a mod directory](#mod_setup) for the current map.
+A mod (short for game modification) is a way of extending a Quake-engine based game with custom gameplay and assets. Custom assets include models, sounds, and materials. From the perspective of the game, a mod is a subdirectory in the game directory where the additional assets reside in the form of loose files or archives such as pak files. As far as BrümSchtick is concerned, a mod just provides assets, some of which replace existing assets from the game and some of which are new. For example, a mod might provide a new model for an entity, or it provides an entirely new entity. In order to make these new entities usable in BrümSchtick, two things are required: First, BrümSchtick needs an entity definition for these entities, and BrümSchtick needs to know where it should look for the models to display in the viewports. The first issue can be addressed by pointing BrümSchtick to an alternate [entity definition file](#entity_definitions), and the second issue can be addressed by [adding a mod directory](#mod_setup) for the current map.
 
-Every game has a default mod which is always loaded by TrenchBroom. As an example, the default mod for Quake is _id1_, which is the directory that contains all game content. TrenchBroom supports multiple mods, and in the case of multiple mods, there has to be a policy for resolving name conflicts between resources. For example, a mod might provide an entity model for an entity defined in the default mod in order to replace the default model with a more detailed one. To do this, the mod provides an entity model with the same name as the one it wants to replace. To resolve such name conflicts, TrenchBroom assigns priorities for mods, and if a name conflict occurs between different mods, the mod with the highest priority wins. Note that the default mod always has the lowest priority.
+Every game has a default mod which is always loaded by BrümSchtick. As an example, the default mod for Quake is _id1_, which is the directory that contains all game content. BrümSchtick supports multiple mods, and in the case of multiple mods, there has to be a policy for resolving name conflicts between resources. For example, a mod might provide an entity model for an entity defined in the default mod in order to replace the default model with a more detailed one. To do this, the mod provides an entity model with the same name as the one it wants to replace. To resolve such name conflicts, BrümSchtick assigns priorities for mods, and if a name conflict occurs between different mods, the mod with the highest priority wins. Note that the default mod always has the lowest priority.
 
 ### Materials and Material Collections {#materials}
 
-A material defines how a surface is rendered and how it interacts with light. In TrenchBroom, materials are usually closely related to textures. When TrenchBroom finds a texture on the filesystem, it automatically creates a default material for it. For Quake 3, additional material properties are read from shader files. Materials are usually not provided individually, but as material collections. A material collection can be a directory containing loose image files, or it can be an archive such as a wad file. Some games such as Quake 2 come with textures that are readily loadable by TrenchBroom. Such textures are called _internal_. _External_ textures on the other hand are textures that you provide by loading a wad file. Since some games such as Quake don't come with their own textures readily available, you have to obtain the textures you wish to use and add them to TrenchBroom manually by [loading a wad file](#material_management).
+A material defines how a surface is rendered and how it interacts with light. In BrümSchtick, materials are usually closely related to textures. When BrümSchtick finds a texture on the filesystem, it automatically creates a default material for it. For Quake 3, additional material properties are read from shader files. Materials are usually not provided individually, but as material collections. A material collection can be a directory containing loose image files, or it can be an archive such as a wad file. Some games such as Quake 2 come with textures that are readily loadable by BrümSchtick. Such textures are called _internal_. _External_ textures on the other hand are textures that you provide by loading a wad file. Since some games such as Quake don't come with their own textures readily available, you have to obtain the textures you wish to use and add them to BrümSchtick manually by [loading a wad file](#material_management).
 
 Multiple material collections may contain a material with the same name, resulting in a name conflict. Such a conflict is resolved by observing the order in which the material collections were loaded - the material that was loaded most recently wins the conflict. You cannot control the load order unless you are using wad files.
 
 ## Startup {#startup}
 
-The first thing you will see when TrenchBroom starts is the welcome window. This window allows you to open one of your most recently edited maps, to create a new map or to browse your computer for an existing map you wish to open in TrenchBroom.
+The first thing you will see when BrümSchtick starts is the welcome window. This window allows you to open one of your most recently edited maps, to create a new map or to browse your computer for an existing map you wish to open in BrümSchtick.
 
-![TrenchBroom's welcome window (Mac OS X)](images/WelcomeWindow.png)
+![BrümSchtick's welcome window (Mac OS X)](images/WelcomeWindow.png)
 
-You can click the button labeled "New map..." to create a new map or you can click the button labeled "Browse..." to find a map file on your computer. Double click one of the documents in the list on the right of the window to open it. The light gray text on the left gives you some information about which version of TrenchBroom you are currently running. The version information is useful if you wish to report a problem with the editor (see [here](#reporting_bugs) for more information).
+You can click the button labeled "New map..." to create a new map or you can click the button labeled "Browse..." to find a map file on your computer. Double click one of the documents in the list on the right of the window to open it. The light gray text on the left gives you some information about which version of BrümSchtick you are currently running. The version information is useful if you wish to report a problem with the editor (see [here](#reporting_bugs) for more information).
 
-If you choose to create a new map, TrenchBroom needs to know which game the map should be for, and will show a dialog in which you can select a game and, if applicable, a map format. This dialog may also be shown when you open an existing map. TrenchBroom will try to detect this information from the map file, but if that fails, you need to select the game and map format.
+If you choose to create a new map, BrümSchtick needs to know which game the map should be for, and will show a dialog in which you can select a game and, if applicable, a map format. This dialog may also be shown when you open an existing map. BrümSchtick will try to detect this information from the map file, but if that fails, you need to select the game and map format.
 
 ![The game selection dialog (Mac OS X)](images/GameSelectionDialog.png)
 
-The list of supported games is shown on the right side of the dialog. Below the game list, there is a dropdown menu for choosing a map format; this is only shown if the game supports more than one map format. One example for this is Quake, which supports both the standard format and the Valve 220 format for map files. In the screenshot above, none of the games in the list were actually found on the hard disk. This is because the respective game paths have not been configured yet. TrenchBroom allows you to create maps for missing games, but you will not be able to see the entity models in the editor and other resources such as materials might be missing as well. To open the game configuration preferences, you can click the button labeled "Open preferences...". Click [here](#game_configuration) to find out how to configure the supported games.
+The list of supported games is shown on the right side of the dialog. Below the game list, there is a dropdown menu for choosing a map format; this is only shown if the game supports more than one map format. One example for this is Quake, which supports both the standard format and the Valve 220 format for map files. In the screenshot above, none of the games in the list were actually found on the hard disk. This is because the respective game paths have not been configured yet. BrümSchtick allows you to create maps for missing games, but you will not be able to see the entity models in the editor and other resources such as materials might be missing as well. To open the game configuration preferences, you can click the button labeled "Open preferences...". Click [here](#game_configuration) to find out how to configure the supported games.
 
-Once you have selected a game and a map format, TrenchBroom will open the main editing window with a new map. The following section gives an overview of this window and its main elements. If you want to find out how to [work with mods](#mods) and how to [add materials](#material_management), you can skip ahead to the respective sections.
+Once you have selected a game and a map format, BrümSchtick will open the main editing window with a new map. The following section gives an overview of this window and its main elements. If you want to find out how to [work with mods](#mods) and how to [add materials](#material_management), you can skip ahead to the respective sections.
 
 ## Main Window {#main_window}
 
@@ -136,11 +136,11 @@ The sizes of the editing area, the inspector and the info bar can be changed by 
 
 ### The Editing Area
 
-The editing area is divided in two sections: The context sensitive info bar at the top and the viewports below. The info bar contains different controls depending on which tool is currently activated. You can switch between tools such as the rotate tool and the vertex tool using the toolbar buttons, the menu or with the respective keyboard shortcuts. The context sensitive controls allow you to perform certain actions that are relevant to the current tool such as setting the rotation center when in the rotate tool or moving objects by a given delta when in the default move tool. Additionally, there is a button labeled "View Options" on the right of the info bar. Clicking on this button unfolds a dropdown containing controls to [filter out](#filtering_rendering_options) certain objects in the viewports or to change how the viewport [renders its contents](#filtering_rendering_options).
+The editing area is divided in two sections: The context sensitive info bar at the top and the viewports below. The info bar contains different controls depending on which tool is currently activated. You can switch between tools such as the rotate tool and the vertex tool using the toolbar buttons, the menu or with the respective keyboard shortcuts. The context sensitive controls allow you to perform certain actions that are relevant to the current tool such as setting the rotation center when in the rotate tool or moving objects by a given delta when in the default move tool. The info bar also includes a search field that filters visible map objects by entity property values or texture/material names; use key=value or key:value to target a specific property. Additionally, there is a button labeled "View Options" on the right of the info bar. Clicking on this button unfolds a dropdown containing controls to [filter out](#filtering_rendering_options) certain objects in the viewports or to change how the viewport [renders its contents](#filtering_rendering_options).
 
 ![The info bar with view dropdown (Windows 10)](images/ViewDropdown.png)
 
-There are two types of viewports: 3D viewports and 2D viewports. TrenchBroom gives you some control over the layout of the viewports: You can have one, two, three, or four viewports. See section [View Layout and Rendering](#view_layout_and_rendering) to find out how to change the layout of the viewports. If you have fewer than four viewports, then one of the viewports can be cycled by hitting #action(Controls/Map view/Cycle map view). Which of the viewports can be cycled and the order of cycling the viewports is given in the following table:
+There are two types of viewports: 3D viewports and 2D viewports. BrümSchtick gives you some control over the layout of the viewports: You can have one, two, three, or four viewports. See section [View Layout and Rendering](#view_layout_and_rendering) to find out how to change the layout of the viewports. If you have fewer than four viewports, then one of the viewports can be cycled by hitting #action(Controls/Map view/Cycle map view). Which of the viewports can be cycled and the order of cycling the viewports is given in the following table:
 
 No. of Viewports    Cycling View         Cycling Order
 ----------------    ------------         -------------
@@ -167,13 +167,13 @@ At most one of the viewports can have focus, that is, only one of them can recei
 
 ![McKinley Base and Quake map bounds](images/CTF1Bounds.png)
 
-Game engines often impose a limit on the usable/playable volume of space. TrenchBroom can display this limit as a guide to use when creating your map. Such bounds will appear as an orange square or rectangle in the 2D viewports. For example, the image above shows the Quake map McKinley Base (ctf1 from Threewave CTF) within the normal bounds for a Quake map.
+Game engines often impose a limit on the usable/playable volume of space. BrümSchtick can display this limit as a guide to use when creating your map. Such bounds will appear as an orange square or rectangle in the 2D viewports. For example, the image above shows the Quake map McKinley Base (ctf1 from Threewave CTF) within the normal bounds for a Quake map.
 
 ![Map Properties (Ubuntu Linux)](images/SoftBounds.png) If bounds are configured for a game, they will usually represent the limits observed by the last official release or patch of a particular game engine. Those bounds may not be correct for your situation, so you can disable or modify the displayed bounds using the Map Properties portion of the Map Inspector, as shown here. (More about the Map Inspector in the next section below.)
 
-In Quake-engine games, these bounds represent a limit on the volume that can contain players, items, or other entities. Static geometry (plain brushes) can extend further, which is why these limits are often called "soft bounds". As far as TrenchBroom is concerned however, it is just drawing orange lines at whatever coordinates are indicated in the [game configuration file](#game_configuration_files)... if this is a non-Quake-engine game then the bounds could represent something else.
+In Quake-engine games, these bounds represent a limit on the volume that can contain players, items, or other entities. Static geometry (plain brushes) can extend further, which is why these limits are often called "soft bounds". As far as BrümSchtick is concerned however, it is just drawing orange lines at whatever coordinates are indicated in the [game configuration file](#game_configuration_files)... if this is a non-Quake-engine game then the bounds could represent something else.
 
-In any case, keep in mind that the displayed bounds are just a guide that you should use to help yourself stay within the limits of your target game engine. Changing the bounds in TrenchBroom will not change the behavior in the game!
+In any case, keep in mind that the displayed bounds are just a guide that you should use to help yourself stay within the limits of your target game engine. Changing the bounds in BrümSchtick will not change the behavior in the game!
 
 ### The Inspector
 
@@ -185,11 +185,11 @@ The **Map Inspector** allows you to edit [layers](#layers), configure displayed 
 
 ### The Info Bar
 
-You can show or hide the info bar by choosing #menu(Menu/View/Toggle Info Panel). It contains the console where TrenchBroom prints out messages, warnings and errors, and the live [issue browser](#issue_browser) where you can view, filter and resolve issues with your map.
+You can show or hide the info bar by choosing #menu(Menu/View/Toggle Info Panel). It contains the console where BrümSchtick prints out messages, warnings and errors, and the live [issue browser](#issue_browser) where you can view, filter and resolve issues with your map.
 
 ## Camera Navigation {#camera_navigation}
 
-Navigation in TrenchBroom is quite simple and straightforward. You will mostly use the mouse to move and pan the camera and to look around. There are also some keyboard shortcuts to help you position the camera with more precision. Just like in Quake, the camera cannot be rolled - in other words, up is always in the positive Z direction and down is always in the negative Z direction. The behavior of the camera can be controlled in the [preferences](#mouse_input).
+Navigation in BrümSchtick is quite simple and straightforward. You will mostly use the mouse to move and pan the camera and to look around. There are also some keyboard shortcuts to help you position the camera with more precision. Just like in Quake, the camera cannot be rolled - in other words, up is always in the positive Z direction and down is always in the negative Z direction. The behavior of the camera can be controlled in the [preferences](#mouse_input).
 
 ### Looking and Moving Around
 
@@ -232,7 +232,7 @@ To temporarily adjust the camera's zoom, hold #key(Shift) and scroll the mouse w
 
 # Selection {#selection}
 
-There are two different kinds of things that can be selected in TrenchBroom: objects and brush faces. Most of the time, you will select objects such as entities and brushes. Selecting individual brush faces is only useful for changing their attributes, e.g. the materials. You can only select objects or brush faces, but not both at the same time. However, a selection of brushes (and nothing else) is treated as if all of their brush faces were selected individually.
+There are two different kinds of things that can be selected in BrümSchtick: objects and brush faces. Most of the time, you will select objects such as entities and brushes. Selecting individual brush faces is only useful for changing their attributes, e.g. the materials. You can only select objects or brush faces, but not both at the same time. However, a selection of brushes (and nothing else) is treated as if all of their brush faces were selected individually.
 
 ![Object selection in 3D and 2D viewports](images/ObjectSelection.gif)
 
@@ -246,9 +246,9 @@ In the 3D viewport, you can only select the frontmost object with the mouse. To 
 
 ![Selection drilling in the 3D viewport](images/DrillSelection.gif)
 
-In a 2D viewport, you can also left click an object to select it. But unlike in the 3D viewport, this will not necessarily select the frontmost object. Instead, TrenchBroom will analyze the objects under the mouse, specifically the faces under the mouse, and it will find the one with the smallest visible area. Having found such a face, it will select the object to which this face belongs. Since entities don't necessarily have faces, the faces of their bounding boxes will be considered instead. The advantage of this technique is that it allows you to easily select occluded objects in the 2D viewports.
+In a 2D viewport, you can also left click an object to select it. But unlike in the 3D viewport, this will not necessarily select the frontmost object. Instead, BrümSchtick will analyze the objects under the mouse, specifically the faces under the mouse, and it will find the one with the smallest visible area. Having found such a face, it will select the object to which this face belongs. Since entities don't necessarily have faces, the faces of their bounding boxes will be considered instead. The advantage of this technique is that it allows you to easily select occluded objects in the 2D viewports.
 
-You may also think of left click selection like this: In both the 3D viewport or a 2D viewport, TrenchBroom first compiles a set of candidate objects. These are all objects under the mouse. Then, it must choose an object to be selected from these candidates. In the 3D viewport, the frontmost object always wins (unless you're using the scroll wheel to drill the selection), and in a 2D view, the object with the smallest visible area wins. Other than that, selection behaves exactly the same in both viewports, that is, you can hold #key(Ctrl) to select multiple objects and so on.
+You may also think of left click selection like this: In both the 3D viewport or a 2D viewport, BrümSchtick first compiles a set of candidate objects. These are all objects under the mouse. Then, it must choose an object to be selected from these candidates. In the 3D viewport, the frontmost object always wins (unless you're using the scroll wheel to drill the selection), and in a 2D view, the object with the smallest visible area wins. Other than that, selection behaves exactly the same in both viewports, that is, you can hold #key(Ctrl) to select multiple objects and so on.
 
 Sometimes, selecting objects manually is too tedious. To select all currently editable objects, you can choose #menu(Menu/Edit/Select All) from the menu. Note that hidden and locked objects are excluded, so this command is particularly useful in conjunction with those features. Another option to select multiple objects at once is to use _selection brushes_. Just create one or more new brushes that enclose or touch all the objects you wish to select. These brushes are called selection brushes. Select all of these newly created selection brushes, and choose #menu(Menu/Edit/Select Touching) to select every object touched by the selection brushes, or choose #menu(Menu/Edit/Select Inside) to select every object enclosed inside them. Note that selection brushes will disappear after they were made use of.
 
@@ -256,7 +256,7 @@ Sometimes, selecting objects manually is too tedious. To select all currently ed
 
 A similar operation can be found under #menu(Menu/Edit/Select Tall), but this particular operation is only available when a 2D view has focus. It projects the selection brushes onto the view plane of the currently focused 2D viewport, which results in a 2D polygon, and then selects every object that is contained entirely within that polygon. You can think of this as a cheap lasso selection tool that works like #menu(Menu/Edit/Select Inside), but without having to adjust the distance and thickness of the selection brushes.
 
-If you have selected a single brush that belongs to an entity or group, and you wish to select every other object belonging to that entity or group, you can choose #menu(Menu/Edit/Select Siblings). The same effect can be achieved by left double clicking on a brush that belongs to an entity or group. The menu command #menu(Menu/Edit/Select by Line Number) is useful for diagnostic purposes. If an external program such as a map compiler presents you with an error message and a line number indicating where in the map file that error occurred, you can use this menu command to have TrenchBroom select the offending object for you.
+If you have selected a single brush that belongs to an entity or group, and you wish to select every other object belonging to that entity or group, you can choose #menu(Menu/Edit/Select Siblings). The same effect can be achieved by left double clicking on a brush that belongs to an entity or group. When a brush is in the top-level layer, a double click selects all faces of that brush instead of selecting every object in the layer. The menu command #menu(Menu/Edit/Select by Line Number) is useful for diagnostic purposes. If an external program such as a map compiler presents you with an error message and a line number indicating where in the map file that error occurred, you can use this menu command to have BrümSchtick select the offending object for you.
 
 Choose #menu(Menu/Edit/Select Inverse) from the menu to invert the selection, i.e. select everything that is currently unselected (excluding hidden and locked objects).
 
@@ -270,7 +270,7 @@ To select a brush face, you need to hold #key(Shift) and left click it in the 3D
 
 # Editing
 
-In this section, we will cover all topics related to the actual editing of a map. We begin by explaining how to set up the map itself, that is, how to set up mods, entity definitions, and material collection. Afterwards, we show you how to create new objects such as entities or brushes, how to edit and transform them, and how to delete them. After that, we explain how you can work with materials in TrenchBroom. The following section introduces the various tools at your disposal to shape brushes while the section after that focuses on entities and how to edit their properties. The goal of the final section is to help you keep an overview in your map by using layers, groups, and by various other means.
+In this section, we will cover all topics related to the actual editing of a map. We begin by explaining how to set up the map itself, that is, how to set up mods, entity definitions, and material collection. Afterwards, we show you how to create new objects such as entities or brushes, how to edit and transform them, and how to delete them. After that, we explain how you can work with materials in BrümSchtick. The following section introduces the various tools at your disposal to shape brushes while the section after that focuses on entities and how to edit their properties. The goal of the final section is to help you keep an overview in your map by using layers, groups, and by various other means.
 
 ## Map Setup
 
@@ -278,7 +278,7 @@ The first step when creating a new map is the setup of mods, entity definitions,
 
 ### Setting Up Mods {#mod_setup}
 
-![Mod editor](images/ModEditor.png) We explained [previously](#mods) that a mod is just a sub directory in the game directory itself. Every game has a default mod that is always active and that cannot be deactivated - in Quake, this is _id1_, the directory that contains all game resources. TrenchBroom supports an unlimited number of additional mods. Mods can be added, removed, and reordered by using the mod editor, which you can find at the bottom of the map inspector.
+![Mod editor](images/ModEditor.png) We explained [previously](#mods) that a mod is just a sub directory in the game directory itself. Every game has a default mod that is always active and that cannot be deactivated - in Quake, this is _id1_, the directory that contains all game resources. BrümSchtick supports an unlimited number of additional mods. Mods can be added, removed, and reordered by using the mod editor, which you can find at the bottom of the map inspector.
 
 When the editor starts, the mod editor is folded, but you can unfold it by clicking on its title bar. You are then presented with a two column view of the available mods (left column) and the enabled mods (right column). The list of available mods contains every sub directory in the game directory in alphabetic order. This list can be filtered using the search field at the bottom. To enable some mods, select them in the list of available mods and click on the plus icon below the list of enabled mods. To disable mods, select them in the list of enabled mods and click on the minus icon.
 
@@ -288,11 +288,11 @@ Mods are stored in a worldspawn property called "_tb_mod".
 
 ### Loading Entity Definitions {#entity_definition_setup}
 
-![Entity definition editor](images/EntityDefinitionEditor.png) Entity definitions are text files containing information about [the meaning of entities and their properties](#entity_definitions). Depending on the game and mod you are mapping for, you might want to load different entity definitions into the editor. To load an entity definition file into TrenchBroom, switch to the entity inspector and click on the entity browser title bar where it says "Settings". The entity definition browser is horizontally divided into two areas. The upper area contains a list of _builtin_ entity definition files. These are the entity definition files that came with TrenchBroom for the game you are currently working on. You can select one of these builtin files by clicking on it. TrenchBroom will load the file and update its resources accordingly. Alternatively, you may want to load an external entity definition file of your own. To do this, click the button labeled "Browse" in the lower area of the entity definition browser and choose the file you wish to load. Currently, TrenchBroom supports Radiant DEF files and ENT files as well as [Valve FGD][FGD File Format] files. To reload the entity definitions (as well as the referenced models) from the currently loaded external file, you can click the button labeled "Reload" at the bottom or use #menu(Menu/File/Reload Entity Definitions). This may be useful if you're editing an entity definition file for a mod you're working on.
+![Entity definition editor](images/EntityDefinitionEditor.png) Entity definitions are text files containing information about [the meaning of entities and their properties](#entity_definitions). Depending on the game and mod you are mapping for, you might want to load different entity definitions into the editor. To load an entity definition file into BrümSchtick, switch to the entity inspector and click on the entity browser title bar where it says "Settings". The entity definition browser is horizontally divided into two areas. The upper area contains a list of _builtin_ entity definition files. These are the entity definition files that came with BrümSchtick for the game you are currently working on. You can select one of these builtin files by clicking on it. BrümSchtick will load the file and update its resources accordingly. Alternatively, you may want to load an external entity definition file of your own. To do this, click the button labeled "Browse" in the lower area of the entity definition browser and choose the file you wish to load. Currently, BrümSchtick supports Radiant DEF files and ENT files as well as [Valve FGD][FGD File Format] files. To reload the entity definitions (as well as the referenced models) from the currently loaded external file, you can click the button labeled "Reload" at the bottom or use #menu(Menu/File/Reload Entity Definitions). This may be useful if you're editing an entity definition file for a mod you're working on.
 
 Return to the entity browser by clicking on the entity browser title bar again where it says "Browser".
 
-Note that FGD and ENT files contain much more information than DEF files and are generally preferable. While TrenchBroom supports all of these file types, its support for FGD and for ENT is better and more comprehensive. Unfortunately, DEF files are still relevant because Radiant style editors require them, so TrenchBroom allows you to use them, too.
+Note that FGD and ENT files contain much more information than DEF files and are generally preferable. While BrümSchtick supports all of these file types, its support for FGD and for ENT is better and more comprehensive. Unfortunately, DEF files are still relevant because Radiant style editors require them, so BrümSchtick allows you to use them, too.
 
 The path of an external entity definition file is stored in a worldspawn property called "_tb_def".
 
@@ -300,27 +300,27 @@ The path of an external entity definition file is stored in a worldspawn propert
 
 #### Wad Files
 
-Wad files are managed via the `wad` worldspawn property. The property contains a semicolon separated list of paths where TrenchBroom will load a wad file from. Map compilers also use this property to find wad files.
+Wad files are managed via the `wad` worldspawn property. The property contains a semicolon separated list of paths where BrümSchtick will load a wad file from. Map compilers also use this property to find wad files.
 
-![Smart wad editor](images/SmartWadEditor.png) In TrenchBroom, you cannot edit this property directly, so you must use a smart property editor that's available for the `wad` property. This smart editor is available when you select the `wad` worldspawn property in the entity property editor. Click the `+` icon to add a wad file or the `-` icon to remove the selected wad files. The two triangle icons move a selected wad file up and down in the list. This only has an effect on how name conflicts between materials are resolved. The icon with the two circular arrows reloads all texture wads.
+![Smart wad editor](images/SmartWadEditor.png) In BrümSchtick, you cannot edit this property directly, so you must use a smart property editor that's available for the `wad` property. This smart editor is available when you select the `wad` worldspawn property in the entity property editor. Click the `+` icon to add a wad file or the `-` icon to remove the selected wad files. The two triangle icons move a selected wad file up and down in the list. This only has an effect on how name conflicts between materials are resolved. The icon with the two circular arrows reloads all texture wads.
 
 Alternatively, you can drag wad files onto the editor window from a file browser such as the Windows explorer. If the map uses wad files, these files will be loaded and their paths will get appended to the `wad` worldspawn property.
 
 #### Materials from directories
 
-Unless you are using wad files, you don't need to do anything to manage your materials - TrenchBroom will automatically load all available material collections.
+Unless you are using wad files, you don't need to do anything to manage your materials - BrümSchtick will automatically load all available material collections.
 
-If you want to provide your own custom textures, you need to put them in a subdirectory where TrenchBroom can find them. For Quake 2, this means that you need to create a subdirectory called `textures` in the directory of the mod you're mapping for, or in the `baseq2` directory. Then you need to create another subdirectory with a name of your choice. Then you copy your texture files into that directory. TrenchBroom will then find that directory (possibly after restarting the editor) and allow you to load the textures from there. Currently, for a generic game you must create a `textures` folder in the game path directory you set in [game configuration](#game_configuration), or in a directory you loaded as a mod.
+If you want to provide your own custom textures, you need to put them in a subdirectory where BrümSchtick can find them. For Quake 2, this means that you need to create a subdirectory called `textures` in the directory of the mod you're mapping for, or in the `baseq2` directory. Then you need to create another subdirectory with a name of your choice. Then you copy your texture files into that directory. BrümSchtick will then find that directory (possibly after restarting the editor) and allow you to load the textures from there. Currently, for a generic game you must create a `textures` folder in the game path directory you set in [game configuration](#game_configuration), or in a directory you loaded as a mod.
 
 You need to place your textures in a subdirectory exactly one level deep in the `textures` folder. Any loose images in `textures` will not be detected, nor will any nested in subdirectories of your collection.
 
 ## Interacting with the Editor
 
-Before we delve into specific editing operations such as creating new objects, you should learn some basics about how to interact with the editor itself. In particular, it is important to understand the concept of tools in TrenchBroom and how mouse input is mapped to 3D coordinates.
+Before we delve into specific editing operations such as creating new objects, you should learn some basics about how to interact with the editor itself. In particular, it is important to understand the concept of tools in BrümSchtick and how mouse input is mapped to 3D coordinates.
 
 ### Working with Tools
 
-All editing functionality in TrenchBroom is provided by tools. There are two types of tools in TrenchBroom: Permanently active tools and modal tools. Modal tools are tools which have to be activated or deactivated manually by the user. Permanently active tools are tools which are always available, unless they are deactivated by a modal tool. The following table lists all tools with a short description:
+All editing functionality in BrümSchtick is provided by tools. There are two types of tools in BrümSchtick: Permanently active tools and modal tools. Modal tools are tools which have to be activated or deactivated manually by the user. Permanently active tools are tools which are always available, unless they are deactivated by a modal tool. The following table lists all tools with a short description:
 
 Tool                  Viewports    Type          Purpose
 ----                  ---------    ----          -----------
@@ -350,7 +350,7 @@ Vertex Tool           #menu(Menu/Edit/Tools/Vertex Tool)
 
 ![Tool buttons](images/ToolbarTools.png) Additionally, tools can be toggled by using the buttons on the left of the toolbar. In the image, the first button is active, however, this particular button does not represent any of the modal tools listed in the table above. Rather, it indicates that no modal tool is currently active, and therefore all permanent tools are available. The buttons icon indicates that objects can be moved, which is only possible if no modal tool is active. The second button represents the convex brush tool, the third button toggles the clip tool, the fourth button is used to toggle the vertex tool and the fifth button toggles the rotate tool.
 
-You can learn more about these tools in later sections. But before you can learn about the tools in detail, you should understand how TrenchBroom processes mouse input, which is what the following two sections will explain.
+You can learn more about these tools in later sections. But before you can learn about the tools in detail, you should understand how BrümSchtick processes mouse input, which is what the following two sections will explain.
 
 ### Canceling Operations and Tools {#canceling}
 
@@ -369,9 +369,9 @@ In addition, you can hit #action(Controls/Map view/Deactivate current tool) to d
 
 ### Mouse Input in 3D
 
-It is very important that you understand how mouse input is mapped to 3D coordinates when editing objects in TrenchBroom's 3D viewport. Since the mouse is a 2D input device, you cannot directly control all three dimensions when you edit objects with the mouse. For example, if you want to move a brush around, you can only move it in two directions by dragging it. Because of this, TrenchBroom maps mouse input to the horizontal XY plane. This means that you can only move things around horizontally by default. To move an object vertically, you need to hold #key(Alt) during editing. This applies to moving objects and vertices, for the most part.
+It is very important that you understand how mouse input is mapped to 3D coordinates when editing objects in BrümSchtick's 3D viewport. Since the mouse is a 2D input device, you cannot directly control all three dimensions when you edit objects with the mouse. For example, if you want to move a brush around, you can only move it in two directions by dragging it. Because of this, BrümSchtick maps mouse input to the horizontal XY plane. This means that you can only move things around horizontally by default. To move an object vertically, you need to hold #key(Alt) during editing. This applies to moving objects and vertices, for the most part.
 
-But this is not always true, since some editing operations are spatially restricted. For example, when resizing a brush, you drag one of its faces along its normal, so the editing operation is restricted to that normal vector. In fact, the mouse pointer's position must be mapped to a one-dimensional value that represents the distance by which the brush face has been dragged. Whenever mouse input has to be mapped to one or two dimensions, TrenchBroom does this mapping automatically and no additional thought is required. But if mouse input must be mapped to three dimensions, TrenchBroom does so by employing the editing plane metaphor explained before.
+But this is not always true, since some editing operations are spatially restricted. For example, when resizing a brush, you drag one of its faces along its normal, so the editing operation is restricted to that normal vector. In fact, the mouse pointer's position must be mapped to a one-dimensional value that represents the distance by which the brush face has been dragged. Whenever mouse input has to be mapped to one or two dimensions, BrümSchtick does this mapping automatically and no additional thought is required. But if mouse input must be mapped to three dimensions, BrümSchtick does so by employing the editing plane metaphor explained before.
 
 ### Mouse Input in 2D
 
@@ -379,15 +379,15 @@ Mapping mouse input to 3D coordinates is much simpler in the 2D viewports, becau
 
 ### Axis Restriction {#axis_restriction}
 
-To avoid imprecise movements when moving objects in two dimensions, you can limit movement to a single axis when using the mouse. By default, objects are moved on the XY plane in the 3D viewport or on the view plane in the 2D viewports. To move objects vertically in the 3D viewport, you have to hold #key(Alt). This works either when you start moving the objects and also during a drag. Furthermore, when moving objects on the XY plane in the 3D viewport or on the view plane in the 2D viewports, you can restrict the movement to one axis by holding #key(Shift). TrenchBroom will then restrict movement to the axis on which the objects have moved the farthest. So if you are moving objects in the 3D viewport and you want to restrict movement to the X axis, move the objects some distance along the X axis and press #key(Shift) to lock all movement to that axis. When you release #key(Shift), the restriction is lifted again and the objects will move to the position under the mouse. This applies not only to moving objects, but also moving vertices in the vertex tool and moving clip points in the clip tool. In the clip tool, the axis restriction only works in the 2D viewports however.
+To avoid imprecise movements when moving objects in two dimensions, you can limit movement to a single axis when using the mouse. By default, objects are moved on the XY plane in the 3D viewport or on the view plane in the 2D viewports. To move objects vertically in the 3D viewport, you have to hold #key(Alt). This works either when you start moving the objects and also during a drag. Furthermore, when moving objects on the XY plane in the 3D viewport or on the view plane in the 2D viewports, you can restrict the movement to one axis by holding #key(Shift). BrümSchtick will then restrict movement to the axis on which the objects have moved the farthest. So if you are moving objects in the 3D viewport and you want to restrict movement to the X axis, move the objects some distance along the X axis and press #key(Shift) to lock all movement to that axis. When you release #key(Shift), the restriction is lifted again and the objects will move to the position under the mouse. This applies not only to moving objects, but also moving vertices in the vertex tool and moving clip points in the clip tool. In the clip tool, the axis restriction only works in the 2D viewports however.
 
 ![Moving a brush in the 3D viewport with trace line](images/MoveTrace.png)
 
-Note that TrenchBroom draws a trace line for you when you move objects with the mouse. The trace line helps to move objects in straight lines and as a visual feedback for your move. When an axis restriction is active, the trace line is rendered thicker.
+Note that BrümSchtick draws a trace line for you when you move objects with the mouse. The trace line helps to move objects in straight lines and as a visual feedback for your move. When an axis restriction is active, the trace line is rendered thicker.
 
 ### The Grid
 
-TrenchBroom provides you with a static grid to align your objects to each other. The grid size can be 1, 2, 4, 8, 16, etc. up to 256. It is also possible to set the grid size to a value smaller than 1, more precisely to 0.5, 0.25 or 0.125. If grid snapping is enabled, then most editing operations will be snapped to the grid. For example, you can only move objects by the current grid size if grid snapping is enabled. In the 3D viewport, the grid is projected onto the brush faces. Therefore the grid may appear distorted if a brush face is not axis aligned. In the 2D viewports, the grid is just drawn in the background. You can change the brightness of the grid lines in the preferences.
+BrümSchtick provides you with a static grid to align your objects to each other. The grid size can be 1, 2, 4, 8, 16, etc. up to 256. It is also possible to set the grid size to a value smaller than 1, more precisely to 0.5, 0.25 or 0.125. If grid snapping is enabled, then most editing operations will be snapped to the grid. For example, you can only move objects by the current grid size if grid snapping is enabled. In the 3D viewport, the grid is projected onto the brush faces. Therefore the grid may appear distorted if a brush face is not axis aligned. In the 2D viewports, the grid is just drawn in the background. You can change the brightness of the grid lines in the preferences.
 
 The grid size can be set via the menu, or by scrolling the mouse wheel while holding both #key(Alt) and #key(Ctrl).
 
@@ -436,7 +436,7 @@ Create Brush Entity
 
 ## Creating Objects
 
-TrenchBroom gives you various options on how to create new objects. In the following sections, we will introduce these options one by one.
+BrümSchtick gives you various options on how to create new objects. In the following sections, we will introduce these options one by one.
 
 ### Creating Simple Shapes
 
@@ -461,7 +461,7 @@ Spheroid (UV)          Creates a spheroid shape made up of triangles and quads w
 Spheroid (Icosahedron) Creates a spheroid shape made up of triangles, based on an icosahedron
 
 Note that the cylinder, cone and UV sphere shapes all have similar options, namely the number of sides and a circle mode.
-By using the same values for these options across different shapes, TrenchBroom will create shapes that fit onto each other perfectly.
+By using the same values for these options across different shapes, BrümSchtick will create shapes that fit onto each other perfectly.
 
 There are three circle modes that can be selected via the corresponding buttons:
 
@@ -515,7 +515,7 @@ Finally, you can create specific entities by assigning a keyboard shortcut in th
 
 Additionally, you can also assign a keyboard shortcut to create a specific brush entity in the [preferences](#keyboard_shortcuts).
 
-Often, it is much quicker to create new objects by duplicating existing ones. Objects can be duplicated using dedicated functions in TrenchBroom, or just by copying and pasting them.
+Often, it is much quicker to create new objects by duplicating existing ones. Objects can be duplicated using dedicated functions in BrümSchtick, or just by copying and pasting them.
 
 ### Duplicating Objects {#duplicating_objects}
 
@@ -542,9 +542,9 @@ Note that in the image above, the selected brush flashes while it is moved to th
 
 ### Copy and Paste
 
-You can copy objects by selecting them and choosing #menu(Menu/Edit/Copy). TrenchBroom will create text representations of the selected objects as if they were saved to a map, and put that text representation on the clipboard. This allows you to paste them into map files, and also to directly copy objects from map files and paste them into TrenchBroom. Note that you can also copy brush faces, which will also put a text representation of that brush face on the clipboard. Having copied a brush face, you can paste the attributes of that face (material, offset, scale, etc.) into other selected brush faces.
+You can copy objects by selecting them and choosing #menu(Menu/Edit/Copy). BrümSchtick will create text representations of the selected objects as if they were saved to a map, and put that text representation on the clipboard. This allows you to paste them into map files, and also to directly copy objects from map files and paste them into BrümSchtick. Note that you can also copy brush faces, which will also put a text representation of that brush face on the clipboard. Having copied a brush face, you can paste the attributes of that face (material, offset, scale, etc.) into other selected brush faces.
 
-There are two menu commands to paste objects from the clipboard into the map. The simpler of the two is #menu(Menu/Edit/Paste at Original Position), which will simply paste the objects from the clipboard without changing their position. The other command, available at #menu(Menu/Edit/Paste), does not paste the objects from the clipboard at their original positions, but will try to position them using the current mouse position. If pasted into the 3D viewport, the pasted objects will be placed on top of the brush under the mouse. If no brush is under the mouse, the objects will be placed at a default distance. The bounding box of the pasted objects is snapped to the grid, and TrenchBroom will attempt to keep the center of the bounding box of the pasted objects near the mouse cursor. The following clip illustrates these concepts. The light fixture is copied, then pasted several times.
+There are two menu commands to paste objects from the clipboard into the map. The simpler of the two is #menu(Menu/Edit/Paste at Original Position), which will simply paste the objects from the clipboard without changing their position. The other command, available at #menu(Menu/Edit/Paste), does not paste the objects from the clipboard at their original positions, but will try to position them using the current mouse position. If pasted into the 3D viewport, the pasted objects will be placed on top of the brush under the mouse. If no brush is under the mouse, the objects will be placed at a default distance. The bounding box of the pasted objects is snapped to the grid, and BrümSchtick will attempt to keep the center of the bounding box of the pasted objects near the mouse cursor. The following clip illustrates these concepts. The light fixture is copied, then pasted several times.
 
 ![Pasting objects in the 3D viewport](images/PastePositioning3D.gif)
 
@@ -552,7 +552,7 @@ Positioning of objects pasted into a 2D viewport attempts to achieve a similar e
 
 ## Editing Objects
 
-The following section is divided into several sub sections: First, we introduce editing operations that can be applied to all objects, such as moving, rotating, or deleting them. Then we proceed with the tools to shape brushes, such as the clip tool, the vertex tool, and the CSG operations. Afterwards we explain how you work with materials in TrenchBroom, and then we move on to editing entities and their properties. The final subsection deals with TrenchBroom's undo and redo capabilities.
+The following section is divided into several sub sections: First, we introduce editing operations that can be applied to all objects, such as moving, rotating, or deleting them. Then we proceed with the tools to shape brushes, such as the clip tool, the vertex tool, and the CSG operations. Afterwards we explain how you work with materials in BrümSchtick, and then we move on to editing entities and their properties. The final subsection deals with BrümSchtick's undo and redo capabilities.
 
 ### Moving Objects {#moving_objects}
 
@@ -577,7 +577,7 @@ To move objects by a specified offset, select #menu(Menu/Edit/Move objects) to b
 
 ### Rotating Objects {#rotating_objects}
 
-The easiest way to rotate objects in TrenchBroom is to use the following keyboard shortcuts:
+The easiest way to rotate objects in BrümSchtick is to use the following keyboard shortcuts:
 
 Shortcut                                                        Type     Rotation (3D)                         Rotation (2D)
 --------                                                        ----     -------------                         -------------
@@ -602,18 +602,18 @@ Like the move tool, the rotate tool places some controls above the viewport. On 
 
 ![Rotating objects about the Z axis in the 3D viewport](images/RotateTool.gif)
 
-If you look closely at the clip above, you will notice that the entity in the picture, a green armor, rotates nicely with the brush it is placed on. Firstly, its position does not seem to change in relation to the brush, and secondly, its angle of rotation is also changed according to the rotation being performed by the user. Whether and how TrenchBroom can adapt the angle of rotation of an entity depends on the following rules.
+If you look closely at the clip above, you will notice that the entity in the picture, a green armor, rotates nicely with the brush it is placed on. Firstly, its position does not seem to change in relation to the brush, and secondly, its angle of rotation is also changed according to the rotation being performed by the user. Whether and how BrümSchtick can adapt the angle of rotation of an entity depends on the following rules.
 
 - "angles" is interpreted as "pitch yaw roll" (if the entity model is a Quake MDL, pitch is inverted)
 - "mangle" is interpreted as "yaw pitch roll" if the entity classnames begins with "light", otherwise it's a synonym for "angles"
 - "angle" is interpreted as the rotation angle about the Z axis
-- If the point entity's bounding box is not centered in the XY plane (e.g. Quake's misc_explobox), attempts to rotate the entity in TrenchBroom will be blocked. This is done to prevent the model from being rotated out of the collision box, which doesn't rotate in Quake.
+- If the point entity's bounding box is not centered in the XY plane (e.g. Quake's misc_explobox), attempts to rotate the entity in BrümSchtick will be blocked. This is done to prevent the model from being rotated out of the collision box, which doesn't rotate in Quake.
 
-Finally, if TrenchBroom has found a property that contains the rotation angle of the entity, it adapts the value of that property according to the rotation being performed by the user. These rules are quite complicated because sadly, the entity definitions do not contain information about how rotations should be applied to entities. But in practice, they should just perform as expected when you work with the rotate tool in the editor.
+Finally, if BrümSchtick has found a property that contains the rotation angle of the entity, it adapts the value of that property according to the rotation being performed by the user. These rules are quite complicated because sadly, the entity definitions do not contain information about how rotations should be applied to entities. But in practice, they should just perform as expected when you work with the rotate tool in the editor.
 
 ![Checkbox](images/UpdateAnglePropertyAfterTransform.png)
 
-This behavior can be disabled temporarily by toggling the checkbox to the right of the "Apply" button when the rotate tool is active. If the checkmark is removed, TrenchBroom will not update any entity properties except for the origin when an entity is rotated either by the rotate tool or by a shortcut.
+This behavior can be disabled temporarily by toggling the checkbox to the right of the "Apply" button when the rotate tool is active. If the checkmark is removed, BrümSchtick will not update any entity properties except for the origin when an entity is rotated either by the rotate tool or by a shortcut.
 
 ### Flipping Objects {#flipping_objects}
 
@@ -676,7 +676,7 @@ Deleting objects is as simple as selecting them and choosing #menu(Menu/Edit/Del
 
 ## Shaping Brushes
 
-TrenchBroom offers several tools to change the shapes of brushes. The most powerful of these tools, and also the one that requires the most care, is the vertex tool. Before we discuss this tool, we will introduce the clip tool with which you can chop parts off of brushes. But first, we introduce the extrude tool which, as the name suggests, allows you to quickly change the size of brushes. Finally, we explain how you can shape brushes using TrenchBroom's CSG operations.
+BrümSchtick offers several tools to change the shapes of brushes. The most powerful of these tools, and also the one that requires the most care, is the vertex tool. Before we discuss this tool, we will introduce the clip tool with which you can chop parts off of brushes. But first, we introduce the extrude tool which, as the name suggests, allows you to quickly change the size of brushes. Finally, we explain how you can shape brushes using BrümSchtick's CSG operations.
 
 ### Extrusion
 
@@ -684,7 +684,7 @@ Brushes can be extruded using the extrude tool by moving their faces along their
 
 ![Extruding a brush in the 3D viewport](images/ExtrudeTool3D.gif)
 
-Note that you cannot change the number of faces of a brush by with the extrude tool. This means that you cannot push a face back into a brush indefinitely. TrenchBroom will refuse to move it further as soon as that movement would make other faces disappear. The same applies to pulling a face out of a brush, which can make that face disappear. This is disallowed as well.
+Note that you cannot change the number of faces of a brush by with the extrude tool. This means that you cannot push a face back into a brush indefinitely. BrümSchtick will refuse to move it further as soon as that movement would make other faces disappear. The same applies to pulling a face out of a brush, which can make that face disappear. This is disallowed as well.
 
 If you hold #key(Ctrl) when you start dragging, the brush will not be extruded. Instead, a new brush will be created. Both of the original and the new brush together will have the same shape that the original would have had if you had just extruded it without holding #key(Ctrl), and the two brushes are split where the face you were dragging originally sat.
 
@@ -698,7 +698,7 @@ You can also extrude several brushes at the same time by moving their faces usin
 
 ![Extruding multiple brushes](images/ExtrudeTool3DMultipleBrushes.gif)
 
-The extrude tool also works in the 2D viewports, of course, but the ability to move faces which are behind the selected brush is absent there. In both cases, TrenchBroom uses two methods to determine how to snap the distance by which you drag the face:
+The extrude tool also works in the 2D viewports, of course, but the ability to move faces which are behind the selected brush is absent there. In both cases, BrümSchtick uses two methods to determine how to snap the distance by which you drag the face:
 
 - The distance is snapped to the current grid size, i.e., if you drag a face by 17.5 units along its normal, it will be moved by 16.0 units if the current grid size is 16. This is useful if you are resizing brushes which are part of a curve because their faces will line up after the drag.
 - The vertices of the dragged faces are snapped to the grid planes, i.e., whenever at least one vertex component (X,Y, or Z) is a multiple of the current grid size, the face is snapped to that vertex. This makes it easy to align a face to other adjacent faces.
@@ -715,7 +715,7 @@ The distance is snapped to the current grid size. Moving multiple faces is possi
 
 ### Clipping
 
-Clipping is the most basic operation for Quake maps due to how brushes are [constructed from planes](#brush_geometry). In essence, all that clipping does is adding a new plane to a brush and, depending on the brush's shape, removing other planes from it if they become superfluous. In TrenchBroom, clipping is done using the clip tool, which you can activate by choosing #menu(Menu/Edit/Tools/Clip Tool). The clip tool lets you define a clip plane in various ways, and the lets you apply that plane to the selected brushes.
+Clipping is the most basic operation for Quake maps due to how brushes are [constructed from planes](#brush_geometry). In essence, all that clipping does is adding a new plane to a brush and, depending on the brush's shape, removing other planes from it if they become superfluous. In BrümSchtick, clipping is done using the clip tool, which you can activate by choosing #menu(Menu/Edit/Tools/Clip Tool). The clip tool lets you define a clip plane in various ways, and the lets you apply that plane to the selected brushes.
 
 There are three different outcomes of applying a clip plane: Drop all parts of the selected brushes that are in front of the (oriented) clip plane, drop all parts of the selected brushes that are behind the clip plane, or slice the selected brushes into two pieces each. The following image illustrates these three modes:
 
@@ -727,11 +727,11 @@ In all three images, there is a clip plane defined by two points. This clip plan
 
 To place clip points, you simply left click into a viewport when the clip tool is active. Alternatively, you can add two clip points at once by dragging with the left mouse. In that case, the first clip point is placed at the start point of the drag, and the second clip point is placed at the end point of the drag. In the 3D viewport, you can only place clip points on already existing brushes, whereas in the 2D viewports, you can place them anywhere. Clip points are snapped to the grid, however, in the 3D viewport, there is a caveat which we will explain below. When the clip tool is active, it gives you some feedback in the form of an orange sphere that appears close to your mouse pointer. This sphere indicates where a clip point would be placed after being snapped to the grid. This feedback sphere is only shown if a clip point can actually be placed at or close to the point under the mouse.
 
-Once two clip points have been placed, TrenchBroom will attempt to guess a clip plane even though it is underspecified: You cannot define a plane with only two points. If you are happy with the clip plane that TrenchBroom has determined, then you can apply the clipping operation by hitting #action(Controls/Map view/Perform clip). Otherwise, you can place the third point to fully define the clip plane, or you can change the clip points you have already placed. To change a clip point, you can just left click and drag it with the mouse. To remove the most recently place clip point, you can choose #menu(Menu/Edit/Delete).
+Once two clip points have been placed, BrümSchtick will attempt to guess a clip plane even though it is underspecified: You cannot define a plane with only two points. If you are happy with the clip plane that BrümSchtick has determined, then you can apply the clipping operation by hitting #action(Controls/Map view/Perform clip). Otherwise, you can place the third point to fully define the clip plane, or you can change the clip points you have already placed. To change a clip point, you can just left click and drag it with the mouse. To remove the most recently place clip point, you can choose #menu(Menu/Edit/Delete).
 
 #### Clip Point Snapping
 
-In the 3D viewport, clip points can only be placed on the faces of already existing brushes. Such a clip point is snapped to the grid that has been projected onto the brush face on which you placed that point. So it appears to be snapped to the projected grid, but it is also kept glued onto the brush face. If the point were snapped in all dimensions, then it would either sink into or move away from the brush face it was placed on. TrenchBroom avoids this by glueing clip points to the brush faces on which they were placed by the user. This means that if you attempt to move an already placed clip point around using the 3D viewport, that point will be moved to the closest snapped point on the brush face under the mouse.
+In the 3D viewport, clip points can only be placed on the faces of already existing brushes. Such a clip point is snapped to the grid that has been projected onto the brush face on which you placed that point. So it appears to be snapped to the projected grid, but it is also kept glued onto the brush face. If the point were snapped in all dimensions, then it would either sink into or move away from the brush face it was placed on. BrümSchtick avoids this by glueing clip points to the brush faces on which they were placed by the user. This means that if you attempt to move an already placed clip point around using the 3D viewport, that point will be moved to the closest snapped point on the brush face under the mouse.
 
 In the 2D viewport, clip points are just snapped to the visible grid, so they are not restricted to being glued to brush faces. You can place clip points in any viewport you wish, and you can move clip points that have been placed in one viewport using any other viewport, but the grid snapping will be that of the viewport that you are using to move the clip point. That means if you use a 2D viewport to move a clip point that was placed in the 3D viewport, then that point can be dragged off of the brush face on which it was placed and into the void. Conversely, if you use the 3D viewport to move a clip point that was placed in a 2D viewport, that clip point will snap onto  the brush face under the mouse, or it will not move at all if there is no brush face under the mouse.
 
@@ -741,7 +741,7 @@ In the 2D viewport, clip points are just snapped to the visible grid, so they ar
 
 ### Vertex Editing {#vertex_editing}
 
-TrenchBroom includes three separate tools to edit a brush's vertices: the [vertex tool](#vertex_tool) for editing individual vertices, the [edge tool](#edge_tool) for editing individual edges, and the [face tool](#face_tool) for editing individual faces. The vertex tool is the most powerful of the three because in addition to moving vertices around, you can also add and remove vertices from the brush(es). Conversely, the edge and face tools only allow you to move faces around.
+BrümSchtick includes three separate tools to edit a brush's vertices: the [vertex tool](#vertex_tool) for editing individual vertices, the [edge tool](#edge_tool) for editing individual edges, and the [face tool](#face_tool) for editing individual faces. The vertex tool is the most powerful of the three because in addition to moving vertices around, you can also add and remove vertices from the brush(es). Conversely, the edge and face tools only allow you to move faces around.
 
 #### Vertex Tool {#vertex_tool}
 
@@ -755,7 +755,7 @@ Selecting vertex handles is treated in the same way as selecting objects. Click 
 
 When you have selected some vertex handles, you can move them around by dragging them with the left mouse button. Moving vertex handles (and their corresponding vertices) works in a similar fashion to moving objects, so in the 3D viewport, you can move them on the XY plane, or you can hold #key(Alt) to move them vertically. In a 2D viewport, you can move the vertex handles on the view plane of that viewport. If you begin your drag on an unselected vertex handle, that vertex handle is automatically selected, so if you just want to move a single vertex around, you do not need to select it first. Once you press the left mouse button on a vertex handle to begin a drag, yellow guide lines show up that help you to position the vertex in relation to other objects. When moving vertex handles around, the move distances are snapped to the current grid size component wise, just like when you move objects. If you prefer to have the absolute vertex positions snapped to the grid, you can toggle between relative and absolute snapping using #key(Ctrl) during the drag.
 
-![Chopping faces](images/VertexToolFaceChopping.gif) TrenchBroom ensures that you do not create invalid brushes with the vertex tool. For example, it is impossible to make a brush concave by pushing a vertex into the brush. To achieve this, TrenchBroom will chop up the faces incident to that vertex into triangles depending on the direction in which that vertex is moved. In the animation on the left, you can see that the top face of the cube has one triangle chopped off in the first move where the vertex is moved downward, while in the second move, the front face is chopped into a triangle fan when the vertex is moved outward. Sometimes, TrenchBroom will even delete a vertex if a move would push it inside the brush, which would make it concave. In such a case, the vertex move is concluded.
+![Chopping faces](images/VertexToolFaceChopping.gif) BrümSchtick ensures that you do not create invalid brushes with the vertex tool. For example, it is impossible to make a brush concave by pushing a vertex into the brush. To achieve this, BrümSchtick will chop up the faces incident to that vertex into triangles depending on the direction in which that vertex is moved. In the animation on the left, you can see that the top face of the cube has one triangle chopped off in the first move where the vertex is moved downward, while in the second move, the front face is chopped into a triangle fan when the vertex is moved outward. Sometimes, BrümSchtick will even delete a vertex if a move would push it inside the brush, which would make it concave. In such a case, the vertex move is concluded.
 
 The vertex tool also allows you to fuse adjacent vertices. If a vertex ends up on an adjacent vertex during a vertex move, the two vertices will be fused. This does not conclude the move however, you can keep moving the fused vertex, and it remains selected. Note that fusing is not allowed when you are moving edges or faces, even though fusing does happen when you move multiple vertices at once.
 
@@ -765,11 +765,11 @@ If you wish to snap a vertex onto another vertex quickly without performing a dr
 
 ![Splitting](images/VertexToolSplitting.gif) Besides moving, fusing and deleting vertices, you can also add new vertices to a brush with the vertex tool. Hold #key(Shift) and move your mouse over the position on the grid where you wish to add a vertex. Notice that a new vertex handle is shown when your mouse pointer is close to that point. Click and drag the handle to add a new vertex.
 
-Additionally, you can delete the selected vertices, edges, and faces from brushes by choosing #menu(Menu/Edit/Delete). Note that this will only succeed if none of the currently selected brushes becomes invalid by the deletions, that is, you can only delete vertices, edges, or faces if all of the selected brushes remain three-dimensional after the deletions. If that is not the case, TrenchBroom will refuse the entire operation.
+Additionally, you can delete the selected vertices, edges, and faces from brushes by choosing #menu(Menu/Edit/Delete). Note that this will only succeed if none of the currently selected brushes becomes invalid by the deletions, that is, you can only delete vertices, edges, or faces if all of the selected brushes remain three-dimensional after the deletions. If that is not the case, BrümSchtick will refuse the entire operation.
 
 <br clear="all" />
 
-![Vertex clumping](images/VertexToolVertexClumping.gif) Vertex editing is not limited to working with single brushes. Selecting more than one brush and activating the vertex tool will cause vertex handles to appear for all brushes in the selection. This is more useful when working on organic brushwork such as terrain. You can build a large group of brushes and modify them all at once without having to change the selection. TrenchBroom will recognize when vertices of multiple brushes share the same position. In this case, when trying to move a vertex, TrenchBroom will move all those vertices together, making editing terrain much quicker and easier. In the following animation, the vertices under the cursor were moved with a single drag operation because they share the same position.
+![Vertex clumping](images/VertexToolVertexClumping.gif) Vertex editing is not limited to working with single brushes. Selecting more than one brush and activating the vertex tool will cause vertex handles to appear for all brushes in the selection. This is more useful when working on organic brushwork such as terrain. You can build a large group of brushes and modify them all at once without having to change the selection. BrümSchtick will recognize when vertices of multiple brushes share the same position. In this case, when trying to move a vertex, BrümSchtick will move all those vertices together, making editing terrain much quicker and easier. In the following animation, the vertices under the cursor were moved with a single drag operation because they share the same position.
 
 <br clear="all" />
 
@@ -827,11 +827,11 @@ The regular Alignment Lock preference doesn't apply to vertex editing - instead,
 
 ![UV Lock toolbar button](images/UVLock.png)
 
-When this setting is enabled, TrenchBroom will attempt to keep vertex UV coordinates the same when using the vertex editing tools or [face moving](#moving_faces).
+When this setting is enabled, BrümSchtick will attempt to keep vertex UV coordinates the same when using the vertex editing tools or [face moving](#moving_faces).
 
 ### CSG Operations
 
-CSG stands for Constructive Solid Geometry. CSG is a technique used in professional modeling tools to create complex shape by combining simple shapes using set operators such as union (sometimes called addition), subtraction, and intersection. However, CSG union and subtraction cannot be directly applied to brushes since they may create concave shapes which cannot be represented directly using brushes (remember that brushes are always convex). But some of these operators can be emulated with brushes. TrenchBroom supports the operations _convex merge_ (in place of union), _subtraction_ (emulated by creating new brushes to represent the resulting concave shape), and _intersection_ (supported directly).
+CSG stands for Constructive Solid Geometry. CSG is a technique used in professional modeling tools to create complex shape by combining simple shapes using set operators such as union (sometimes called addition), subtraction, and intersection. However, CSG union and subtraction cannot be directly applied to brushes since they may create concave shapes which cannot be represented directly using brushes (remember that brushes are always convex). But some of these operators can be emulated with brushes. BrümSchtick supports the operations _convex merge_ (in place of union), _subtraction_ (emulated by creating new brushes to represent the resulting concave shape), and _intersection_ (supported directly).
 
 #### CSG Convex Merge
 
@@ -843,7 +843,7 @@ As you can see, the newly created brush covers some areas which were not covered
 
 #### CSG Subtraction
 
-CSG subtraction takes the selected brushes (the subtrahend) and subtracts them the rest of the selectable, visible brushes in the map (the minuend). Since the result of a CSG subtraction is potentially concave, TrenchBroom creates brushes that represent the concave shape by cutting up the minuend brushes using the faces of the subtrahend brushes.
+CSG subtraction takes the selected brushes (the subtrahend) and subtracts them the rest of the selectable, visible brushes in the map (the minuend). Since the result of a CSG subtraction is potentially concave, BrümSchtick creates brushes that represent the concave shape by cutting up the minuend brushes using the faces of the subtrahend brushes.
 
 ![CSG subtracting to create an arch](images/CSGSubtractArch.gif)
 
@@ -870,7 +870,7 @@ You can perform a CSG intersection by selecting the brushes you wish to intersec
 
 #### Materials and CSG Operations {#materials_and_csg_operations}
 
-In each of the CSG operations, new brushes are created, and TrenchBroom has to assign materials to their faces. To determine which material to assign to a new brush face, TrenchBroom will attempt to find a face in the input brushes that has the same plane as the newly created face. If such a face was found, TrenchBroom assigns the material and attributes of that brush face to the newly created brush face. Otherwise, it will assign the [current material](#working_with_materials).
+In each of the CSG operations, new brushes are created, and BrümSchtick has to assign materials to their faces. To determine which material to assign to a new brush face, BrümSchtick will attempt to find a face in the input brushes that has the same plane as the newly created face. If such a face was found, BrümSchtick assigns the material and attributes of that brush face to the newly created brush face. Otherwise, it will assign the [current material](#working_with_materials).
 
 ![CSG material handling](images/CSGTexturing.gif)
 
@@ -880,7 +880,7 @@ In the example above, a brush is subtracted from another brush to form an archwa
 
 Most Quake based games have certain special types of brushes and faces. An example for a special brush type is a *trigger brush* that activates some game logic. A special face type may be a face with a special _clip_ material that is invisible, but blocks the player from passing it. In Quake 3, _caulk_ faces are often used to tell the bsp compiler to skip certain faces because they are invisible.
 
-TrenchBroom is aware of these special brush and face types as long as they are configured in the [game configuration file](#game_configuration_files) for a game. Special brush or face types can be detected by TrenchBroom in the following ways:
+BrümSchtick is aware of these special brush and face types as long as they are configured in the [game configuration file](#game_configuration_files) for a game. Special brush or face types can be detected by BrümSchtick in the following ways:
 
 * **Brush Types**
   - **Entity Classname Pattern** If a brush is contained in an entity whose classname matches a certain pattern, it will receive the special brush type (example: trigger brushes).
@@ -890,7 +890,7 @@ TrenchBroom is aware of these special brush and face types as long as they are c
   - **Surface Flags** If a brush has one of several surface flags, it will receive the special face type.
   - **Surface Parm** If a brush has a specific surface parameter, it will receive the special face type.
 
-TrenchBroom allows you to filter for special brush and face types in the [filtering and rendering options](#filtering_rendering_options). Furthermore, you can assign a keyboard shortcut to set or unset a special brush type (if supported). The following special brush and face types can be set / unset in this way:
+BrümSchtick allows you to filter for special brush and face types in the [filtering and rendering options](#filtering_rendering_options). Furthermore, you can assign a keyboard shortcut to set or unset a special brush type (if supported). The following special brush and face types can be set / unset in this way:
 
 * **Brush Types**
   - **Entity Classname Pattern** Can be set and unset. Setting a brush type wraps the selected brushes in a newly created entity with a classname that matches the pattern. If more than one classnames in the currently loaded entity definitions matches the pattern, a dropdown menu is shown to allow you to choose one of the options. Unsetting a brush type simply moves the selected brushes into the world.
@@ -904,7 +904,7 @@ Finally, every special brush or face type that supports unsetting can be cleared
 
 ## Working with Materials {#working_with_materials}
 
-There are two aspects to working with materials in a level editor. [Material management](#material_management) and material application. This section deals with the latter, so you will learn different ways to apply material to brush faces and to manipulate their alignment to the faces. But before we dive into that, we have to cover three general topics: First, we present the material browser, then we explain how TrenchBroom assigns material to newly created brush faces, and finally we discuss different material projection modes in TrenchBroom.
+There are two aspects to working with materials in a level editor. [Material management](#material_management) and material application. This section deals with the latter, so you will learn different ways to apply material to brush faces and to manipulate their alignment to the faces. But before we dive into that, we have to cover three general topics: First, we present the material browser, then we explain how BrümSchtick assigns material to newly created brush faces, and finally we discuss different material projection modes in BrümSchtick.
 
 ### The Material Browser {#material_browser}
 
@@ -924,15 +924,15 @@ Click on the "Browser" button in the material browser's title bar to return to t
 
 ### Material Projection Modes {#material_projection_modes}
 
-In the original Quake engine, materials are projected onto brush faces along the axes of the coordinate system. In practice, the engine (the compiler, to be precise), uses the normal of a brush face to determine the projection axis - the chose axis is the one that has the smallest angle with the face's normal. Then, the material is projected onto the brush face along that axis. This leads to some distortion (shearing) that is particularly apparent for slanted brush faces where the face's normal is linearly dependent on all three coordinate system axes. However, this type of projection, which we call _paraxial projection_ in TrenchBroom, also has an advantage: If the face's normal is linearly dependent on only two or less coordinate system axes (that is, it lies in the plane defined by two of the axes, e.g., the XY plane), then the paraxial projection ensures that the material still fits the brush faces without having to change the scaling factors.
+In the original Quake engine, materials are projected onto brush faces along the axes of the coordinate system. In practice, the engine (the compiler, to be precise), uses the normal of a brush face to determine the projection axis - the chose axis is the one that has the smallest angle with the face's normal. Then, the material is projected onto the brush face along that axis. This leads to some distortion (shearing) that is particularly apparent for slanted brush faces where the face's normal is linearly dependent on all three coordinate system axes. However, this type of projection, which we call _paraxial projection_ in BrümSchtick, also has an advantage: If the face's normal is linearly dependent on only two or less coordinate system axes (that is, it lies in the plane defined by two of the axes, e.g., the XY plane), then the paraxial projection ensures that the material still fits the brush faces without having to change the scaling factors.
 
 The main disadvantage of paraxial projection is that it is impossible to do perfect alignment locking. _Alignment locking_ means that the material remains perfectly in place on the brush faces during all transformations of the face. For example, if the brush moves by 16 units along the X axis, then the materials on all faces of the brush do not move relatively to the brush. With paraxial projection, materials may become distorted due to the face normals changing by the transformation, but it is impossible to compensate for that shearing.
 
-This is (probably) one of the reasons why the Valve 220 map format was introduced for Half Life. This map format extends the brush faces with additional information about the UV axes for each brush faces. In principle, this makes it possible to have arbitrary linear transformations for the UV coordinates due to their projection, but in practice, most editors keep the UV axes perpendicular to the face normals. In that case, the material is projected onto the face along the normal of the face (and not a coordinate system axis). In TrenchBroom, this mode of projection is called _parallel projection_, and it is only available in maps that have the Valve 220 map format.
+This is (probably) one of the reasons why the Valve 220 map format was introduced for Half Life. This map format extends the brush faces with additional information about the UV axes for each brush faces. In principle, this makes it possible to have arbitrary linear transformations for the UV coordinates due to their projection, but in practice, most editors keep the UV axes perpendicular to the face normals. In that case, the material is projected onto the face along the normal of the face (and not a coordinate system axis). In BrümSchtick, this mode of projection is called _parallel projection_, and it is only available in maps that have the Valve 220 map format.
 
-### How TrenchBroom Assigns Materials to New Brushes
+### How BrümSchtick Assigns Materials to New Brushes
 
-In TrenchBroom, there is the notion of a current material, which we have already mentioned previous sections. Initially, the current material is unset, and it is changed by two actions: selecting a brush face and selecting the current material by clicking on a material in the material browser. When TrenchBroom creates a new brush or a new brush face, it may consult the current material to determine which material to apply to the newly created brush faces. This is not always the case: Sometimes, TrenchBroom can determine materials for newly created brush faces from the context of the operations. We have discussed this earlier for [CSG operations](#materials_and_csg_operations). In other cases, such as when you create a new brush with the mouse, TrenchBroom will always apply the current material.
+In BrümSchtick, there is the notion of a current material, which we have already mentioned previous sections. Initially, the current material is unset, and it is changed by two actions: selecting a brush face and selecting the current material by clicking on a material in the material browser. When BrümSchtick creates a new brush or a new brush face, it may consult the current material to determine which material to apply to the newly created brush faces. This is not always the case: Sometimes, BrümSchtick can determine materials for newly created brush faces from the context of the operations. We have discussed this earlier for [CSG operations](#materials_and_csg_operations). In other cases, such as when you create a new brush with the mouse, BrümSchtick will always apply the current material.
 
 ### Assigning Materials Manually
 
@@ -1047,9 +1047,17 @@ At the bottom of the UV editor are the following controls:
 - Rotate material 90° clockwise
 - Grid controls for subdividing the UV grid. This can be useful to align part of a larger trim sheet to the face.
 
+Below the face attribute editors there is a texture alignment row:
+
+- **Align** Rotates and offsets the material to the selected face edge. Repeated clicks cycle through candidate edges.
+- **Fit** Aligns like **Align** and also scales the material to fit the face. Use the **U** and **V** toggles to choose which axes are scaled, and the repeat controls to set the number of tiles.
+- **Rotate** Adjusts rotation only, snapping the material to the selected edge.
+
+Edge selection starts with the edge that best matches the current alignment; ties are broken by preferring the edge most parallel to the world XY plane and, when ambiguous, the lower edge. For horizontal faces, the current camera orientation determines which edge is considered "down."
+
 ## Entity Properties {#entity_properties}
 
-An entity is, essentially, a collection of properties, and a property is a key value pair where both the key and the value is a string. Some values have a special format, such as colors, points, or angles. But in general, if you are editing an entity, you will be working with strings. In TrenchBroom, you can add, remove, and edit entity properties using the entity property editor, which is located at the top of the entity inspector.
+An entity is, essentially, a collection of properties, and a property is a key value pair where both the key and the value is a string. Some values have a special format, such as colors, points, or angles. But in general, if you are editing an entity, you will be working with strings. In BrümSchtick, you can add, remove, and edit entity properties using the entity property editor, which is located at the top of the entity inspector.
 
 ![Entity Property Editor](images/EntityPropertyEditor.png)
 
@@ -1059,7 +1067,7 @@ The entity property editor is split into two separate areas. At the top, there i
 
 The default properties are shown in _italics_ below the actual properties of the selected entities. To hide the default properties, you can uncheck the checkbox at the bottom of the table. Default entity properties are defined in an entity definition file such as an FGD file, and their meaning depends on the game. Some games, like Quake, have builtin default values for entity properties, and the default entity properties reflect these defaults (if set up correctly in the entity definition file).
 
-Other games such as Half Life don't provide default values for entity properties, and expect the defaults to be set explicitly for every entity. If configured in the [game configuration](#game_configuration_files_entities), then TrenchBroom will automatically instantiate the default entity properties (with default values) when a new entity is created. Note that not every default property will be instantiated by TrenchBroom - only those properties which have a default value configured in the entity definition file can be instantiated by TrenchBroom.
+Other games such as Half Life don't provide default values for entity properties, and expect the defaults to be set explicitly for every entity. If configured in the [game configuration](#game_configuration_files_entities), then BrümSchtick will automatically instantiate the default entity properties (with default values) when a new entity is created. Note that not every default property will be instantiated by BrümSchtick - only those properties which have a default value configured in the entity definition file can be instantiated by BrümSchtick.
 
 ![Setting Default Entity Properties](images/SetDefaultPropertiesMenu.png)
 
@@ -1089,7 +1097,7 @@ If you change an entity property when multiple entities are selected, the change
 
 ### Smart Entity Property Editors
 
-TrenchBroom provides special editors for the following entity properties: spawnflags, colors, and choices. These special editors are called _smart property editors_ and are displayed below the entity property table if you select an entity property for which such an editor exists.
+BrümSchtick provides special editors for the following entity properties: spawnflags, colors, and choices. These special editors are called _smart property editors_ and are displayed below the entity property table if you select an entity property for which such an editor exists.
 
 Type             Editor                                                         Description
 ----             ------                                                         -----------
@@ -1099,11 +1107,11 @@ Choice           ![Smart Spawnflags Editor](images/SmartChoiceEditor.png)       
 
 ### Linking Entities
 
-Entities can be linked using special link properties. Each link has a source and a target entity. The target entity has a property called "targetname", and the value of that property is some arbitrary string. The source entity has a "target" or a "killtarget" property, and the value of that property is the value of the target entity's "targetname" property. To create an entity link, you have to manually set these properties to the proper values. Currently, the names of the link properties are hardcoded into TrenchBroom, but in the future they will be read from the FGD file if appropriate. The following section explains how entity links are visualized in the editor.
+Entities can be linked using special link properties. Each link has a source and a target entity. The target entity has a property called "targetname", and the value of that property is some arbitrary string. The source entity has a "target" or a "killtarget" property, and the value of that property is the value of the target entity's "targetname" property. To create an entity link, you have to manually set these properties to the proper values. Currently, the names of the link properties are hardcoded into BrümSchtick, but in the future they will be read from the FGD file if appropriate. The following section explains how entity links are visualized in the editor.
 
 ### Entity Link Visualization
 
-Entity Links are rendered as lines in the 3D and 2D viewports. TrenchBroom provides you with four modes for entity link visualization. You can switch between these modes in the dropdown menu that is displayed when you click on the "View" button at the right of the info bar. The following table explains the four different modes.
+Entity Links are rendered as lines in the 3D and 2D viewports. BrümSchtick provides you with four modes for entity link visualization. You can switch between these modes in the dropdown menu that is displayed when you click on the "View" button at the right of the info bar. The following table explains the four different modes.
 
 Mode                   Description
 ----                   -----------
@@ -1120,17 +1128,17 @@ In the screenshot above, the link between the two info_null entities is rendered
 
 ## Undo and Redo {#undo_redo}
 
-Almost everything that you do in TrenchBroom can be undone by choosing #menu(Menu/Edit/Undo). This applies to every action that somehow modifies the map file (such as moving objects), but it also applies to some actions that do not change the map file, such as selection, hiding, and locking. There is no limit to how many actions you can undo, and once an action is undone, you can redo it by choosing #menu(Menu/Edit/Redo).
+Almost everything that you do in BrümSchtick can be undone by choosing #menu(Menu/Edit/Undo). This applies to every action that somehow modifies the map file (such as moving objects), but it also applies to some actions that do not change the map file, such as selection, hiding, and locking. There is no limit to how many actions you can undo, and once an action is undone, you can redo it by choosing #menu(Menu/Edit/Redo).
 
 ### Undo Collation and Transactions
 
-Note that TrenchBroom groups certain sequences of actions into transactions which can be undone and redone as one. For example, if you select a few objects and then hide them, the objects are automatically deselected. Both the action of deselecting the objects to be hidden and hiding them are grouped together into a transaction, so when you undo, the objects will be unhidden and reselected at the same time.
+Note that BrümSchtick groups certain sequences of actions into transactions which can be undone and redone as one. For example, if you select a few objects and then hide them, the objects are automatically deselected. Both the action of deselecting the objects to be hidden and hiding them are grouped together into a transaction, so when you undo, the objects will be unhidden and reselected at the same time.
 
-On top of that, TrenchBroom will merge sequences of the same action if they happen within one mouse drag or within a certain time. So if you move a brush around, all steps of the move will be merged into one action, or if you move a brush around by pressing the appropriate keyboard shortcuts within a certain time, all these actions will also be merged into one. In practice, this saves memory and it allows you to undo such sequences in one fell swoop.
+On top of that, BrümSchtick will merge sequences of the same action if they happen within one mouse drag or within a certain time. So if you move a brush around, all steps of the move will be merged into one action, or if you move a brush around by pressing the appropriate keyboard shortcuts within a certain time, all these actions will also be merged into one. In practice, this saves memory and it allows you to undo such sequences in one fell swoop.
 
 # Keeping an Overview
 
-If you are working on large maps, it can become cumbersome to manage the objects in the map and to keep an overview over them. Some areas may be crowded with a lot of brushes and entities so that it becomes difficult to edit a particular object that is occluded by other things. TrenchBroom provides you with a number of tools to easily keep an overview over your map and to remove clutter in crowded areas.
+If you are working on large maps, it can become cumbersome to manage the objects in the map and to keep an overview over them. Some areas may be crowded with a lot of brushes and entities so that it becomes difficult to edit a particular object that is occluded by other things. BrümSchtick provides you with a number of tools to easily keep an overview over your map and to remove clutter in crowded areas.
 
 ## Filtering {#filtering_rendering_options}
 
@@ -1181,7 +1189,7 @@ Groups can also be linked together to allow a form of instancing. Linked groups 
 
 You can apply various transformations to linked groups such as translation, rotation, scaling, or flipping. Groups and linked groups can be nested arbitrarily, so a linked group can contain a group, or a group can contain a linked group, and linked groups can even contain linked groups.
 
-It is important not to think of linked groups as instancing. In TrenchBroom, there is no fixed "primary" version of the linked group that you create instances of. Indeed, linked groups are much simpler under the hood: When you change a linked group, that group will temporarily become the "primary" version and all of its contents are copied into all of its linked siblings, independent of whether or not the contained objects were changed. With this in mind, you may think of TrenchBroom performing a manual updating process automatically for you.
+It is important not to think of linked groups as instancing. In BrümSchtick, there is no fixed "primary" version of the linked group that you create instances of. Indeed, linked groups are much simpler under the hood: When you change a linked group, that group will temporarily become the "primary" version and all of its contents are copied into all of its linked siblings, independent of whether or not the contained objects were changed. With this in mind, you may think of BrümSchtick performing a manual updating process automatically for you.
 
 You can add objects to linked groups or remove objects from linked groups in the usual way, and the change is reflected in the linked groups immediately. To edit an object in a linked group, open the group as usual and perform your changes. Again, the changes are reflected in the linked groups immediately.
 
@@ -1312,7 +1320,7 @@ Linked groups are rendered with a different color than regular groups. If you se
 
 ### Linked Groups in the Map File {#linked_groups_map_file}
 
-Like regular groups, linked groups are stored in the map file using `func_group` entities with additional, TrenchBroom specific properties. If you edit a map file with linked groups in another editor than TrenchBroom and you change objects belonging to a linked group, then that linked group is out of sync with its linked counterparts. TrenchBroom will load such groups without issue and you can keep editing them as usual. However, if you change one of the linked groups, then this group will overwrite the contents of all other linked groups, so afterwards they will be in sync again. So if you purposefully changed one of the linked groups in an external editor, and want to replicate these changes into the linked groups, just open this specific group in the editor, make change to it, and close the group again. This will update all of the linked groups and they will be in sync again.
+Like regular groups, linked groups are stored in the map file using `func_group` entities with additional, BrümSchtick specific properties. If you edit a map file with linked groups in another editor than BrümSchtick and you change objects belonging to a linked group, then that linked group is out of sync with its linked counterparts. BrümSchtick will load such groups without issue and you can keep editing them as usual. However, if you change one of the linked groups, then this group will overwrite the contents of all other linked groups, so afterwards they will be in sync again. So if you purposefully changed one of the linked groups in an external editor, and want to replicate these changes into the linked groups, just open this specific group in the editor, make change to it, and close the group again. This will update all of the linked groups and they will be in sync again.
 
 Consider the following linked groups:
 
@@ -1330,7 +1338,7 @@ Group B (translated by 128 0 0)
   - "origin" "128 0 0"
 ```
 
-In the map file, these groups would be stored as follows. Refer to the comments for information about the TrenchBroom specific properties for linked groups.
+In the map file, these groups would be stored as follows. Refer to the comments for information about the BrümSchtick specific properties for linked groups.
 
 ```
 // entity 0
@@ -1430,7 +1438,7 @@ The preferences dialog allows you to set the game configurations, to change the 
 
 ![Game Configuration Dialog (Mac OS X)](images/GamePreferences.png)
 
-The game configuration preference pane is where you set up the paths to the games that TrenchBroom supports. For each game, you can set the game path by clicking on the "..." button and selecting the folder in which the game is stored on your hard drive. Alternatively, you can enter a path manually in the text box, but you have to hit #key(Return) to apply the change.
+The game configuration preference pane is where you set up the paths to the games that BrümSchtick supports. For each game, you can set the game path by clicking on the "..." button and selecting the folder in which the game is stored on your hard drive. Alternatively, you can enter a path manually in the text box, but you have to hit #key(Return) to apply the change.
 
 Additionally, you can configure the game engines for the selected game by clicking on the 'Configure engines...' button.
 
@@ -1438,7 +1446,7 @@ Clicking the folder icon below the game list opens the folder that contains cust
 
 ![Game Engine Configuration Dialog (Mac OS X)](images/GameEngineDialog.png)
 
-In this dialog, you can add a game engine profile by clicking on the '+' button below the profile list on the left, and you can delete the selected profile by clicking on the '-' button. To the right of the list, you can edit the details of the selected game engine profile, specifically its name and path. Similar to the game path, if you edit the engine path manually, you have to apply the changes by pressing #key(Return) while in the path text box. Click [here](#launching_game_engines) to find out how to launch game engines from within TrenchBroom.
+In this dialog, you can add a game engine profile by clicking on the '+' button below the profile list on the left, and you can delete the selected profile by clicking on the '-' button. To the right of the list, you can edit the details of the selected game engine profile, specifically its name and path. Similar to the game path, if you edit the engine path manually, you have to apply the changes by pressing #key(Return) while in the path text box. Click [here](#launching_game_engines) to find out how to launch game engines from within BrümSchtick.
 
 For some game configurations (such as for Quake, shown above) you can also optionally enter paths for a set of compilation tools. If it's not clear what you should be specifying a path to here, then hovering over the path entry box may give you a tooltip with additional info about that compilation tool.
 
@@ -1451,7 +1459,7 @@ The benefits of specifying your tool paths here (if the game configuration allow
 
 So in the example above, if you wanted to try a later version of ericw-tools that are located in a different folder like `C:\mapping\ericw-tools-v0.19-win64\bin`, then you would only need to change the paths in this dialog. You wouldn't need to edit all of your compilation profiles.
 
-You can also add [custom game configurations](#game_configuration_files) to suit a particular setup (such as an engine supporting formats that TrenchBroom supports, but does not expect with that game).
+You can also add [custom game configurations](#game_configuration_files) to suit a particular setup (such as an engine supporting formats that BrümSchtick supports, but does not expect with that game).
 
 ## View Layout and Rendering {#view_layout_and_rendering}
 
@@ -1484,7 +1492,7 @@ Renderer Font Size          Text size in the map viewports (e.g. entity classnam
 
 ![Mouse Configuration Dialog (Ubuntu Linux)](images/MousePreferences.png)
 
-The mouse input preference pane allows you to change how TrenchBroom interprets mouse movements.
+The mouse input preference pane allows you to change how BrümSchtick interprets mouse movements.
 
 Setting     Description
 -------     -----------
@@ -1497,7 +1505,7 @@ Move Keys   Keyboard shortcuts for moving around in the map, with a separate sli
 
 ![Keyboard Configuration Dialog (Ubuntu Linux)](images/KeyboardPreferences.png)
 
-In this preference pane, you can change the keyboard shortcuts used in TrenchBroom. The table lists all available shortcuts, their context, and the description. To change a keyboard shortcut, click twice (do not double click) on the shortcut in the first column of the table and enter the new shortcut. The context determines when this shortcut is available, for example, the PgDn key triggers different actions depending on whether the rotate tool is active or not. Finally, the description column explains what a shortcut does in a particular context. Sometimes a shortcut triggers different actions depending on whether the viewport in which it was used is a 3D or a 2D viewport. For example, the PgDn key can move objects backward (away from the camera) in a 2D viewport or down along the Z axis in the 3D viewport. These different actions are listed together in the description column, but they are separated with a semicolon.
+In this preference pane, you can change the keyboard shortcuts used in BrümSchtick. The table lists all available shortcuts, their context, and the description. To change a keyboard shortcut, click twice (do not double click) on the shortcut in the first column of the table and enter the new shortcut. The context determines when this shortcut is available, for example, the PgDn key triggers different actions depending on whether the rotate tool is active or not. Finally, the description column explains what a shortcut does in a particular context. Sometimes a shortcut triggers different actions depending on whether the viewport in which it was used is a 3D or a 2D viewport. For example, the PgDn key can move objects backward (away from the camera) in a 2D viewport or down along the Z axis in the 3D viewport. These different actions are listed together in the description column, but they are separated with a semicolon.
 
 If you open the preference dialog when a map is currently opened, the list of shortcuts will contain additional entries depending on the loaded entity configuration file and the game configuration file. For each entity and special brush or face types, the following keyboard shortcuts are available.
 
@@ -1515,12 +1523,12 @@ Note that if you assign a keyboard shortcut to different actions in the same con
 
 ## Automatic Updates
 
-TrenchBroom can check for updates. If an update is available, it can be downloaded and installed from within TrenchBroom. If "Check for updates on startup" is enabled in the preferences, TrenchBroom will perform an update check when it starts.
+BrümSchtick can check for updates. If an update is available, it can be downloaded and installed from within BrümSchtick. If "Check for updates on startup" is enabled in the preferences, BrümSchtick will perform an update check when it starts.
 
-TrenchBroom will notify you of a new update in the following places:
+BrümSchtick will notify you of a new update in the following places:
 
 - The welcome window
-- The "About TrenchBroom" dialog
+- The "About BrümSchtick" dialog
 - The update preferences
 - The status bar
 
@@ -1534,25 +1542,25 @@ In the above screenshot, the updater hasn't performed an update check yet, so th
 
 The updater can be configured in the Preferences. The following settings are available:
 
-- Check for updates on startup: If this is checked, the TrenchBroom will check for updates automatically when it starts.
-- Include pre-releases: If this is checked, then TrenchBroom will include pre-releases in the update check. Pre-releases are versions of TrenchBroom that are not yet considered stable. 
+- Check for updates on startup: If this is checked, the BrümSchtick will check for updates automatically when it starts.
+- Include pre-releases: If this is checked, then BrümSchtick will include pre-releases in the update check. Pre-releases are versions of BrümSchtick that are not yet considered stable. 
 They may contain new features or bug fixes that are not yet part of a stable release.
 
-Note that TrenchBroom doesn't send any private information about your or your computer when it performs an update check. We don't collect any data about you. To perform the update check, TrenchBroom sends one request to GitHub via HTTPS, and to download an update, it sends another HTTPS requests to wherever the update file ist hosted (currently these files are all hosted on GitHub, too).
+Note that BrümSchtick doesn't send any private information about your or your computer when it performs an update check. We don't collect any data about you. To perform the update check, BrümSchtick sends one request to GitHub via HTTPS, and to download an update, it sends another HTTPS requests to wherever the update file ist hosted (currently these files are all hosted on GitHub, too).
 
 ## Command Repetition
 
-Editing brushwork often consists of repeating the same steps over and over. As an example, consider building a spiral stair case. You start by cutting out a brush that represents one step of the stair case. Then you duplicate that brush, move it upward and rotate it about the center axis of the stair case. And the you repeat these actions for every step of the stairset. TrenchBroom has a feature called *command repetition* that is designed to automate some part of this process for you.
+Editing brushwork often consists of repeating the same steps over and over. As an example, consider building a spiral stair case. You start by cutting out a brush that represents one step of the stair case. Then you duplicate that brush, move it upward and rotate it about the center axis of the stair case. And the you repeat these actions for every step of the stairset. BrümSchtick has a feature called *command repetition* that is designed to automate some part of this process for you.
 
-Repeating commands is similar to having an automatic Macro recorder. Remember that TrenchBroom already records everything you do to provide [undo and redo](#undo_redo). In addition to undoing your actions, TrenchBroom also uses the recorded information to allow you to repeat some of your most recently performed actions. In the example of the stairwell, you would want to repeat the duplication, the translation, and the rotation actions over and over with a single key stroke. The only problem is that you need to determine which of the most recently performed actions should be repeated. This is done in two ways. First, TrenchBroom automatically forgets all repeatable actions when the selection changes. So if you select some objects and choose #menu(Menu/Edit/Repeat) directly after selecting some objects, nothing will happen because all repeatable actions have been discarded. Second, you can tell TrenchBroom to discard all repeatable actions by choosing #menu(Menu/Edit/Clear Repeatable Commands). Think of this as telling TrenchBroom to start a new macro.
+Repeating commands is similar to having an automatic Macro recorder. Remember that BrümSchtick already records everything you do to provide [undo and redo](#undo_redo). In addition to undoing your actions, BrümSchtick also uses the recorded information to allow you to repeat some of your most recently performed actions. In the example of the stairwell, you would want to repeat the duplication, the translation, and the rotation actions over and over with a single key stroke. The only problem is that you need to determine which of the most recently performed actions should be repeated. This is done in two ways. First, BrümSchtick automatically forgets all repeatable actions when the selection changes. So if you select some objects and choose #menu(Menu/Edit/Repeat) directly after selecting some objects, nothing will happen because all repeatable actions have been discarded. Second, you can tell BrümSchtick to discard all repeatable actions by choosing #menu(Menu/Edit/Clear Repeatable Commands). Think of this as telling BrümSchtick to start a new macro.
 
-So in the case of the spiral stairwell, you would first create the brush that represents one stair. Since you don't want to repeat whatever actions you performed to create this brush, you'll have tell TrenchBroom to discard all repeatable commands, either by deselecting and then reselecting the brush, or by choosing the appropriate command from the menu. After that, you duplicate the brush, move it upwards, and rotate it. Then, you can repeat these steps by choosing #menu(Menu/Edit/Repeat) as often as you want.
+So in the case of the spiral stairwell, you would first create the brush that represents one stair. Since you don't want to repeat whatever actions you performed to create this brush, you'll have tell BrümSchtick to discard all repeatable commands, either by deselecting and then reselecting the brush, or by choosing the appropriate command from the menu. After that, you duplicate the brush, move it upwards, and rotate it. Then, you can repeat these steps by choosing #menu(Menu/Edit/Repeat) as often as you want.
 
 In summary, you can think of command repetition as a very simple macro system that allows you to have one macro that consists only of the most recently performed actions. Even though it is quite limited, it can make your life a lot easier if you get used to it.
 
 ## Issue Browser {#issue_browser}
 
-The issue browser is located at the bottom of the window. It contains a live list of issues that TrenchBroom has detected in your map. The list is live in the sense that the editor updates it automatically whenever the map changes. Be aware that TrenchBroom cannot detect all issues that may lead to compilation errors or warnings, or strange behavior in game. But it can detect some of these issues, and keeping the map free of such issues can protect you from having to spend a lot of time fixing bugs later on when your map becomes more complex. To see which types of issues TrenchBroom can detect and fix for you, click on the "Filter" button at the top right of the issue browser. This opens a dropdown list where you can toggle which types of issues TrenchBroom should check in your map. By default, all issues are enabled.
+The issue browser is located at the bottom of the window. It contains a live list of issues that BrümSchtick has detected in your map. The list is live in the sense that the editor updates it automatically whenever the map changes. Be aware that BrümSchtick cannot detect all issues that may lead to compilation errors or warnings, or strange behavior in game. But it can detect some of these issues, and keeping the map free of such issues can protect you from having to spend a lot of time fixing bugs later on when your map becomes more complex. To see which types of issues BrümSchtick can detect and fix for you, click on the "Filter" button at the top right of the issue browser. This opens a dropdown list where you can toggle which types of issues BrümSchtick should check in your map. By default, all issues are enabled.
 
 ![Issue Browser with Filter Dropdown](images/IssueBrowserFilter.png)
 
@@ -1560,11 +1568,11 @@ Every entry in the issue list provides you with to pieces of information: the li
 
 ![Issue Browser with Context Menu](images/IssueBrowserContextMenu.png)
 
-In addition to making you aware of issues, TrenchBroom can also fix them for you. To fix an issue, right click it and choose the appropriate fix from the "Fix" context menu. If you wish to ignore a particular issue, you can also tell TrenchBroom to hide it by choosing "Hide" in the context menu. If you wish to see all hidden issues, you can check the respective checkbox above the issue list. To make a hidden issue visible again, first show all hidden issues, then right click the issue and choose "Show" from the context menu.
+In addition to making you aware of issues, BrümSchtick can also fix them for you. To fix an issue, right click it and choose the appropriate fix from the "Fix" context menu. If you wish to ignore a particular issue, you can also tell BrümSchtick to hide it by choosing "Hide" in the context menu. If you wish to see all hidden issues, you can check the respective checkbox above the issue list. To make a hidden issue visible again, first show all hidden issues, then right click the issue and choose "Show" from the context menu.
 
 ## Compiling Maps {#compiling_maps}
 
-TrenchBroom supports compiling your maps from inside the editor. This means that you can create compilation profiles and configure those profiles to run external compilation tools for you. Note however that TrenchBroom does not come with prepackaged compilation tools - you'll have to download and install those yourself. The following screenshot shows the compilation dialog that comes up when choosing #menu(Menu/Run/Compile...).
+BrümSchtick supports compiling your maps from inside the editor. This means that you can create compilation profiles and configure those profiles to run external compilation tools for you. Note however that BrümSchtick does not come with prepackaged compilation tools - you'll have to download and install those yourself. The following screenshot shows the compilation dialog that comes up when choosing #menu(Menu/Run/Compile...).
 
 ![Compilation Dialog (Windows 10)](images/CompilationDialog.png)
 
@@ -1623,7 +1631,7 @@ Delete Files
     ---------   -----------
     Target      The file(s) to delete. To specify more than one file, you can use wildcards (*,?) in the filename. Variables are allowed.
 
-You can use [expressions](#expression_language) when specifying the working directory of a profile and also for the task parameters. The following table lists the available variables, their scopes, and their meaning. A scope of 'Tool' indicates that the variable is available when specifying tool parameters. A scope of 'Workdir' indicates that the variable is only available when specifying the working directory. Note that TrenchBroom helps you to enter variables by popping up an autocompletion list.
+You can use [expressions](#expression_language) when specifying the working directory of a profile and also for the task parameters. The following table lists the available variables, their scopes, and their meaning. A scope of 'Tool' indicates that the variable is available when specifying tool parameters. A scope of 'Workdir' indicates that the variable is only available when specifying the working directory. Note that BrümSchtick helps you to enter variables by popping up an autocompletion list.
 
 Variable         Scope             Description
 --------         -----             -----------
@@ -1633,7 +1641,7 @@ Variable         Scope             Description
 `MAP_FULL_NAME`  Tool, Workdir     The full name (with extension) of the currently edited map.
 `GAME_DIR_PATH`  Tool, Workdir     The full path to the current game as specified in the game preferences.
 `MODS`           Tool, Workdir     An array containing all enabled mods for the current map.
-`APP_DIR_PATH`   Tool, Workdir     The full path to the directory containing the TrenchBroom application binary.
+`APP_DIR_PATH`   Tool, Workdir     The full path to the directory containing the BrumSchtick application binary.
 `CPU_COUNT`      Tool              The number of CPUs in the current machine.
 
 If the [game configuration](#game_configuration) for the current game includes compilation tools, then the names of those tools are also available as variables in the Tool scope. The following screenshot is a section of a compilation profile showing the use of such variables.
@@ -1649,7 +1657,7 @@ It is recommended to use the following general process for compiling maps and to
 
 The last step will copy the bsp file to the appropriate directory within the game path. You can add more *Copy Files* tasks if the compilation produces more than just a bsp file (e.g. lightmap files). Alternatively, you can use a wildcard expression such as `${WORK_DIR_PATH}/${MAP_BASE_NAME}.*` to copy related files.
 
-To run a compilation profile, click the 'Run' button in the compilation dialog. Note that the 'Run' button changes into a 'Stop' button once the compilation profile is running. If you click on this button again, TrenchBroom will terminate the currently running tool. A running compilation will also be terminated if you close the compilation dialog or if you close the main window, but TrenchBroom will ask you before this happens. Note that the compilation tools are run in the background. You can keep working on your map if you wish.
+To run a compilation profile, click the 'Run' button in the compilation dialog. Note that the 'Run' button changes into a 'Stop' button once the compilation profile is running. If you click on this button again, BrümSchtick will terminate the currently running tool. A running compilation will also be terminated if you close the compilation dialog or if you close the main window, but BrümSchtick will ask you before this happens. Note that the compilation tools are run in the background. You can keep working on your map if you wish.
 
 If you want to test your compilation profile without actually running it, click the 'Test' button. A test run will only print what each task will do without actually executing it.
 
@@ -1657,9 +1665,9 @@ Once the compilation is done, you can launch a game engine and check out your ma
 
 ## Launching Game Engines {#launching_game_engines}
 
-Before you can launch a game engine in TrenchBroom, you have to make your engine(s) known to TrenchBroom. You can do this by bringing up the game engine profile dialog either from the launch dialog (see below) or from the [game configuration](#game_configuration).
+Before you can launch a game engine in BrümSchtick, you have to make your engine(s) known to BrümSchtick. You can do this by bringing up the game engine profile dialog either from the launch dialog (see below) or from the [game configuration](#game_configuration).
 
-There are two ways to launch a game engine from within TrenchBroom. Either click the 'Launch' button in the compilation dialog or choose #menu(Menu/Run/Launch...). This brings up the launch dialog shown in the following screenshot.
+There are two ways to launch a game engine from within BrümSchtick. Either click the 'Launch' button in the compilation dialog or choose #menu(Menu/Run/Launch...). This brings up the launch dialog shown in the following screenshot.
 
 ![Launch Dialog (Mac OS X)](images/LaunchGameEngineDialog.png)
 
@@ -1677,7 +1685,7 @@ Note that the parameters are stored with the game engine profile.
 
 ## Expression Language {#expression_language}
 
-TrenchBroom contains a simple expression language that can be used to easily embed variables and more complex expressions into strings. Currently, the language is mainly used in the Compilation dialog and the Launch Engine dialog. In the following, we will introduce the syntax and the semantics of the expression language.
+BrümSchtick contains a simple expression language that can be used to easily embed variables and more complex expressions into strings. Currently, the language is mainly used in the Compilation dialog and the Launch Engine dialog. In the following, we will introduce the syntax and the semantics of the expression language.
 
 ### Evaluation
 
@@ -1930,7 +1938,7 @@ Like arrays, maps can contain other subscriptable values such as strings, arrays
 
 ### Unary Operator Terms
 
-A unary operator is an operator that applies to a single operand. In TrenchBroom's expression language, there are four unary operators: unary plus, unary minus, logical negation, and binary negation.
+A unary operator is an operator that applies to a single operand. In BrümSchtick's expression language, there are four unary operators: unary plus, unary minus, logical negation, and binary negation.
 
     Plus            = "+" SimpleTerm
     Minus           = "-" SimpleTerm
@@ -2233,21 +2241,21 @@ In EBNF, terminal rules are those which only contain terminal symbols on the rig
     Numeric = "0" | "1" | ... "9"
     Char    = Any ASCII character
 
-This concludes the manual for TrenchBroom's expression language.
+This concludes the manual for BrümSchtick's expression language.
 
 ## Solving Problems
 
-This section contains some information about what you can do if you run into problems when using TrenchBroom.
+This section contains some information about what you can do if you run into problems when using BrümSchtick.
 
 ### Automatic Backups
 
-TrenchBroom automatically creates backups of your work. As a prerequisite, you have to work on a saved file, that is, a file that exists somewhere on your computer. So when you create a new file, you should save it as soon as you decide that you want to keep it. At that point, TrenchBroom will create its automatic backups. These backups are stored in a folder called "autosave" within the folder where your map file is located. It will create a new backup every ten minutes after the last backup, unless the map file has not been changed since then. To prevent the autosaving from interrupting your workflow, TrenchBroom will only create an autosave you are not interacting with it, however. In total, TrenchBroom will create up to 50 backups. After that, it will delete the oldest backup when it creates a new one so that the total number of backups does not exceed 50. The backups have the same name as the map file you are editing, but with the backup number added to the name just before the extension.
+BrümSchtick automatically creates backups of your work. As a prerequisite, you have to work on a saved file, that is, a file that exists somewhere on your computer. So when you create a new file, you should save it as soon as you decide that you want to keep it. At that point, BrümSchtick will create its automatic backups. These backups are stored in a folder called "autosave" within the folder where your map file is located. It will create a new backup every ten minutes after the last backup, unless the map file has not been changed since then. To prevent the autosaving from interrupting your workflow, BrümSchtick will only create an autosave you are not interacting with it, however. In total, BrümSchtick will create up to 50 backups. After that, it will delete the oldest backup when it creates a new one so that the total number of backups does not exceed 50. The backups have the same name as the map file you are editing, but with the backup number added to the name just before the extension.
 
 You can use these backups to go back to previous versions of your map if problems arise. This may help you when you are fixing bugs or if your map file gets corrupted somehow.
 
 ## Display Models for Entities
 
-TrenchBroom can show models for point entities in the 3D and 2D viewports. For this to work, the display models have to be set up in the [entity definition](#entity_definitions) file, and the game path has to be set up correctly in the [game configuration](#game_configuration). For most of the included entity definition files, the models have already been set up for you, but if you wish to create an entity definition file for a mod that works well in TrenchBroom, you have to add these model definitions yourself. You will learn how to do this for FGD and DEF files in this section.
+BrümSchtick can show models for point entities in the 3D and 2D viewports. For this to work, the display models have to be set up in the [entity definition](#entity_definitions) file, and the game path has to be set up correctly in the [game configuration](#game_configuration). For most of the included entity definition files, the models have already been set up for you, but if you wish to create an entity definition file for a mod that works well in BrümSchtick, you have to add these model definitions yourself. You will learn how to do this for FGD and DEF files in this section.
 
 ### General Model Syntax
 
@@ -2259,7 +2267,7 @@ In ENT files, the model definitions are given as XML attribute values of the `<p
 
     <point model="..." />
 
-Thereby, the ellipsis contains the actual information about the model to display. You can use TrenchBroom's [expression language](#expression_language) to define the actual models. Each entity definition should contain only one model definition, and the expression in the model definition should evaluate either to a value of type string or to a value of type map. If the expression evaluates to a map, it must have the following structure:
+Thereby, the ellipsis contains the actual information about the model to display. You can use BrümSchtick's [expression language](#expression_language) to define the actual models. Each entity definition should contain only one model definition, and the expression in the model definition should evaluate either to a value of type string or to a value of type map. If the expression evaluates to a map, it must have the following structure:
 
     {
       "path" : MODEL,
@@ -2313,7 +2321,7 @@ So a valid model definitions might look like this:
       "scale" : 2
     })
 
-Sometimes, the actual model that is displayed in game depends on the value of an entity property. TrenchBroom allows you to mimic this behavior by using conditional expressions using the switch and case operators and by referring to the entity properties as variables in the expressions. Let's look at an example where we combine several model definitions using a literal value.
+Sometimes, the actual model that is displayed in game depends on the value of an entity property. BrümSchtick allows you to mimic this behavior by using conditional expressions using the switch and case operators and by referring to the entity properties as variables in the expressions. Let's look at an example where we combine several model definitions using a literal value.
 
     model({{
       dangle == "1" -> { "path": "progs/voreling.mdl", "skin": 0, "frame": 13 },
@@ -2328,7 +2336,7 @@ The voreling has two states, either as a normal monster, standing on the ground,
     ,                                                         // Otherwise,
     { "path": "progs/voreling.mdl" }                          // use this as the model.
 
-If you have problems understanding this syntax, you should read the section on TrenchBroom's [expression language](#expression_language).
+If you have problems understanding this syntax, you should read the section on BrümSchtick's [expression language](#expression_language).
 
 The following example shows a combination of model definitions using flag values.
 
@@ -2346,7 +2354,7 @@ In the previous example, note that if both `ROTTEN` and `MEGAHEALTH` were checke
 
 #### Advanced Examples
 
-The basic expressions you have seen so far allow you to customize which model, skin and frame TrenchBroom shows depending on the values of an entity's properties with great flexibility, but the actual paths, skin indices and frame indices are hardcoded in the entity definition file. However, sometimes even this flexibility is not enough, in particular with entities that allow you to place arbitrary models into the map. In such cases, the entity definition file cannot contain the actual model paths and so on. Rather, the model path, skin index and frame index are specified by the mapper using entity properties. Since TrenchBroom provides the values of the entity properties to the model expressions as variables, you can easily cover such cases as well.
+The basic expressions you have seen so far allow you to customize which model, skin and frame BrümSchtick shows depending on the values of an entity's properties with great flexibility, but the actual paths, skin indices and frame indices are hardcoded in the entity definition file. However, sometimes even this flexibility is not enough, in particular with entities that allow you to place arbitrary models into the map. In such cases, the entity definition file cannot contain the actual model paths and so on. Rather, the model path, skin index and frame index are specified by the mapper using entity properties. Since BrümSchtick provides the values of the entity properties to the model expressions as variables, you can easily cover such cases as well.
 
 Remember the structure of the model definition maps:
 
@@ -2393,7 +2401,7 @@ Then, if you create an entity with the appropriate classname and specifies three
       "frame" "1"
     }
 
-TrenchBroom will display the second frame of the `progs/armor.mdl` model using its third skin. If you change these values, the model will be updated in the 3D and 2D viewports accordingly.
+BrümSchtick will display the second frame of the `progs/armor.mdl` model using its third skin. If you change these values, the model will be updated in the 3D and 2D viewports accordingly.
 
 #### Differences Between DEF, FGD and ENT Files
 
@@ -2437,19 +2445,19 @@ In an ENT file, the same model specification might look like this.
 
 ## Point Files and Portal Files
 
-TrenchBroom can load point files (PTS) generated by QBSP, which help locate leaks. After you open a point file with #menu(Menu/File/Load Point File...), it's rendered as a sequence of green line segments which will connect the map interior to the void. Hit #menu(Menu/View/Camera/Move to Next Point) to move the camera to the first point, and continue hitting #menu(Menu/View/Camera/Move to Next Point) to fly along the path, which should show you where the leak is.
+BrümSchtick can load point files (PTS) generated by QBSP, which help locate leaks. After you open a point file with #menu(Menu/File/Load Point File...), it's rendered as a sequence of green line segments which will connect the map interior to the void. Hit #menu(Menu/View/Camera/Move to Next Point) to move the camera to the first point, and continue hitting #menu(Menu/View/Camera/Move to Next Point) to fly along the path, which should show you where the leak is.
 
 Portal files (PRT), also generated by QBSP, let you visualize the portals between BSP leafs. They can be loaded with #menu(Menu/File/Load Portal File...) and are rendered as translucent red polygons.
 
 ## Game Configuration Files {#game_configuration_files}
 
-TrenchBroom uses game configuration files to provide support for different games. Some game configuration files come with the editor. They are installed at `<ResourcePath>/games`, where the value of `<ResourcePath>` depends on the platform according to the following table.
+BrümSchtick uses game configuration files to provide support for different games. Some game configuration files come with the editor. They are installed at `<ResourcePath>/games`, where the value of `<ResourcePath>` depends on the platform according to the following table.
 
 Platform  Location
 --------  --------
-Windows   The directory where the TrenchBroom executable is located.
-macOS     `TrenchBroom.app/Contents/Resources`
-Linux     `<prefix>/share/trenchbroom`, where `<prefix>` is the installation prefix.
+Windows   The directory where the BrumSchtick executable is located.
+macOS     `BrumSchtick.app/Contents/Resources`
+Linux     `<prefix>/share/BrumSchtick`, where `<prefix>` is the installation prefix.
 
 The folder `<ResourcePath>/games` contains a `.cfg` file for each supported game, and additional folders which can contain additional resources related to the game such as icons, palettes or entity definition files.
 
@@ -2457,19 +2465,19 @@ It is not recommended to change these builtin game configurations, as they will 
 
 Platform  Location
 --------  --------
-Windows   `C:\Users\<username>\AppData\Roaming\TrenchBroom`
-macOS     `~/Library/Application Support/TrenchBroom`
-Linux     `~/.TrenchBroom`
+Windows   `C:\Users\<username>\AppData\Roaming\BrumSchtick`
+macOS     `~/Library/Application Support/BrumSchtick`
+Linux     `~/.BrumSchtick`
 
-Running TrenchBroom with the `--portable` argument will instead put the `<UserDataPath>` in the current directory. This is intended to be run from within the `<ResourcePath>` directory to provide a fully self-contained instance of the application.
+Running BrümSchtick with the `--portable` argument will instead put the `<UserDataPath>` in the current directory. This is intended to be run from within the `<ResourcePath>` directory to provide a fully self-contained instance of the application.
 
-To add a new game configuration to TrenchBroom, place it into a folder under `<UserDataPath>/games` -- note that you might need to create that folder if it does not exist. You will need to write your own `GameConfig.cfg` file, or you can copy one of the builtin files and base your game configuration on that. Additionally, you can place additional resources in the folder you created. As an example, suppose you want to add a game configuration for a game called "Example". For this, you would create a new folder `<UserDataPath>/games/Example`, and within that folder, you would create a game configuration file called `GameConfig.cfg`. If you need additional resource such as an icon or entity definition files, you would place those files into this newly created folder as well.
+To add a new game configuration to BrümSchtick, place it into a folder under `<UserDataPath>/games` -- note that you might need to create that folder if it does not exist. You will need to write your own `GameConfig.cfg` file, or you can copy one of the builtin files and base your game configuration on that. Additionally, you can place additional resources in the folder you created. As an example, suppose you want to add a game configuration for a game called "Example". For this, you would create a new folder `<UserDataPath>/games/Example`, and within that folder, you would create a game configuration file called `GameConfig.cfg`. If you need additional resource such as an icon or entity definition files, you would place those files into this newly created folder as well.
 
 You can also access this directory using the folder icon button below the game list in the [game configuration dialog](#game_configuration).
 
-To override a builtin game configuration file, copy the folder containing the builtin file and place it in `<UserDataPath>/games`. TrenchBroom will prioritize your custom game configurations over the builtin files, but you can still access the resources in the game's resource sub folder without problems. If you wish, you can also override some of these resources by placing a file of the same name in your game resource sub directory.
+To override a builtin game configuration file, copy the folder containing the builtin file and place it in `<UserDataPath>/games`. BrümSchtick will prioritize your custom game configurations over the builtin files, but you can still access the resources in the game's resource sub folder without problems. If you wish, you can also override some of these resources by placing a file of the same name in your game resource sub directory.
 
-As an example, consider the case where you want to override the builtin Quake game configuration and the builtin entity definition file for Quake. Copy the file `<ResourcePath>/games/Quake/GameConfig.cfg` to `<UserDataPath>/games/Quake` and modify it as needed. Then copy the file `<ResourcePath>/games/Quake/Quake.fgd` to `<UserDataPath>/games/Quake` and modify it, too. When you load the game configuration in TrenchBroom, the editor will pick up the modified files instead of the builtin ones.
+As an example, consider the case where you want to override the builtin Quake game configuration and the builtin entity definition file for Quake. Copy the file `<ResourcePath>/games/Quake/GameConfig.cfg` to `<UserDataPath>/games/Quake` and modify it as needed. Then copy the file `<ResourcePath>/games/Quake/Quake.fgd` to `<UserDataPath>/games/Quake` and modify it, too. When you load the game configuration in BrümSchtick, the editor will pick up the modified files instead of the builtin ones.
 
 ### Game Configuration File Syntax
 
@@ -2591,11 +2599,11 @@ The game configuration is an [expression language](#expression_language) map wit
 
 #### Versions
 
-The game configuration files are versioned. Whenever a breaking change to the game configuration format is introduced, the version number will increase and TrenchBroom will reject the old format with an error message.
+The game configuration files are versioned. Whenever a breaking change to the game configuration format is introduced, the version number will increase and BrümSchtick will reject the old format with an error message.
 
 **Current Versions**
 
-TrenchBroom currently supports game config version 9.
+BrümSchtick currently supports game config version 9.
 
 **Version History**
 
@@ -2650,7 +2658,7 @@ Each entry of the array must have the following structure:
       "initialmap: "initial_standard.map"
     }
 
-Thereby, the `format` key is mandatory but the `initialmap` key is optional. The `initialmap` key refers to a map file in the game's configuration sub folder which should be loaded if a new document is created. If no initial map is specified, or if the file cannot be found, TrenchBroom will create a map containing a single brush at the origin.
+Thereby, the `format` key is mandatory but the `initialmap` key is optional. The `initialmap` key refers to a map file in the game's configuration sub folder which should be loaded if a new document is created. If no initial map is specified, or if the file cannot be found, BrümSchtick will create a map containing a single brush at the origin.
 
 #### File System
 
@@ -2681,15 +2689,15 @@ Every material configuration consists of a root search directory, and optionally
       "excludes": [ "*_norm", "*_gloss" ],
     },
 
-The `root` key specifies the folder at which to search for the material packages. This folder is relative to the game file system set up according to the `filesystem` configuration earlier in the file. TrenchBroom will create a material collection for each folder contained in the root folder specified here.
+The `root` key specifies the folder at which to search for the material packages. This folder is relative to the game file system set up according to the `filesystem` configuration earlier in the file. BrümSchtick will create a material collection for each folder contained in the root folder specified here.
 
-In the case of Quake 2, the builtin game configuration specifies the search path of the file system as `"baseq2"` and the material package root as `"textures"`, so TrenchBroom will create a material collection for each folder found in `<Game Path>/baseq2/textures`.
+In the case of Quake 2, the builtin game configuration specifies the search path of the file system as `"baseq2"` and the material package root as `"textures"`, so BrümSchtick will create a material collection for each folder found in `<Game Path>/baseq2/textures`.
 
-TrenchBroom supports a wide array of image formats such as tga, pcx, jpeg, and so on. TrenchBroom uses the [FreeImage Library] to load these images and supports any file type supported by this library.
+BrümSchtick supports a wide array of image formats such as tga, pcx, jpeg, and so on. BrümSchtick uses the [FreeImage Library] to load these images and supports any file type supported by this library.
 
-Optionally, you can specify a palette. The value of the `palette` key specifies a path, relative to the file system, where TrenchBroom will look for a palette file that comes with the game's assets.
+Optionally, you can specify a palette. The value of the `palette` key specifies a path, relative to the file system, where BrümSchtick will look for a palette file that comes with the game's assets.
 
-The `attribute` key specifies the name of a worldspawn property where TrenchBroom will store the wad files in the map file.
+The `attribute` key specifies the name of a worldspawn property where BrümSchtick will store the wad files in the map file.
 
 The optional `excludes` key specifies a list of patterns matched against material names which will be ignored and not displayed in the [material browser](#material_browser). Wildcards `*` and `?` are allowed. Use backslashes to escape literal `*` and `?` chars.
 
@@ -2710,7 +2718,7 @@ In the entity configuration section, you can specify which entity definition fil
       "setDefaultProperties": true
     },
 
-The `definitions` key provides a list of entity definition files. These files are specified by a path that is relative to the `games` directory where TrenchBroom searches for the game configurations.
+The `definitions` key provides a list of entity definition files. These files are specified by a path that is relative to the `games` directory where BrümSchtick searches for the game configurations.
 
 The `scale` key has an expression that is evaluated against an entities' properties to determine the model scale. This expression can refer to any of the entities' properties, or it can provide fixed values.
 
@@ -2723,13 +2731,13 @@ Example                                   Description
 
 Of course, you could use the switch and case operators for more complicated cases.
 
-The optional `setDefaultProperties` key controls whether [default entity properties](#entity_properties_defaults) are instantiated automatically when TrenchBroom creates a new entity. Defaults to `false` if not set.
+The optional `setDefaultProperties` key controls whether [default entity properties](#entity_properties_defaults) are instantiated automatically when BrümSchtick creates a new entity. Defaults to `false` if not set.
 
 #### Tags {#game_configuration_files_tags}
 
-TrenchBroom can recognize certain special brush or face types. An example would be clip faces or trigger brushes. But since the details can be game dependent, these special types are defined in the game configuration. For greater flexibility and future enhancements, a general "smart tags" system is used to realize this functionality.
+BrümSchtick can recognize certain special brush or face types. An example would be clip faces or trigger brushes. But since the details can be game dependent, these special types are defined in the game configuration. For greater flexibility and future enhancements, a general "smart tags" system is used to realize this functionality.
 
-TrenchBroom uses these tag definitions to automatically apply attributes to matching brushes/faces &mdash; for example to render trigger brushes partially transparent &mdash; and to populate the filtering options available in the [View menu](#filtering_rendering_options).
+BrümSchtick uses these tag definitions to automatically apply attributes to matching brushes/faces &mdash; for example to render trigger brushes partially transparent &mdash; and to populate the filtering options available in the [View menu](#filtering_rendering_options).
 
 Each smart tag definition also makes one or more related [keyboard shortcuts](#keyboard_shortcuts) available (searching the shortcuts by "Tags" will show all of these). Each tag will always have a related shortcut that can be used to toggle the visibility of brushes whose faces match the tag. Additional shortcuts may also be available to apply the characteristics of the tag to the current selection, or remove those characteristics. These shortcuts depend on the tag's `match` criteria as described below.
 
@@ -2751,7 +2759,7 @@ Each of these keys has a list of tags. Each tag looks as follows.
 
 The only attribute type currently supported in the `attribs` list is "transparent", which as mentioned above will cause faces matching this tag to be rendered with partial transparency in the 3D viewport.
 
-The `match` key specifies how TrenchBroom will determine whether or not this tag applies to a brush or face.
+The `match` key specifies how BrümSchtick will determine whether or not this tag applies to a brush or face.
 
 For a `brush` smart tag, the `match` key can only have the "classname" value. In addition to the usual keyboard shortcut for view filtering, this kind of smart tag will also generate keyboard shortcuts to either apply the tag (create a brush entity from selected brushes) or remove it (return selected brushes to worldspawn). This can be summarized as follows:
 
@@ -2865,30 +2873,30 @@ Each element in the list is an object that must have a `name` key and may option
 
 ## Suggesting a Feature
 
-If you have an idea for a nice feature that you're missing in TrenchBroom, then you can submit a request at the [TrenchBroom issue tracker]. Try to describe your feature, but don't go into too much detail. If it gets picked up, we will hash out the details together.
+If you have an idea for a nice feature that you're missing in BrümSchtick, then you can submit a request at the [BrümSchtick issue tracker]. Try to describe your feature, but don't go into too much detail. If it gets picked up, we will hash out the details together.
 
 ## Reporting Bugs {#reporting_bugs}
 
-You can submit bug reports at the [TrenchBroom issue tracker]. Be sure to include the the following information:
+You can submit bug reports at the [BrümSchtick issue tracker]. Be sure to include the the following information:
 
-- *TrenchBroom version*: e.g., "*"Version 2.0.0 f335082 D" see below
+- *BrümSchtick version*: e.g., "*"Version 2.0.0 f335082 D" see below
 - *Operation system and version*: e.g. "Windows 7 64bit"
-- *Crash report and the map file*: When TrenchBroom crashes, it saves a crash report and the map file automatically. These files are placed in the folder containing the current map file, or in your documents folder if the current map hasn't been saved yet. For example, if the map file you are editing has the name "rtz_q1.map", the crash report will be named "rtz_q1-crash.txt", and the saved map file will be named "rtz_q1-crash.map". Existing files are not overwritten - TrenchBroom creates new file names by attaching a number at the end. Please choose the files with the highest numbers when reporting a bug.
+- *Crash report and the map file*: When BrümSchtick crashes, it saves a crash report and the map file automatically. These files are placed in the folder containing the current map file, or in your documents folder if the current map hasn't been saved yet. For example, if the map file you are editing has the name "rtz_q1.map", the crash report will be named "rtz_q1-crash.txt", and the saved map file will be named "rtz_q1-crash.map". Existing files are not overwritten - BrümSchtick creates new file names by attaching a number at the end. Please choose the files with the highest numbers when reporting a bug.
 - *Exact steps to reproduce*: It is really helpful if you can provide exact info on how to reproduce the problem. Sometimes this can be difficult to describe, so you can attach screenshots or make screencasts if necessary. If you cannot reproduce the problem, please submit a bug report either way. The cause of the problem can often be deduced anyway.
 
 ### The Version Information
 
-Open the "About TrenchBroom" dialog from the menu. The light gray text on the left gives you some information about which version of TrenchBroom you are currently running, for example "Version 2.0.0 f335082 D". The first three numbers represent the version (2.0.0), the following seven letter string is the build id (f335082), and the final letter indicates the build type ("D" for Debug and "R" for release). You can also find this information in the Welcome window that the editor shows at startup.
+Open the "About BrümSchtick" dialog from the menu. The light gray text on the left gives you some information about which version of BrümSchtick you are currently running, for example "Version 2.0.0 f335082 D". The first three numbers represent the version (2.0.0), the following seven letter string is the build id (f335082), and the final letter indicates the build type ("D" for Debug and "R" for release). You can also find this information in the Welcome window that the editor shows at startup.
 
 *If you click on the version information strings, they will be copied to the clipboard, which is useful for bug reports.*
 
 ## Contact
 
-- [TrenchBroom Discord]
+- [BrümSchtick Discord]
 
 # References and Links {#references_and_links}
 
-- [TrenchBroom on GitHub] - TrenchBroom's GitHub page
+- [BrümSchtick on GitHub] - BrümSchtick's GitHub page
 - [func_msgboard] - Quake Mapping Forum
 - [Quake Tools] - Quake tools by Joshua Skelton
 - [Tutorials by dumptruck_ds] - Video Tutorial Series
@@ -2896,9 +2904,9 @@ Open the "About TrenchBroom" dialog from the menu. The light gray text on the le
 - [Quake Mapping Discord] - Quake Mapping Discord
 - [Tome of Preach] - Quake Map Hacks and QuakeC Hacks
 
-[TrenchBroom on GitHub]: https://github.com/TrenchBroom/TrenchBroom/
-[TrenchBroom issue tracker]: https://github.com/TrenchBroom/TrenchBroom/issues/
-[TrenchBroom Discord]: https://discord.gg/WGf9uve
+[BrümSchtick on GitHub]: https://github.com/themuffinator/BrumSchtick
+[BrümSchtick issue tracker]: https://github.com/themuffinator/BrumSchtick/issues
+[BrümSchtick Discord]: https://discord.gg/WGf9uve
 [func_msgboard]: https://celephais.net/board/
 [Quake Tools]: https://joshua.itch.io/quake-tools
 [Tome of Preach]: https://tomeofpreach.wordpress.com/
@@ -2907,3 +2915,5 @@ Open the "About TrenchBroom" dialog from the menu. The light gray text on the le
 [Quake Level Design Starter Kit]: https://github.com/jonathanlinat/quake-leveldesign-starterkit
 [Quake Mapping Discord]: https://discordapp.com/invite/f5Y99aM
 [FreeImage Library]: https://freeimage.sourceforge.io/
+
+

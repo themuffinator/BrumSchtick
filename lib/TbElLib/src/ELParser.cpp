@@ -28,7 +28,7 @@
 
 #include "kd/string_format.h"
 
-#include <fmt/format.h>
+#include <format>
 
 #include <optional>
 #include <sstream>
@@ -277,7 +277,7 @@ ELTokenizer::Token ELTokenizer::emitToken()
         if (!eof() && curChar() == '.' && lookAhead() != '.')
         {
           throw ParserException{
-            FileLocation{line, column}, fmt::format("Unexpected character: '{}'", *c)};
+            FileLocation{line, column}, std::format("Unexpected character: '{}'", *c)};
         }
         return Token{ELToken::Number, c, e, offset(c), line, column};
       }
@@ -314,7 +314,7 @@ ELTokenizer::Token ELTokenizer::emitToken()
       }
 
       throw ParserException{
-        FileLocation{line, column}, fmt::format("Unexpected character: '{}'", *c)};
+        FileLocation{line, column}, std::format("Unexpected character: '{}'", *c)};
     }
   }
   return Token{ELToken::Eof, nullptr, nullptr, length(), line(), column()};
@@ -621,7 +621,7 @@ ExpressionNode ELParser::parseUnaryOperator()
   }
   throw ParserException{
     token.location(),
-    fmt::format("Unhandled unary operator: {}", m_tokenizer.tokenName(token.type()))};
+    std::format("Unhandled unary operator: {}", m_tokenizer.tokenName(token.type()))};
 }
 
 ExpressionNode ELParser::parseSwitch()
@@ -687,7 +687,7 @@ ExpressionNode ELParser::parseCompoundTerm(ExpressionNode lhs)
     {
       throw ParserException{
         token.location(),
-        fmt::format(
+        std::format(
           "Unhandled binary operator: {}", m_tokenizer.tokenName(token.type()))};
     }
   }

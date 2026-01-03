@@ -21,7 +21,7 @@
 
 #include "kd/contracts.h"
 
-#include <fmt/format.h>
+#include <format>
 
 #include <stdexcept>
 #include <string>
@@ -34,7 +34,7 @@ void glCheckError(const std::string& msg)
   if (error != GL_NO_ERROR)
   {
     throw std::runtime_error{
-      fmt::format("OpenGL error: {} ({}) {}", error, glGetErrorMessage(error), msg)};
+      std::format("OpenGL error: {} ({}) {}", error, glGetErrorMessage(error), msg)};
   }
 }
 

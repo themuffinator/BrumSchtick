@@ -26,6 +26,7 @@
 
 #include "vm/bbox.h"
 #include "vm/polygon.h"
+#include "vm/vec.h"
 
 #include <filesystem>
 #include <memory>
@@ -51,6 +52,7 @@ class Autosaver;
 class Command;
 class Map;
 class Node;
+class EntityNodeBase;
 class PickResult;
 class ResourceId;
 class UndoableCommand;
@@ -80,6 +82,12 @@ struct PortalFile
 {
   std::vector<vm::polygon3f> portals;
   std::filesystem::path path;
+};
+
+struct EntityPropertyPickRequest
+{
+  std::string propertyKey;
+  std::vector<mdl::EntityNodeBase*> nodes;
 };
 
 class MapDocument
@@ -151,6 +159,7 @@ private:
 
   std::optional<PointFile> m_pointFile;
   std::optional<PortalFile> m_portalFile;
+  std::optional<EntityPropertyPickRequest> m_entityPropertyPickRequest;
 
   std::vector<Action> m_tagActions;
   std::vector<Action> m_entityDefinitionActions;
@@ -257,6 +266,13 @@ public: // portal file management
   bool canReloadPortalFile() const;
   void reloadPortalFile();
   void unloadPortalFile();
+
+public: // entity property picking
+  bool hasEntityPropertyPickRequest() const;
+  void startEntityPropertyPick(
+    std::string propertyKey, std::vector<mdl::EntityNodeBase*> nodes);
+  void cancelEntityPropertyPick();
+  bool applyEntityPropertyPick(const vm::vec3d& position);
 
 private: // observers
   void connectObservers();

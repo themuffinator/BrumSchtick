@@ -149,10 +149,16 @@ private:
     ParserStatus& status, std::string propertyKey);
   mdl::PropertyDefinition parseFloatPropertyDefinition(
     ParserStatus& status, std::string propertyKey);
+  mdl::PropertyDefinition parseAnglePropertyDefinition(
+    ParserStatus& status, std::string propertyKey);
   mdl::PropertyDefinition parseChoicesPropertyDefinition(
     ParserStatus& status, std::string propertyKey);
   mdl::PropertyDefinition parseFlagsPropertyDefinition(std::string propertyKey);
+  mdl::PropertyDefinition parseVectorPropertyDefinition(
+    ParserStatus& status, std::string propertyKey);
   mdl::PropertyDefinition parseOriginPropertyDefinition(
+    ParserStatus& status, std::string propertyKey);
+  mdl::PropertyDefinition parseTargetNameOrClassPropertyDefinition(
     ParserStatus& status, std::string propertyKey);
   mdl::PropertyDefinition parseInputPropertyDefinition(ParserStatus& status);
   mdl::PropertyDefinition parseOutputPropertyDefinition(ParserStatus& status);

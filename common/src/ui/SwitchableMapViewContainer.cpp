@@ -147,6 +147,23 @@ void SwitchableMapViewContainer::toggleAssembleBrushTool()
   m_toolBox->toggleAssembleBrushTool();
 }
 
+bool SwitchableMapViewContainer::brushBuilderToolActive() const
+{
+  return m_toolBox->brushBuilderToolActive();
+}
+
+bool SwitchableMapViewContainer::canToggleBrushBuilderTool() const
+{
+  return true;
+}
+
+void SwitchableMapViewContainer::toggleBrushBuilderTool()
+{
+  contract_pre(canToggleBrushBuilderTool());
+
+  m_toolBox->toggleBrushBuilderTool();
+}
+
 bool SwitchableMapViewContainer::clipToolActive() const
 {
   return m_toolBox->clipToolActive();

@@ -49,8 +49,7 @@
 #include "vm/ray.h"
 #include "vm/vec_io.h" // IWYU pragma: keep
 
-#include <fmt/format.h>
-#include <fmt/ostream.h>
+#include <format>
 
 #include <algorithm>
 #include <optional>
@@ -603,7 +602,7 @@ void ClipTool::renderFeedback(
 
 bool ClipTool::hasBrushes() const
 {
-  return m_document.map().selection().hasBrushes();
+  return !m_document.map().selection().allBrushes().empty();
 }
 
 bool ClipTool::canClip() const
@@ -622,7 +621,8 @@ void ClipTool::performClip()
 
     // need to make a copies here so that we are not affected by the deselection
     const auto toAdd = clipBrushes();
-    const auto toRemove = map.selection().nodes;
+    const auto toRemove =
+      kdl::vec_static_cast<mdl::Node*>(map.selection().allBrushes());
     const auto addedNodes = addNodes(map, toAdd);
 
     deselectAll(map);
@@ -820,7 +820,7 @@ void ClipTool::clearBrushes()
 void ClipTool::updateBrushes()
 {
   auto& map = m_document.map();
-  const auto& brushNodes = map.selection().brushes;
+  const auto& brushNodes = map.selection().allBrushes();
   const auto& worldBounds = map.worldBounds();
 
   const auto clip =

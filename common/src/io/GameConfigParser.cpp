@@ -28,15 +28,17 @@
 #include "mdl/TagMatcher.h"
 
 #include "kd/ranges/to.h"
+#include "kd/string_utils.h"
 
 #include "vm/vec_io.h"
 
-#include <fmt/format.h>
+#include <format>
 
 #include <algorithm>
 #include <ranges>
 #include <sstream>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace tb::io
@@ -68,10 +70,32 @@ void checkVersion(const el::EvaluationContext& context, const el::Value& version
   {
     throw ParserException{
       *context.location(version),
-      fmt::format(
+      std::format(
         "Unsupported game configuration version {}; valid versions are: {}",
         version.integerValue(context),
         kdl::str_join(validVsns, ", "))};
+  }
+}
+
+void checkUnexpectedKeys(
+  const el::EvaluationContext& context,
+  const el::Value& value,
+  const std::string_view label,
+  const std::initializer_list<std::string_view> allowedKeys)
+{
+  if (value == el::Value::Null)
+  {
+    return;
+  }
+
+  for (const auto& key : value.keys(context))
+  {
+    if (std::ranges::find(allowedKeys, key) == allowedKeys.end())
+    {
+      throw ParserException{
+        *context.location(value.at(context, key)),
+        std::format("Unexpected key '{}' in {}", key, label)};
+    }
   }
 }
 
@@ -84,6 +108,7 @@ std::vector<mdl::CompilationTool> parseCompilationTools(
   }
 
   return value.arrayValue(context) | std::views::transform([&](const auto& entry) {
+           checkUnexpectedKeys(context, entry, "compilation tool", {"name", "description"});
            auto name = entry.at(context, "name").stringValue(context);
 
            const auto descriptionValue = entry.atOrDefault(context, "description");
@@ -115,7 +140,7 @@ std::optional<vm::bbox3d> parseSoftMapBounds(
   // If a bounds is provided in the config, it must be valid
   throw ParserException{
     *context.location(value),
-    fmt::format("Can't parse soft map bounds '{}'", value.asString())};
+    std::format("Can't parse soft map bounds '{}'", value.asString())};
 }
 
 std::vector<mdl::TagAttribute> parseTagAttributes(
@@ -127,7 +152,7 @@ std::vector<mdl::TagAttribute> parseTagAttributes(
            {
              throw ParserException{
                *context.location(value),
-               fmt::format("Unexpected tag attribute '{}'", name)};
+               std::format("Unexpected tag attribute '{}'", name)};
            }
 
            return mdl::TagAttributes::Transparency;
@@ -159,7 +184,7 @@ void checkTagName(
   if (std::ranges::any_of(tags, [&](const auto& tag) { return tag.name() == name; }))
   {
     throw ParserException{
-      *context.location(nameValue), fmt::format("Duplicate tag '{}'", name)};
+      *context.location(nameValue), std::format("Duplicate tag '{}'", name)};
   }
 }
 
@@ -195,7 +220,7 @@ std::unique_ptr<mdl::TagMatcher> parseFaceTagMatcher(
   }
 
   throw ParserException{
-    *context.location(value), fmt::format("Unexpected smart tag match type '{}'", match)};
+    *context.location(value), std::format("Unexpected smart tag match type '{}'", match)};
 }
 
 mdl::SmartTag parseFaceTag(
@@ -204,6 +229,9 @@ mdl::SmartTag parseFaceTag(
   const el::Value& value,
   const mdl::FaceAttribsConfig& faceAttribsConfig)
 {
+  checkUnexpectedKeys(
+    context, value, "brush face tag", {"name", "attribs", "match", "pattern", "flags"});
+
   auto matcher = parseFaceTagMatcher(context, value, faceAttribsConfig);
   auto attribs = parseTagAttributes(context, value.atOrDefault(context, "attribs"));
 
@@ -243,12 +271,15 @@ std::unique_ptr<mdl::TagMatcher> parseBrushTagMatcher(
   }
 
   throw ParserException{
-    *context.location(value), fmt::format("Unexpected smart tag match type '{}'", match)};
+    *context.location(value), std::format("Unexpected smart tag match type '{}'", match)};
 }
 
 mdl::SmartTag parseBrushTag(
   const el::EvaluationContext& context, std::string name, const el::Value& value)
 {
+  checkUnexpectedKeys(
+    context, value, "brush tag", {"name", "attribs", "match", "pattern", "material"});
+
   auto matcher = parseBrushTagMatcher(context, value);
   auto attribs = parseTagAttributes(context, value.atOrDefault(context, "attribs"));
 
@@ -284,6 +315,7 @@ std::vector<mdl::SmartTag> parseTags(
     return result;
   }
 
+  checkUnexpectedKeys(context, value, "tags", {"brush", "brushface"});
   parseBrushTags(context, value.atOrDefault(context, "brush"), result);
   parseFaceTags(
     context, value.atOrDefault(context, "brushface"), faceAttribsConfig, result);
@@ -301,6 +333,19 @@ mdl::BrushFaceAttributes parseFaceAttribsDefaults(
   {
     return defaults;
   }
+
+  checkUnexpectedKeys(
+    context,
+    value,
+    "face attributes defaults",
+    {"materialName",
+     "offset",
+     "scale",
+     "rotation",
+     "surfaceFlags",
+     "surfaceContents",
+     "surfaceValue",
+     "color"});
 
   if (const auto materialNameValue = value.atOrDefault(context, "materialName");
       materialNameValue != el::Value::Null)
@@ -380,6 +425,8 @@ void parseFlag(
   const size_t index,
   std::vector<mdl::FlagConfig>& flags)
 {
+  checkUnexpectedKeys(context, value, "face attributes flag", {"name", "description", "unused"});
+
   if (!value.atOrDefault(context, "unused").booleanValue(context))
   {
     flags.push_back(mdl::FlagConfig{
@@ -418,6 +465,8 @@ mdl::FaceAttribsConfig parseFaceAttribsConfig(
     };
   }
 
+  checkUnexpectedKeys(context, value, "face attributes", {"surfaceflags", "contentflags", "defaults"});
+
   auto surfaceFlags = parseFlagsConfig(context, value.at(context, "surfaceflags"));
   auto contentFlags = parseFlagsConfig(context, value.at(context, "contentflags"));
   auto defaults = parseFaceAttribsDefaults(
@@ -433,6 +482,12 @@ mdl::FaceAttribsConfig parseFaceAttribsConfig(
 mdl::EntityConfig parseEntityConfig(
   const el::EvaluationContext& context, const el::Value& value)
 {
+  checkUnexpectedKeys(
+    context,
+    value,
+    "entities",
+    {"definitions", "defaultcolor", "scale", "setDefaultProperties", "modelformats"});
+
   auto paths = value.at(context, "definitions").arrayValue(context)
                | std::views::transform([&](const auto& v) {
                    return std::filesystem::path{v.stringValue(context)};
@@ -445,6 +500,12 @@ mdl::EntityConfig parseEntityConfig(
                        })
                      | kdl::value();
 
+  if (const auto modelFormatsValue = value.atOrDefault(context, "modelformats");
+      modelFormatsValue != el::Value::Null)
+  {
+    modelFormatsValue.asStringList(context);
+  }
+
   return mdl::EntityConfig{
     std::move(paths),
     color,
@@ -456,6 +517,8 @@ mdl::EntityConfig parseEntityConfig(
 mdl::PackageFormatConfig parsePackageFormatConfig(
   const el::EvaluationContext& context, const el::Value& value)
 {
+  checkUnexpectedKeys(context, value, "package format", {"format", "extension", "extensions"});
+
   const auto formatValue = value.at(context, "format");
   if (const auto extension = value.atOrDefault(context, "extension");
       extension != el::Value::Null)
@@ -488,6 +551,12 @@ std::vector<std::filesystem::path> parseMaterialExtensions(
 mdl::MaterialConfig parseMaterialConfig(
   const el::EvaluationContext& context, const el::Value& value)
 {
+  checkUnexpectedKeys(
+    context,
+    value,
+    "materials",
+    {"root", "extensions", "format", "palette", "attribute", "shaderSearchPath", "excludes"});
+
   return mdl::MaterialConfig{
     std::filesystem::path{value.at(context, "root").stringValue(context)},
     parseMaterialExtensions(context, value),
@@ -504,6 +573,8 @@ mdl::MaterialConfig parseMaterialConfig(
 mdl::FileSystemConfig parseFileSystemConfig(
   const el::EvaluationContext& context, const el::Value& value)
 {
+  checkUnexpectedKeys(context, value, "filesystem", {"searchpath", "packageformat"});
+
   return mdl::FileSystemConfig{
     std::filesystem::path{value.at(context, "searchpath").stringValue(context)},
     parsePackageFormatConfig(context, value.at(context, "packageformat")),
@@ -514,6 +585,7 @@ std::vector<mdl::MapFormatConfig> parseMapFormatConfigs(
   const el::EvaluationContext& context, const el::Value& value)
 {
   return value.arrayValue(context) | std::views::transform([&](const auto& entry) {
+           checkUnexpectedKeys(context, entry, "file format", {"format", "initialmap"});
            return mdl::MapFormatConfig{
              entry.at(context, "format").stringValue(context),
              entry.atOrDefault(context, "initialmap").stringValue(context),
@@ -532,6 +604,22 @@ Result<mdl::GameConfig> parseGameConfig(
     const auto root = expression.evaluate(context);
 
     checkVersion(context, root.at(context, "version"));
+    checkUnexpectedKeys(
+      context,
+      root,
+      "game configuration",
+      {"version",
+       "name",
+       "icon",
+       "experimental",
+       "fileformats",
+       "filesystem",
+       "materials",
+       "entities",
+       "faceattribs",
+       "tags",
+       "softMapBounds",
+       "compilationTools"});
 
     auto mapFormatConfigs =
       parseMapFormatConfigs(context, root.at(context, "fileformats"));

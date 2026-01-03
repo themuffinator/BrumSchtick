@@ -24,7 +24,7 @@
 
 #include "kd/contracts.h"
 
-#include <fmt/format.h>
+#include <format>
 
 #include <algorithm>
 #include <stdexcept>
@@ -100,7 +100,7 @@ void TagManager::registerSmartTags(const std::vector<SmartTag>& tags)
     if (!inserted)
     {
       throw std::logic_error{
-        fmt::format("Smart tag '{}' already registered", tag.name())};
+        std::format("Smart tag '{}' already registered", tag.name())};
     }
 
     it->setIndex(nextIndex);

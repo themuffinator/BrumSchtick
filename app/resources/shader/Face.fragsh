@@ -33,10 +33,12 @@ uniform float GridAlpha;
 uniform vec3 GridColor;
 uniform bool ShadeFaces;
 uniform bool ShowFog;
+uniform bool ApplyLightPreview;
 
 varying vec4 modelCoordinates;
 varying vec3 modelNormal;
 varying vec4 faceColor;
+varying vec4 lightPreviewColor;
 varying vec3 viewVector;
 
 float grid(vec3 coords, vec3 normal, float gridSize, float minGridSize, float lineWidthFactor);
@@ -47,6 +49,10 @@ void main() {
 		gl_FragColor = texture2D(Material, gl_TexCoord[0].st);
 	else
 		gl_FragColor = faceColor;
+
+    if (ApplyLightPreview) {
+        gl_FragColor.rgb *= lightPreviewColor.rgb;
+    }
 
     // Assume alpha masked or opaque.
     // TODO: Make this optional if we gain support for translucent textures
@@ -69,7 +75,7 @@ void main() {
         gl_FragColor = clamp(brightnessCorrection * gl_FragColor, 0.0, 1.0);
     }
 
-	if (ShadeFaces) {
+	if (ShadeFaces && !ApplyLightPreview) {
 		// angular dimming ( can be controlled with dimStrength )
 		// TODO: make view option
 		float dimStrength = 0.25;

@@ -34,7 +34,7 @@
 #include "kd/path_utils.h"
 #include "kd/ranges/to.h"
 
-#include <fmt/format.h>
+#include <format>
 
 #include <string>
 #include <vector>
@@ -489,7 +489,7 @@ void parseSkins(
 
   for (size_t i = 0; i < count; ++i)
   {
-    auto skinName = fmt::format("{}_{}", modelName, i);
+    auto skinName = std::format("{}_{}", modelName, i);
     skins.push_back(
       parseSkin(reader, width, height, flags, std::move(skinName), palette));
   }
@@ -531,11 +531,11 @@ Result<mdl::EntityModelData> MdlLoader::load(Logger& /* logger */)
 
     if (ident != MdlLayout::Ident)
     {
-      return Error{fmt::format("Unknown MDL model ident: {}", ident)};
+      return Error{std::format("Unknown MDL model ident: {}", ident)};
     }
     if (version != MdlLayout::Version6)
     {
-      return Error{fmt::format("Unknown MDL model version: {}", version)};
+      return Error{std::format("Unknown MDL model version: {}", version)};
     }
 
     const auto scale = reader.readVec<float, 3>();

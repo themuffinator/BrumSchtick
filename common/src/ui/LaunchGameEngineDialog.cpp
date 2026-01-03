@@ -246,7 +246,7 @@ void LaunchGameEngineDialog::launchEngine()
     | kdl::transform_error([](const auto& e) {
         const auto message = kdl::str_to_string("Could not launch game engine: ", e.msg);
         QMessageBox::critical(
-          nullptr, "TrenchBroom", QString::fromStdString(message), QMessageBox::Ok);
+          nullptr, "BrümSchtick", QString::fromStdString(message), QMessageBox::Ok);
       });
 }
 
@@ -265,7 +265,7 @@ void LaunchGameEngineDialog::saveConfig()
   const auto& map = m_document.map();
   const auto& gameName = map.gameInfo().gameConfig.name;
 
-  gameManager.updateGameEngineConfig(gameName, m_config, m_document.logger())
+  gameManager.updateGameEngineConfig(gameName, m_config)
     | kdl::transform_error([&](const auto& e) { m_document.logger().error() << e.msg; });
 }
 

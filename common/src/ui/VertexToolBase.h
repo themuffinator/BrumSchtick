@@ -117,7 +117,7 @@ public:
 
   const std::vector<mdl::BrushNode*>& selectedBrushes() const
   {
-    return m_document.map().selection().brushes;
+    return m_document.map().selection().allBrushes();
   }
 
 public:
@@ -614,8 +614,12 @@ protected:
       node->accept(kdl::overload(
         [](const mdl::WorldNode*) {},
         [](const mdl::LayerNode*) {},
-        [](const mdl::GroupNode*) {},
-        [](const mdl::EntityNode*) {},
+        [](auto&& thisLambda, const mdl::GroupNode* groupNode) {
+          groupNode->visitChildren(thisLambda);
+        },
+        [](auto&& thisLambda, const mdl::EntityNode* entityNode) {
+          entityNode->visitChildren(thisLambda);
+        },
         [&](const mdl::BrushNode* brush) { handleManager.addHandles(brush); },
         [](const mdl::PatchNode*) {}));
     }
@@ -631,8 +635,12 @@ protected:
       node->accept(kdl::overload(
         [](const mdl::WorldNode*) {},
         [](const mdl::LayerNode*) {},
-        [](const mdl::GroupNode*) {},
-        [](const mdl::EntityNode*) {},
+        [](auto&& thisLambda, const mdl::GroupNode* groupNode) {
+          groupNode->visitChildren(thisLambda);
+        },
+        [](auto&& thisLambda, const mdl::EntityNode* entityNode) {
+          entityNode->visitChildren(thisLambda);
+        },
         [&](const mdl::BrushNode* brush) { handleManager.removeHandles(brush); },
         [](const mdl::PatchNode*) {}));
     }

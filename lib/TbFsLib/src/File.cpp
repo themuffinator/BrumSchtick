@@ -21,8 +21,7 @@
 
 #include "kd/result.h"
 
-#include <fmt/format.h>
-#include <fmt/std.h>
+#include <format>
 
 #include <cstdio>
 #include <cstring>
@@ -70,7 +69,8 @@ Result<kdl::resource<std::FILE*>> openPathAsFILE(
 
   if (!file)
   {
-    return Error{fmt::format("Failed to open '{}': {}", path, std::strerror(errno))};
+    return Error{
+      std::format("Failed to open '{}': {}", path.string(), std::strerror(errno))};
   }
 
   return kdl::resource{file, std::fclose};
@@ -185,8 +185,8 @@ Result<CFile::BufferType> CFile::buffer(const size_t position, const size_t size
 
 Error CFile::makeError(const std::string& msg) const
 {
-  return std::feof(*m_file) ? Error{fmt::format("{}: unexpected end of file", msg)}
-                            : Error{fmt::format("{}: {}", msg, std::strerror(errno))};
+  return std::feof(*m_file) ? Error{std::format("{}: unexpected end of file", msg)}
+                            : Error{std::format("{}: {}", msg, std::strerror(errno))};
 }
 
 Result<std::shared_ptr<CFile>> createCFile(const std::filesystem::path& path)

@@ -40,8 +40,7 @@
 #include "ui/TitledPanel.h"
 #include "ui/ViewConstants.h"
 
-#include <fmt/format.h>
-#include <fmt/ostream.h>
+#include <format>
 
 #include <optional>
 

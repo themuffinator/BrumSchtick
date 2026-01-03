@@ -20,6 +20,7 @@
 #pragma once
 
 #include <QApplication>
+#include <QString>
 
 #include "kd/task_manager.h"
 
@@ -31,6 +32,7 @@ class QMenu;
 class QNetworkAccessManager;
 class QSettings;
 class QTimer;
+class QTranslator;
 
 namespace upd
 {
@@ -67,6 +69,8 @@ private:
   std::unique_ptr<RecentDocuments> m_recentDocuments;
   std::unique_ptr<WelcomeWindow> m_welcomeWindow;
   QTimer* m_recentDocumentsReloadTimer = nullptr;
+  std::unique_ptr<QTranslator> m_appTranslator;
+  std::unique_ptr<QTranslator> m_qtTranslator;
 
 public:
   static TrenchBroomApp& instance();
@@ -90,6 +94,8 @@ private:
   static QPalette darkPalette();
   bool loadStyleSheets();
   void loadStyle();
+  void applyLanguagePreference();
+  void installTranslations(const QString& languageId);
 
 public:
   std::vector<std::filesystem::path> recentDocuments() const;

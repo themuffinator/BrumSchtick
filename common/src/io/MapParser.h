@@ -80,7 +80,11 @@ protected: // subclassing interface for users of the parser
     size_t rowCount,
     size_t columnCount,
     std::vector<vm::vec<double, 5>> controlPoints,
+    std::vector<vm::vec3d> controlNormals,
     std::string materialName,
+    int surfaceContents,
+    int surfaceFlags,
+    float surfaceValue,
     ParserStatus& status) = 0;
 };
 

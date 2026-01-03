@@ -37,14 +37,19 @@ class BezierPatch
 {
 public:
   using Point = vm::vec<double, 5>;
+  using Normal = vm::vec3d;
 
 private:
   size_t m_pointRowCount;
   size_t m_pointColumnCount;
   std::vector<Point> m_controlPoints;
+  std::vector<Normal> m_controlNormals;
   vm::bbox3d m_bounds;
 
   std::string m_materialName;
+  int m_surfaceContents = 0;
+  int m_surfaceFlags = 0;
+  float m_surfaceValue = 0.0f;
   AssetReference<Material> m_materialReference;
 
   kdl_reflect_decl(
@@ -53,14 +58,22 @@ private:
     m_pointColumnCount,
     m_bounds,
     m_controlPoints,
-    m_materialName);
+    m_controlNormals,
+    m_materialName,
+    m_surfaceContents,
+    m_surfaceFlags,
+    m_surfaceValue);
 
 public:
   BezierPatch(
     size_t pointRowCount,
     size_t pointColumnCount,
     std::vector<Point> controlPoints,
-    std::string materialName);
+    std::string materialName,
+    int surfaceContents = 0,
+    int surfaceFlags = 0,
+    float surfaceValue = 0.0f,
+    std::vector<Normal> controlNormals = {});
   ~BezierPatch();
 
   BezierPatch(const BezierPatch& other);
@@ -80,8 +93,13 @@ public: // control points:
   size_t surfaceColumnCount() const;
 
   const std::vector<Point>& controlPoints() const;
+  const std::vector<Normal>& controlNormals() const;
+  bool hasControlNormals() const;
   Point& controlPoint(size_t row, size_t col);
   const Point& controlPoint(size_t row, size_t col) const;
+  Normal& controlNormal(size_t row, size_t col);
+  const Normal& controlNormal(size_t row, size_t col) const;
+  void setControlNormals(std::vector<Normal> controlNormals);
   void setControlPoint(size_t row, size_t col, Point controlPoint);
 
   const vm::bbox3d& bounds() const;
@@ -89,12 +107,18 @@ public: // control points:
   const std::string& materialName() const;
   void setMaterialName(std::string materialName);
 
+  int surfaceContents() const;
+  int surfaceFlags() const;
+  float surfaceValue() const;
+  void setSurfaceAttributes(int surfaceContents, int surfaceFlags, float surfaceValue);
+
   const Material* material() const;
   bool setMaterial(Material* material);
 
   void transform(const vm::mat4x4d& transformation);
 
   std::vector<Point> evaluate(size_t subdivisionsPerSurface) const;
+  std::vector<Normal> evaluateNormals(size_t subdivisionsPerSurface) const;
 };
 
 } // namespace tb::mdl

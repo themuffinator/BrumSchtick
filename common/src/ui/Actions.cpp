@@ -1381,6 +1381,17 @@ void ActionManager::createEditMenu()
       return context.hasDocument() && context.frame().canDoCsgIntersect();
     },
   }));
+  csgMenu.addItem(addAction(Action{
+    "Menu/Edit/CSG/Convert Patches to Convex Brushes",
+    QObject::tr("Convert Patches to Convex Brushes"),
+    ActionContext::Any,
+    QKeySequence{},
+    [](auto& context) { context.frame().convertPatchesToConvexBrushes(); },
+    [](const auto& context) {
+      return context.hasDocument()
+             && context.frame().canConvertPatchesToConvexBrushes();
+    },
+  }));
 
   auto& vertexEditingMenu = editMenu.addMenu("Vertices");
   vertexEditingMenu.addItem(addAction(Action{
@@ -1401,6 +1412,16 @@ void ActionManager::createEditMenu()
     [](auto& context) { context.frame().snapVerticesToGrid(); },
     [](const auto& context) {
       return context.hasDocument() && context.frame().canSnapVertices();
+    },
+  }));
+  vertexEditingMenu.addItem(addAction(Action{
+    "Menu/Edit/Chamfer Edges",
+    QObject::tr("Chamfer Edges..."),
+    ActionContext::Any,
+    QKeySequence{},
+    [](auto& context) { context.frame().chamferEdges(); },
+    [](const auto& context) {
+      return context.hasDocument() && context.frame().canChamferEdges();
     },
   }));
 
@@ -1613,6 +1634,20 @@ void ActionManager::createToolsMenu()
     },
     [](const auto& context) {
       return context.hasDocument() && context.frame().assembleBrushToolActive();
+    },
+    std::filesystem::path{"BrushTool.svg"},
+  }));
+  toolsMenu.addItem(addAction(Action{
+    "Menu/Edit/Tools/Brush Builder Tool",
+    QObject::tr("Brush Builder Tool"),
+    ActionContext::Any,
+    QKeySequence{Qt::SHIFT | Qt::Key_B},
+    [](auto& context) { context.frame().toggleBrushBuilderTool(); },
+    [](const auto& context) {
+      return context.hasDocument() && context.frame().canToggleBrushBuilderTool();
+    },
+    [](const auto& context) {
+      return context.hasDocument() && context.frame().brushBuilderToolActive();
     },
     std::filesystem::path{"BrushTool.svg"},
   }));
@@ -2175,8 +2210,8 @@ void ActionManager::createHelpMenu()
 {
   auto& helpMenu = createMainMenu("Help");
   helpMenu.addItem(addAction(Action{
-    std::filesystem::path{"Menu/Help/TrenchBroom Manual"},
-    QObject::tr("TrenchBroom Manual"),
+    std::filesystem::path{"Menu/Help/BrumSchtick Manual"},
+    QObject::tr("BrümSchtick Manual"),
     ActionContext::Any,
     QKeySequence{QKeySequence::HelpContents},
     [](auto&) {
@@ -2186,8 +2221,8 @@ void ActionManager::createHelpMenu()
     [](const auto&) { return true; },
   }));
   helpMenu.addItem(addAction(Action{
-    "Menu/File/About TrenchBroom",
-    QObject::tr("About TrenchBroom"),
+    "Menu/File/About BrumSchtick",
+    QObject::tr("About BrümSchtick"),
     ActionContext::Any,
     QKeySequence{},
     [](auto&) {
@@ -2207,6 +2242,7 @@ void ActionManager::createToolbar()
 {
   m_toolBar.addItem(existingAction("Controls/Map view/Deactivate current tool"));
   m_toolBar.addItem(existingAction("Menu/Edit/Tools/Brush Tool"));
+  m_toolBar.addItem(existingAction("Menu/Edit/Tools/Brush Builder Tool"));
   m_toolBar.addItem(existingAction("Menu/Edit/Tools/Clip Tool"));
   m_toolBar.addItem(existingAction("Menu/Edit/Tools/Vertex Tool"));
   m_toolBar.addItem(existingAction("Menu/Edit/Tools/Edge Tool"));

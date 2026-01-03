@@ -23,7 +23,9 @@
 #include "Result.h"
 
 #include "kd/reflection_impl.h"
+#include "kd/string_utils.h"
 
+#include <format>
 #include <string>
 #include <string_view>
 #include <variant>
@@ -171,7 +173,7 @@ public:
     }
 
     return Error{
-      fmt::format("Failed to create color from values {}", fmt::join(values, ", "))};
+      std::format("Failed to create color from values {}", kdl::str_join(values, ", "))};
   }
 
   template <
@@ -191,7 +193,7 @@ public:
     }
 
     return Error{
-      fmt::format("Failed to parse '{}' as color", fmt::join(components, " "))};
+      std::format("Failed to parse '{}' as color", kdl::str_join(components, " "))};
   }
 #ifdef _MSC_VER
 #pragma warning(pop)

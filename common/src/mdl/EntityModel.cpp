@@ -34,7 +34,7 @@
 #include "vm/bbox_io.h" // IWYU pragma: keep
 #include "vm/intersection.h"
 
-#include <fmt/format.h>
+#include <format>
 
 #include <algorithm>
 #include <string>

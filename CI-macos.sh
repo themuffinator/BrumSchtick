@@ -20,7 +20,7 @@ brew --prefix qt@6
 # version because the vcpkg commit ID is part of the cache key for the binary cache.
 export MACOSX_DEPLOYMENT_TARGET=12.0
 
-# Build TB
+# Build BrümSchtick
 
 TB_BUILD_TYPE="Release"
 if [[ $TB_ENABLE_ASAN == "1" || $TB_ENABLE_TSAN == "1" || $TB_ENABLE_UBSAN == "1" ]] ; then
@@ -37,7 +37,7 @@ echo "TB_SIGN_MAC_BUNDLE: $TB_SIGN_MAC_BUNDLE"
 # gatekeeper will refuse to run the app. The app itself is signed as a post-build step
 # using macdeployqt, and the archive is signed and notarized by the
 # ./app/sign_macos_archive.sh script that is called when the build was successful. This
-# script is generated from the cmake template SignMacOsBundle.cmake.in. See Build.md for
+# script is generated from the cmake template SignMacOsBundle.cmake.in. See BUILDING.md for
 # more details on how to set up the necessary prerequisites for signing and notarizing the
 # app and the archive.
 
@@ -106,13 +106,13 @@ if [[ $TB_ENABLE_ASAN == "0" && $TB_ENABLE_UBSAN == "0" ]] ; then
   ./app/generate_checksum.sh || exit 1
 
   echo "Deployment target (minos):"
-  otool -l ./app/TrenchBroom.app/Contents/MacOS/TrenchBroom | grep minos
+  otool -l ./app/BrumSchtick.app/Contents/MacOS/BrumSchtick | grep minos
 
   echo "Shared libraries used:"
-  otool -L ./app/TrenchBroom.app/Contents/MacOS/TrenchBroom
+  otool -L ./app/BrumSchtick.app/Contents/MacOS/BrumSchtick
 
   echo "Binary type:"
-  file ./app/TrenchBroom.app/Contents/MacOS/TrenchBroom
+  file ./app/BrumSchtick.app/Contents/MacOS/BrumSchtick
 else
     echo "Skipping packaging because this is an ASAN build"
 fi

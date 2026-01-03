@@ -44,7 +44,7 @@
 #include "kd/vector_set.h"
 #include "kd/vector_utils.h"
 
-#include <fmt/format.h>
+#include <format>
 
 #include <chrono> // IWYU pragma: keep
 #include <vector>
@@ -184,7 +184,7 @@ void IssueBrowserView::applyQuickFix(const mdl::IssueQuickFix& quickFix)
   const auto issues = collectIssues(getSelection());
 
   auto transaction =
-    mdl::Transaction{map, fmt::format("Apply Quick Fix ({})", quickFix.description())};
+    mdl::Transaction{map, std::format("Apply Quick Fix ({})", quickFix.description())};
   updateSelection();
   quickFix.apply(map, issues);
   transaction.commit();

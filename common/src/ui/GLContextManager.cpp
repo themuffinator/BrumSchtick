@@ -29,7 +29,7 @@
 #include "kd/result.h"
 #include "kd/result_fold.h"
 
-#include <fmt/format.h>
+#include <format>
 
 #include <ranges>
 #include <stdexcept>
@@ -45,7 +45,7 @@ void initializeGlew()
   glewExperimental = GL_TRUE;
   if (const auto glewState = glewInit(); glewState != GLEW_OK)
   {
-    throw std::runtime_error{fmt::format(
+    throw std::runtime_error{std::format(
       "Error initializing glew: {}",
       reinterpret_cast<const char*>(glewGetErrorString(glewState)))};
   }

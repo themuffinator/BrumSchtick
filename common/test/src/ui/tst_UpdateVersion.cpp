@@ -124,10 +124,10 @@ TEST_CASE("chooseAsset")
   SECTION("with release candidates")
   {
     const auto assets = QList<upd::Asset>{
-      {"TrenchBroom-Win64-AMD64-v2025.3-RC3-Release.zip", QUrl{}, 0},
-      {"TrenchBroom-macOS-arm64-v2025.3-RC3-Release.zip", QUrl{}, 0},
-      {"TrenchBroom-macOS-x86_64-v2025.3-RC3-Release.zip", QUrl{}, 0},
-      {"TrenchBroom-Linux-x86_64-v2025.3-RC3-Release.zip", QUrl{}, 0},
+      {"BrumSchtick-Win64-AMD64-v2025.3-RC3-Release.zip", QUrl{}, 0},
+      {"BrumSchtick-macOS-arm64-v2025.3-RC3-Release.zip", QUrl{}, 0},
+      {"BrumSchtick-macOS-x86_64-v2025.3-RC3-Release.zip", QUrl{}, 0},
+      {"BrumSchtick-Linux-x86_64-v2025.3-RC3-Release.zip", QUrl{}, 0},
     };
 
 #if defined(_WIN32)
@@ -146,10 +146,32 @@ TEST_CASE("chooseAsset")
   SECTION("with release versions")
   {
     const auto assets = QList<upd::Asset>{
-      {"TrenchBroom-Win64-AMD64-v2025.3-Release.zip", QUrl{}, 0},
-      {"TrenchBroom-macOS-arm64-v2025.3-Release.zip", QUrl{}, 0},
-      {"TrenchBroom-macOS-x86_64-v2025.3-Release.zip", QUrl{}, 0},
-      {"TrenchBroom-Linux-x86_64-v2025.3-Release.zip", QUrl{}, 0},
+      {"BrumSchtick-Win64-AMD64-v2025.3-Release.zip", QUrl{}, 0},
+      {"BrumSchtick-macOS-arm64-v2025.3-Release.zip", QUrl{}, 0},
+      {"BrumSchtick-macOS-x86_64-v2025.3-Release.zip", QUrl{}, 0},
+      {"BrumSchtick-Linux-x86_64-v2025.3-Release.zip", QUrl{}, 0},
+    };
+
+#if defined(_WIN32)
+    CHECK(chooseAsset(assets) == assets[0]);
+#elif defined(__APPLE__)
+#if defined(__arm64__)
+    CHECK(chooseAsset(assets) == assets[1]);
+#else
+    CHECK(chooseAsset(assets) == assets[2]);
+#endif
+#else
+    CHECK(chooseAsset(assets) == assets[3]);
+#endif
+  }
+
+  SECTION("with semantic versions")
+  {
+    const auto assets = QList<upd::Asset>{
+      {"BrumSchtick-Win64-x86_64-v1.2.3-Release.zip", QUrl{}, 0},
+      {"BrumSchtick-macOS-arm64-v1.2.3-Release.zip", QUrl{}, 0},
+      {"BrumSchtick-macOS-x86_64-v1.2.3-Release.zip", QUrl{}, 0},
+      {"BrumSchtick-Linux-x86_64-v1.2.3-Release.zip", QUrl{}, 0},
     };
 
 #if defined(_WIN32)

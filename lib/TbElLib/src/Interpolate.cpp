@@ -27,6 +27,7 @@
 #include "kd/result_fold.h"
 #include "kd/string_utils.h"
 
+#include <format>
 #include <ranges>
 #include <sstream>
 #include <string>
@@ -46,7 +47,7 @@ Result<std::vector<std::tuple<std::size_t, std::size_t>>> findExpressions(
   {
     if (!part->length)
     {
-      return Error{fmt::format("At position {}: Unterminated expression", part->start)};
+      return Error{std::format("At position {}: Unterminated expression", part->start)};
     }
 
     result.emplace_back(totalOffset + part->start, *part->length);

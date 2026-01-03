@@ -120,6 +120,20 @@ const mdl::CompilationConfig& CompilationProfileManager::config() const
   return m_config;
 }
 
+bool CompilationProfileManager::selectProfileByName(const std::string_view name)
+{
+  for (size_t i = 0; i < m_config.profiles.size(); ++i)
+  {
+    if (m_config.profiles[i].name == name)
+    {
+      m_profileList->setCurrentRow(static_cast<int>(i));
+      return true;
+    }
+  }
+
+  return false;
+}
+
 void CompilationProfileManager::addProfile()
 {
   m_config.profiles.push_back(mdl::CompilationProfile{"unnamed", "${MAP_DIR_PATH}", {}});

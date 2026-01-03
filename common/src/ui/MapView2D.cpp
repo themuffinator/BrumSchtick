@@ -40,6 +40,7 @@
 #include "ui/CameraAnimation.h"
 #include "ui/CameraLinkHelper.h"
 #include "ui/CameraTool2D.h"
+#include "ui/BrushBuilderToolController2D.h"
 #include "ui/ClipToolController.h"
 #include "ui/CreateEntityToolController.h"
 #include "ui/DrawShapeToolController2D.h"
@@ -130,6 +131,8 @@ void MapView2D::initializeToolChain(MapViewToolBox& toolBox)
   addToolController(std::make_unique<ScaleToolController2D>(toolBox.scaleTool()));
   addToolController(std::make_unique<ShearToolController2D>(toolBox.shearTool()));
   addToolController(std::make_unique<ExtrudeToolController2D>(toolBox.extrudeTool()));
+  addToolController(
+    std::make_unique<BrushBuilderToolController2D>(toolBox.brushBuilderTool(), m_document));
   addToolController(std::make_unique<ClipToolController2D>(toolBox.clipTool()));
   addToolController(std::make_unique<VertexToolController>(toolBox.vertexTool()));
   addToolController(std::make_unique<EdgeToolController>(toolBox.edgeTool()));

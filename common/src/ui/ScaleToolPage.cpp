@@ -36,8 +36,7 @@
 
 #include "vm/vec.h"
 
-#include <fmt/format.h>
-#include <fmt/ostream.h>
+#include <format>
 
 namespace tb::ui
 {

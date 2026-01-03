@@ -28,7 +28,7 @@
 
 #include "kd/ranges/to.h"
 
-#include <fmt/format.h>
+#include <format>
 
 #include <ranges>
 #include <string>
@@ -133,7 +133,7 @@ mdl::CompilationTask parseTask(
     return parseToolTask(context, value);
   }
 
-  throw ParserException{fmt::format("Unknown compilation task type '{}'", typeName)};
+  throw ParserException{std::format("Unknown compilation task type '{}'", typeName)};
 }
 
 std::vector<mdl::CompilationTask> parseTasks(
@@ -173,7 +173,7 @@ Result<mdl::CompilationConfig> parseCompilationConfig(
     if (const auto version = root.at(context, "version").numberValue(context);
         version != 1.0)
     {
-      return Error{fmt::format("Unsupported compilation config version {}", version)};
+      return Error{std::format("Unsupported compilation config version {}", version)};
     }
 
     return mdl::CompilationConfig{parseProfiles(context, root.at(context, "profiles"))};

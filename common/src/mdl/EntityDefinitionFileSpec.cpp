@@ -26,8 +26,7 @@
 #include "kd/string_compare.h"
 #include "kd/string_utils.h"
 
-#include <fmt/format.h>
-#include <fmt/std.h>
+#include <format>
 
 #include <cassert>
 #include <string>
@@ -88,9 +87,9 @@ std::string EntityDefinitionFileSpec::asString() const
   switch (type)
   {
   case Type::Builtin:
-    return fmt::format("builtin:{}", forwardPath);
+    return std::format("builtin:{}", forwardPath);
   case Type::External:
-    return fmt::format("external:{}", forwardPath);
+    return std::format("external:{}", forwardPath);
     switchDefault();
   }
 }

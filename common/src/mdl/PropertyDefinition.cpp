@@ -23,7 +23,7 @@
 #include "kd/overload.h"
 #include "kd/reflection_impl.h"
 
-#include <fmt/format.h>
+#include <format>
 
 #include <algorithm>
 #include <string>
@@ -35,14 +35,17 @@ namespace PropertyValueTypes
 
 kdl_reflect_impl(LinkSource);
 kdl_reflect_impl(LinkTarget);
+kdl_reflect_impl(TargetNameOrClass);
 kdl_reflect_impl(String);
 kdl_reflect_impl(Boolean);
 kdl_reflect_impl(Integer);
 kdl_reflect_impl(Float);
+kdl_reflect_impl(Angle);
 kdl_reflect_impl(ChoiceOption);
 kdl_reflect_impl(Choice);
 kdl_reflect_impl(Flag);
 kdl_reflect_impl(Flags);
+kdl_reflect_impl(Vector);
 kdl_reflect_impl(Origin);
 kdl_reflect_impl(Input);
 kdl_reflect_impl(Output);
@@ -109,6 +112,9 @@ std::optional<std::string> PropertyDefinition::defaultValue(
       [](const PropertyValueTypes::LinkSource&) -> std::optional<std::string> {
         return std::nullopt;
       },
+      [](const PropertyValueTypes::TargetNameOrClass& value) {
+        return value.defaultValue;
+      },
       [](const PropertyValueTypes::String& value) { return value.defaultValue; },
       [](const PropertyValueTypes::Boolean& value) {
         return value.defaultValue | kdl::optional_transform([](const auto b) {
@@ -123,11 +129,16 @@ std::optional<std::string> PropertyDefinition::defaultValue(
         return value.defaultValue
                | kdl::optional_transform([](const auto f) { return std::to_string(f); });
       },
+      [](const PropertyValueTypes::Angle& value) {
+        return value.defaultValue
+               | kdl::optional_transform([](const auto f) { return std::to_string(f); });
+      },
       [](const PropertyValueTypes::Choice& value) { return value.defaultValue; },
       [](const PropertyValueTypes::Flags& value) {
         return value.defaultValue != 0 ? std::optional{std::to_string(value.defaultValue)}
                                        : std::nullopt;
       },
+      [](const PropertyValueTypes::Vector& value) { return value.defaultValue; },
       [](const PropertyValueTypes::Origin& value) { return value.defaultValue; },
       [](const PropertyValueTypes::Input&) -> std::optional<std::string> {
         return std::nullopt;

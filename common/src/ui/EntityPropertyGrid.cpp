@@ -54,6 +54,7 @@
 #include "kd/vector_utils.h"
 
 #include <algorithm>
+#include <functional>
 #include <ranges>
 #include <vector>
 
@@ -78,11 +79,11 @@ void EntityPropertyGrid::backupSelection()
   for (const auto& index : m_table->selectionModel()->selectedIndexes())
   {
     const auto sourceIndex = m_proxyModel->mapToSource(index);
-    const auto propertyKey = m_model->propertyKey(sourceIndex.row());
-    m_selectionBackup.push_back({propertyKey, sourceIndex.column()});
+    const auto rowId = m_model->rowId(sourceIndex.row());
+    m_selectionBackup.push_back({rowId, sourceIndex.column()});
 
     GRID_LOG(
-      qDebug() << "Backup selection: " << QString::fromStdString(propertyKey) << ","
+      qDebug() << "Backup selection: " << QString::fromStdString(rowId.key) << ","
                << sourceIndex.column());
   }
 }
@@ -94,12 +95,12 @@ void EntityPropertyGrid::restoreSelection()
   GRID_LOG(qDebug() << "Restore selection");
   for (const auto& selection : m_selectionBackup)
   {
-    const auto row = m_model->rowIndexForPropertyKey(selection.propertyKey);
+    const auto row = m_model->rowIndexForPropertyId(selection.rowId);
     if (row == -1)
     {
       GRID_LOG(
         qDebug() << "Restore selection: couldn't find "
-                 << QString::fromStdString(selection.propertyKey));
+                 << QString::fromStdString(selection.rowId.key));
       continue;
     }
     const auto sourceIndex = m_model->index(row, selection.column);
@@ -108,7 +109,7 @@ void EntityPropertyGrid::restoreSelection()
     m_table->selectionModel()->setCurrentIndex(proxyIndex, QItemSelectionModel::Current);
 
     GRID_LOG(
-      qDebug() << "Restore selection: " << QString::fromStdString(selection.propertyKey)
+      qDebug() << "Restore selection: " << QString::fromStdString(selection.rowId.key)
                << "," << selection.column);
   }
   GRID_LOG(
@@ -152,15 +153,37 @@ void EntityPropertyGrid::removeSelectedProperties()
   }
 
   const auto selectedRows = selectedRowsAndCursorRow();
-  const auto propertyKeys =
-    selectedRows
-    | std::views::transform([&](const auto row) { return m_model->propertyKey(row); })
-    | kdl::ranges::to<std::vector>();
-  const auto numRows = propertyKeys.size();
+  auto propertyKeys = std::vector<std::string>{};
+  auto propertyIndices = std::vector<size_t>{};
+  propertyKeys.reserve(selectedRows.size());
+  propertyIndices.reserve(selectedRows.size());
+  for (const auto row : selectedRows)
+  {
+    const auto rowId = m_model->rowId(row);
+    if (rowId.propertyIndex)
+    {
+      propertyIndices.push_back(*rowId.propertyIndex);
+    }
+    else
+    {
+      propertyKeys.push_back(rowId.key);
+    }
+  }
+  const auto numRows = propertyKeys.size() + propertyIndices.size();
 
   auto& map = m_document.map();
   auto transaction = mdl::Transaction{
     map, kdl::str_plural(numRows, "Remove Property", "Remove Properties")};
+
+  std::ranges::sort(propertyIndices, std::greater{});
+  for (const auto propertyIndex : propertyIndices)
+  {
+    if (!removeEntityPropertyAtIndex(map, propertyIndex))
+    {
+      transaction.cancel();
+      return;
+    }
+  }
 
   for (const auto& propertyKey : propertyKeys)
   {

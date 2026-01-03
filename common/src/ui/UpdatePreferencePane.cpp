@@ -59,7 +59,7 @@ void UpdatePreferencePane::createGui()
 QWidget* UpdatePreferencePane::createUpdatePreferences()
 {
   auto* updateInfo = new QLabel{tr(
-    R"(TrenchBroom can check for updates. If an update is available, you will be notified in the status bar and other places.
+    R"(BrümSchtick can check for updates. If an update is available, you will be notified in the status bar and other places.
 To download and install an available update, click on the link labeled "Update available".)")};
 
   m_autoCheckForUpdates = new QCheckBox{};
@@ -97,7 +97,7 @@ To download and install an available update, click on the link labeled "Update a
     });
 
   auto* preReleaseInfo = new QLabel{tr(
-    R"(Pre-releases are versions of TrenchBroom that are not yet considered stable. 
+    R"(Pre-releases are versions of BrümSchtick that are not yet considered stable. 
 They may contain new features or bug fixes that are not yet part of a stable release.)")};
 
   auto& app = TrenchBroomApp::instance();

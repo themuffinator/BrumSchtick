@@ -87,6 +87,11 @@ bool isNumberedProperty(std::string_view prefix, std::string_view key)
   return kdl::cs::str_matches_glob(key, pattern);
 }
 
+bool isTBPropertyKey(std::string_view key)
+{
+  return kdl::cs::str_is_prefix(key, "_tb_");
+}
+
 EntityProperty::EntityProperty() = default;
 
 EntityProperty::EntityProperty(std::string key, std::string value)

@@ -1,8 +1,8 @@
-# TrenchBroom manual documentation
+# BrümSchtick manual documentation
 
 ## The Build Process
 
-TrenchBroom's documentation is contained in a single markdown file (index.md). This file is converted into HTML using [pandoc](http://www.pandoc.org) during the build process. The build process also converts our custom macros (see below) into javascript snippets that output some information into the help document.
+BrümSchtick's documentation is contained in a single markdown file (index.md). This file is converted into HTML using [pandoc](http://www.pandoc.org) during the build process. The build process also converts our custom macros (see below) into javascript snippets that output some information into the help document.
 
 If you want to preview the generated HTML without doing a full build, you can just build the GenerateHelp target. Change into your build directory and run
 

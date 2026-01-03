@@ -36,6 +36,7 @@
 #include "kd/contracts.h"
 #include "kd/ranges/to.h"
 #include "kd/reflection_impl.h"
+#include "kd/string_utils.h"
 
 #include "vm/bbox.h"
 #include "vm/distance.h"
@@ -43,8 +44,7 @@
 #include "vm/vec.h"
 #include "vm/vec_io.h" // IWYU pragma: keep
 
-#include <fmt/format.h>
-#include <fmt/ostream.h>
+#include <format>
 
 #include <ranges>
 #include <set>
@@ -146,7 +146,7 @@ BBoxSide::BBoxSide(const vm::vec3d& n)
   if (!validSideNormal(n))
   {
     throw std::invalid_argument{
-      fmt::format("BBoxSide created with invalid normal {}", fmt::streamed(n))};
+      std::format("BBoxSide created with invalid normal {}", kdl::str_to_string(n))};
   }
 }
 
@@ -160,7 +160,7 @@ BBoxCorner::BBoxCorner(const vm::vec3d& c)
   if (!validCorner(c))
   {
     throw std::invalid_argument{
-      fmt::format("Corner created with invalid corner {}", fmt::streamed(c))};
+      std::format("Corner created with invalid corner {}", kdl::str_to_string(c))};
   }
 }
 
@@ -175,12 +175,12 @@ BBoxEdge::BBoxEdge(const vm::vec3d& p0, const vm::vec3d& p1)
   if (!validCorner(p0))
   {
     throw std::invalid_argument{
-      fmt::format("BBoxEdge created with invalid corner {}", fmt::streamed(p0))};
+      std::format("BBoxEdge created with invalid corner {}", kdl::str_to_string(p0))};
   }
   if (!validCorner(p1))
   {
     throw std::invalid_argument{
-      fmt::format("BBoxEdge created with invalid corner {}", fmt::streamed(p1))};
+      std::format("BBoxEdge created with invalid corner {}", kdl::str_to_string(p1))};
   }
 }
 

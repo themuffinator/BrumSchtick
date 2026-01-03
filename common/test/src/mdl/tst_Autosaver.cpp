@@ -33,7 +33,7 @@
 
 #include "kd/vector_utils.h"
 
-#include <fmt/format.h>
+#include <format>
 
 #include <chrono>
 #include <filesystem>

@@ -56,7 +56,7 @@ TEST_CASE("GameFileSystem")
 
   auto logger = NullLogger{};
 
-  auto fs = GameFileSystem{};
+  auto fs = GameFileSystem{logger};
 
   const auto config = GameConfig{
     "some game",
@@ -81,7 +81,7 @@ TEST_CASE("GameFileSystem")
 
   SECTION("Mounts packages in game path")
   {
-    fs.initialize(config, fixturePath, {}, logger);
+    fs.initialize(config, fixturePath, {});
 
     CHECK(fs.pathInfo("id1_pak0_1.txt") == fs::PathInfo::File);
     CHECK(fs.pathInfo("id1_pak0_2.txt") == fs::PathInfo::File);
@@ -91,14 +91,14 @@ TEST_CASE("GameFileSystem")
 
   SECTION("Packages files override loose files")
   {
-    fs.initialize(config, fixturePath, {}, logger);
+    fs.initialize(config, fixturePath, {});
 
     CHECK(fs::readTextFile(fs, "id1_pak0_loose_file.txt") == "pak0");
   }
 
   SECTION("Mounts packages in additional search paths")
   {
-    fs.initialize(config, fixturePath, {fixturePath / "mod1"}, logger);
+    fs.initialize(config, fixturePath, {fixturePath / "mod1"});
 
     CHECK(fs.pathInfo("id1_pak0_1.txt") == fs::PathInfo::File);
     CHECK(fs.pathInfo("id1_pak0_2.txt") == fs::PathInfo::File);
@@ -109,7 +109,7 @@ TEST_CASE("GameFileSystem")
 
   SECTION("Additional search paths override game path")
   {
-    fs.initialize(config, fixturePath, {fixturePath / "mod1"}, logger);
+    fs.initialize(config, fixturePath, {fixturePath / "mod1"});
 
     CHECK(fs::readTextFile(fs, "id1_pak0_loose_file.txt") == "mod1");
     CHECK(fs::readTextFile(fs, "id1_pak0_1.txt") == "id1_pak0_1");
@@ -142,7 +142,7 @@ TEST_CASE("GameFileSystem")
       {},
     };
 
-    fs.initialize(ucConfig, fixturePath, {}, logger);
+    fs.initialize(ucConfig, fixturePath, {});
 
     CHECK(fs.pathInfo("id1_pak0_1.txt") == fs::PathInfo::File);
     CHECK(fs.pathInfo("id1_pak0_2.txt") == fs::PathInfo::File);

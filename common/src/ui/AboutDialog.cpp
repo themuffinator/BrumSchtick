@@ -67,7 +67,7 @@ AboutDialog::AboutDialog()
 void AboutDialog::createGui()
 {
   const auto creditsString = tr(R"(
-github.com/TrenchBroom/TrenchBroom<br />
+github.com/themuffinator/BrumSchtick<br />
 <br />
 <b>Developers</b><br />
 <br />

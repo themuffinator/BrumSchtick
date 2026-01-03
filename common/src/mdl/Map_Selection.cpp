@@ -40,6 +40,7 @@
 #include "kd/contracts.h"
 #include "kd/ranges/to.h"
 #include "kd/result_fold.h"
+#include "kd/string_compare.h"
 
 #include <algorithm>
 #include <ranges>
@@ -89,7 +90,8 @@ void selectSiblingNodes(Map& map)
 
 void selectTouchingNodes(Map& map, const bool del)
 {
-  auto nodes = collectTouchingNodes({&map.worldNode()}, map.selection().brushes)
+  const auto selectedBrushes = map.selection().allBrushes();
+  auto nodes = collectTouchingNodes({&map.worldNode()}, selectedBrushes)
                | std::views::filter(
                  [&](const auto* node) { return map.editorContext().selectable(*node); })
                | kdl::ranges::to<std::vector>();
@@ -97,7 +99,8 @@ void selectTouchingNodes(Map& map, const bool del)
   auto transaction = Transaction{map, "Select Touching"};
   if (del)
   {
-    removeSelectedNodes(map);
+    deselectAll(map);
+    removeNodes(map, kdl::vec_static_cast<Node*>(selectedBrushes));
   }
   else
   {
@@ -119,7 +122,7 @@ void selectTouchingNodes(Map& map, const vm::axis::type cameraAxis, const bool d
   const auto minPlane = vm::plane3d{min, cameraAbsDirection};
   const auto maxPlane = vm::plane3d{max, cameraAbsDirection};
 
-  const auto& selectionBrushNodes = map.selection().brushes;
+  const auto selectionBrushNodes = map.selection().allBrushes();
   contract_assert(!selectionBrushNodes.empty());
 
   const auto brushBuilder = BrushBuilder{map.worldNode().mapFormat(), map.worldBounds()};
@@ -146,7 +149,8 @@ void selectTouchingNodes(Map& map, const vm::axis::type cameraAxis, const bool d
         auto transaction = Transaction{map, "Select Tall"};
         if (del)
         {
-          removeSelectedNodes(map);
+          deselectAll(map);
+          removeNodes(map, kdl::vec_static_cast<Node*>(selectionBrushNodes));
         }
         else
         {
@@ -172,7 +176,8 @@ void selectTouchingNodes(Map& map, const vm::axis::type cameraAxis, const bool d
 
 void selectContainedNodes(Map& map, const bool del)
 {
-  auto nodes = collectContainedNodes({&map.worldNode()}, map.selection().brushes)
+  const auto selectedBrushes = map.selection().allBrushes();
+  auto nodes = collectContainedNodes({&map.worldNode()}, selectedBrushes)
                | std::views::filter(
                  [&](const auto* node) { return map.editorContext().selectable(*node); })
                | kdl::ranges::to<std::vector>();
@@ -180,7 +185,8 @@ void selectContainedNodes(Map& map, const bool del)
   auto transaction = Transaction{map, "Select Inside"};
   if (del)
   {
-    removeSelectedNodes(map);
+    deselectAll(map);
+    removeNodes(map, kdl::vec_static_cast<Node*>(selectedBrushes));
   }
   else
   {
@@ -263,7 +269,8 @@ void selectBrushesWithMaterial(Map& map, const std::string_view materialName)
     | std::views::filter([&](const auto& node) {
         return std::ranges::any_of(
           collectSelectableBrushFaces({node}, map.editorContext()), [&](const auto& h) {
-            return h.face().attributes().materialName() == materialName;
+            return kdl::ci::str_is_equal(
+              h.face().attributes().materialName(), materialName);
           });
       })
     | kdl::ranges::to<std::vector>();
@@ -380,8 +387,9 @@ void selectBrushFacesWithMaterial(Map& map, const std::string_view materialName)
 {
   const auto faces =
     collectSelectableBrushFaces(std::vector<Node*>{&map.worldNode()}, map.editorContext())
-    | std::views::filter(
-      [&](const auto& h) { return h.face().attributes().materialName() == materialName; })
+    | std::views::filter([&](const auto& h) {
+        return kdl::ci::str_is_equal(h.face().attributes().materialName(), materialName);
+      })
     | kdl::ranges::to<std::vector>();
 
   auto transaction = Transaction{map, "Select Faces with Material"};

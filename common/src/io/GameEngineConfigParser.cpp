@@ -26,6 +26,7 @@
 
 #include "kd/ranges/to.h"
 
+#include <format>
 #include <ranges>
 #include <string>
 #include <vector>
@@ -62,7 +63,7 @@ Result<mdl::GameEngineConfig> parseGameEngineConfig(
   if (const auto version = root.at(context, "version").numberValue(context);
       version != 1.0)
   {
-    return Error{fmt::format("Unsupported game engine config version {}", version)};
+    return Error{std::format("Unsupported game engine config version {}", version)};
   }
 
   return mdl::GameEngineConfig{parseProfiles(context, root.at(context, "profiles"))};

@@ -38,7 +38,7 @@
 
 #include "vm/vec_io.h"
 
-#include <fmt/format.h>
+#include <format>
 
 #include <cstdlib>
 #include <functional>
@@ -73,7 +73,7 @@ std::string_view getAttribute(
 void warn(
   const tinyxml2::XMLElement& element, const std::string_view msg, ParserStatus& status)
 {
-  const auto str = fmt::format("{}: {}", msg, getName(element));
+  const auto str = std::format("{}: {}", msg, getName(element));
   if (element.GetLineNum() > 0)
   {
     status.warn(FileLocation{static_cast<size_t>(element.GetLineNum() - 1)}, str);
@@ -91,7 +91,7 @@ bool expectAttribute(
 {
   if (!hasAttribute(element, attributeName))
   {
-    warn(element, fmt::format("Expected attribute '{}'", attributeName), status);
+    warn(element, std::format("Expected attribute '{}'", attributeName), status);
     return false;
   }
   return true;
@@ -266,6 +266,14 @@ auto withDefaultValue(
         -> mdl::PropertyValueType { return targetSourceValueType; },
       [](const mdl::PropertyValueTypes::LinkSource& targetDestinationValueType)
         -> mdl::PropertyValueType { return targetDestinationValueType; },
+      [&](mdl::PropertyValueTypes::TargetNameOrClass targetNameOrClassValueType)
+        -> mdl::PropertyValueType {
+        if (hasAttribute(element, "value"))
+        {
+          targetNameOrClassValueType.defaultValue = parseString(element, "value");
+        }
+        return targetNameOrClassValueType;
+      },
       [&](mdl::PropertyValueTypes::String stringValueType) -> mdl::PropertyValueType {
         if (hasAttribute(element, "value"))
         {
@@ -294,6 +302,13 @@ auto withDefaultValue(
         }
         return floatValueType;
       },
+      [&](mdl::PropertyValueTypes::Angle angleValueType) -> mdl::PropertyValueType {
+        if (hasAttribute(element, "value"))
+        {
+          angleValueType.defaultValue = parseFloat(element, "value");
+        }
+        return angleValueType;
+      },
       [&](mdl::PropertyValueTypes::Choice choiceValueType) -> mdl::PropertyValueType {
         if (hasAttribute(element, "value"))
         {
@@ -314,6 +329,13 @@ auto withDefaultValue(
           originValueType.defaultValue = parseString(element, "value");
         }
         return originValueType;
+      },
+      [&](mdl::PropertyValueTypes::Vector vectorValueType) -> mdl::PropertyValueType {
+        if (hasAttribute(element, "value"))
+        {
+          vectorValueType.defaultValue = parseString(element, "value");
+        }
+        return vectorValueType;
       },
       [](mdl::PropertyValueTypes::Input inputValueType) -> mdl::PropertyValueType {
         return inputValueType;
@@ -380,6 +402,22 @@ std::optional<mdl::PropertyDefinition> parseTargetPropertyDefinition(
   return parsePropertyDefinition(element, factory, status);
 }
 
+std::optional<mdl::PropertyDefinition> parseTargetNameOrClassPropertyDefinition(
+  const tinyxml2::XMLElement& element, ParserStatus& status)
+{
+  auto factory = [&](std::string key, std::string shortDesc, std::string longDesc) {
+    auto defaultValue = hasAttribute(element, "value")
+                          ? std::optional(parseString(element, "value"))
+                          : std::nullopt;
+    return mdl::PropertyDefinition{
+      std::move(key),
+      mdl::PropertyValueTypes::TargetNameOrClass{std::move(defaultValue)},
+      std::move(shortDesc),
+      std::move(longDesc)};
+  };
+  return parsePropertyDefinition(element, factory, status);
+}
+
 std::optional<mdl::PropertyDefinition> parseRealPropertyDefinition(
   const tinyxml2::XMLElement& element, ParserStatus& status)
 {
@@ -398,7 +436,7 @@ std::optional<mdl::PropertyDefinition> parseRealPropertyDefinition(
       auto strDefaultValue = parseString(element, "value");
       warn(
         element,
-        fmt::format(
+        std::format(
           "Invalid default value '{}' for float property definition", strDefaultValue),
         status);
       return mdl::PropertyDefinition{
@@ -411,6 +449,121 @@ std::optional<mdl::PropertyDefinition> parseRealPropertyDefinition(
     return mdl::PropertyDefinition{
       std::move(key),
       mdl::PropertyValueTypes::Float{},
+      std::move(shortDesc),
+      std::move(longDesc)};
+  };
+
+  return parsePropertyDefinition(element, factory, status);
+}
+
+std::optional<mdl::PropertyDefinition> parseAnglePropertyDefinition(
+  const tinyxml2::XMLElement& element, ParserStatus& status)
+{
+  auto factory = [&](std::string key, std::string shortDesc, std::string longDesc) {
+    if (hasAttribute(element, "value"))
+    {
+      if (auto angleDefaultValue = parseFloat(element, "value"))
+      {
+        return mdl::PropertyDefinition{
+          std::move(key),
+          mdl::PropertyValueTypes::Angle{angleDefaultValue},
+          std::move(shortDesc),
+          std::move(longDesc)};
+      }
+
+      auto strDefaultValue = parseString(element, "value");
+      warn(
+        element,
+        std::format(
+          "Invalid default value '{}' for angle property definition", strDefaultValue),
+        status);
+      return mdl::PropertyDefinition{
+        std::move(key),
+        mdl::PropertyValueTypes::Unknown{std::move(strDefaultValue)},
+        std::move(shortDesc),
+        std::move(longDesc)};
+    }
+
+    return mdl::PropertyDefinition{
+      std::move(key),
+      mdl::PropertyValueTypes::Angle{},
+      std::move(shortDesc),
+      std::move(longDesc)};
+  };
+
+  return parsePropertyDefinition(element, factory, status);
+}
+
+std::optional<mdl::PropertyDefinition> parseVectorPropertyDefinition(
+  const tinyxml2::XMLElement& element, ParserStatus& status)
+{
+  auto factory = [&](std::string key, std::string shortDesc, std::string longDesc) {
+    if (hasAttribute(element, "value"))
+    {
+      auto defaultValue = parseString(element, "value");
+      if (!vm::parse<double, 3>(defaultValue))
+      {
+        warn(
+          element,
+          std::format(
+            "Invalid default value '{}' for vector property definition",
+            defaultValue),
+          status);
+        return mdl::PropertyDefinition{
+          std::move(key),
+          mdl::PropertyValueTypes::Unknown{std::move(defaultValue)},
+          std::move(shortDesc),
+          std::move(longDesc)};
+      }
+
+      return mdl::PropertyDefinition{
+        std::move(key),
+        mdl::PropertyValueTypes::Vector{std::move(defaultValue)},
+        std::move(shortDesc),
+        std::move(longDesc)};
+    }
+
+    return mdl::PropertyDefinition{
+      std::move(key),
+      mdl::PropertyValueTypes::Vector{},
+      std::move(shortDesc),
+      std::move(longDesc)};
+  };
+
+  return parsePropertyDefinition(element, factory, status);
+}
+
+std::optional<mdl::PropertyDefinition> parseOriginPropertyDefinition(
+  const tinyxml2::XMLElement& element, ParserStatus& status)
+{
+  auto factory = [&](std::string key, std::string shortDesc, std::string longDesc) {
+    if (hasAttribute(element, "value"))
+    {
+      auto defaultValue = parseString(element, "value");
+      if (!vm::parse<double, 3>(defaultValue))
+      {
+        warn(
+          element,
+          std::format(
+            "Invalid default value '{}' for origin property definition", defaultValue),
+          status);
+        return mdl::PropertyDefinition{
+          std::move(key),
+          mdl::PropertyValueTypes::Unknown{std::move(defaultValue)},
+          std::move(shortDesc),
+          std::move(longDesc)};
+      }
+
+      return mdl::PropertyDefinition{
+        std::move(key),
+        mdl::PropertyValueTypes::Origin{std::move(defaultValue)},
+        std::move(shortDesc),
+        std::move(longDesc)};
+    }
+
+    return mdl::PropertyDefinition{
+      std::move(key),
+      mdl::PropertyValueTypes::Origin{},
       std::move(shortDesc),
       std::move(longDesc)};
   };
@@ -436,7 +589,7 @@ std::optional<mdl::PropertyDefinition> parseIntegerPropertyDefinition(
       auto strDefaultValue = parseString(element, "value");
       warn(
         element,
-        fmt::format(
+        std::format(
           "Invalid default value '{}' for integer property definition", strDefaultValue),
         status);
       return mdl::PropertyDefinition{
@@ -474,7 +627,7 @@ std::optional<mdl::PropertyDefinition> parseBooleanPropertyDefinition(
       auto strDefaultValue = parseString(element, "value");
       warn(
         element,
-        fmt::format(
+        std::format(
           "Invalid default value '{}' for boolean property definition", strDefaultValue),
         status);
       return mdl::PropertyDefinition{
@@ -553,15 +706,27 @@ std::optional<mdl::PropertyDefinition> parsePropertyDefinition(
 {
   if (getName(element) == "angle")
   {
-    return parseUnknownPropertyDefinition(element, status);
+    return parseAnglePropertyDefinition(element, status);
   }
   if (getName(element) == "angles")
   {
-    return parseUnknownPropertyDefinition(element, status);
+    return parseVectorPropertyDefinition(element, status);
   }
   if (getName(element) == "direction")
   {
-    return parseUnknownPropertyDefinition(element, status);
+    return parseVectorPropertyDefinition(element, status);
+  }
+  if (getName(element) == "vector")
+  {
+    return parseVectorPropertyDefinition(element, status);
+  }
+  if (getName(element) == "real3")
+  {
+    return parseVectorPropertyDefinition(element, status);
+  }
+  if (getName(element) == "origin")
+  {
+    return parseOriginPropertyDefinition(element, status);
   }
   if (getName(element) == "boolean")
   {
@@ -586,6 +751,14 @@ std::optional<mdl::PropertyDefinition> parsePropertyDefinition(
   if (getName(element) == "targetname")
   {
     return parseTargetNamePropertyDefinition(element, status);
+  }
+  if (getName(element) == "target_name_or_class")
+  {
+    return parseTargetNameOrClassPropertyDefinition(element, status);
+  }
+  if (getName(element) == "targetname_or_class")
+  {
+    return parseTargetNameOrClassPropertyDefinition(element, status);
   }
   if (getName(element) == "texture")
   {
@@ -651,7 +824,7 @@ std::optional<mdl::PropertyDefinition> parseSpawnflags(
         const auto strValue = parseString(*flagElement, "bit");
         warn(
           *flagElement,
-          fmt::format("Invalid value '{}' for bit property definition", strValue),
+          std::format("Invalid value '{}' for bit property definition", strValue),
           status);
       }
       else

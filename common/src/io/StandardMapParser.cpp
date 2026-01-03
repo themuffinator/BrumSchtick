@@ -29,6 +29,8 @@
 
 #include "vm/vec.h"
 
+#include <algorithm>
+#include <format>
 #include <string>
 #include <vector>
 
@@ -54,6 +56,86 @@ auto tokenNames()
     {Comment, "comment"},
     {Eof, "end of file"},
   };
+}
+
+size_t sanitizePatchCount(
+  const size_t count,
+  const std::string_view label,
+  const FileLocation& location,
+  ParserStatus& status)
+{
+  if (count < 3u)
+  {
+    status.warn(
+      location, std::format("Invalid patch {}, expanding to 3", label));
+    return 3u;
+  }
+  if (count % 2u == 0u)
+  {
+    const auto expanded = count + 1u;
+    status.warn(
+      location, std::format("Invalid patch {}, expanding to {}", label, expanded));
+    return expanded;
+  }
+  return count;
+}
+
+std::vector<vm::vec<double, 5>> resizePatchControlPoints(
+  const size_t sourceRowCount,
+  const size_t sourceColumnCount,
+  const size_t targetRowCount,
+  const size_t targetColumnCount,
+  const std::vector<vm::vec<double, 5>>& controlPoints)
+{
+  if (sourceRowCount == 0u || sourceColumnCount == 0u)
+  {
+    return std::vector<vm::vec<double, 5>>(targetRowCount * targetColumnCount);
+  }
+
+  auto resized = std::vector<vm::vec<double, 5>>{};
+  resized.reserve(targetRowCount * targetColumnCount);
+
+  for (size_t row = 0u; row < targetRowCount; ++row)
+  {
+    const auto sourceRow = std::min(row, sourceRowCount - 1u);
+    for (size_t col = 0u; col < targetColumnCount; ++col)
+    {
+      const auto sourceCol = std::min(col, sourceColumnCount - 1u);
+      resized.push_back(
+        controlPoints[sourceRow * sourceColumnCount + sourceCol]);
+    }
+  }
+
+  return resized;
+}
+
+std::vector<vm::vec3d> resizePatchControlNormals(
+  const size_t sourceRowCount,
+  const size_t sourceColumnCount,
+  const size_t targetRowCount,
+  const size_t targetColumnCount,
+  const std::vector<vm::vec3d>& controlNormals)
+{
+  if (sourceRowCount == 0u || sourceColumnCount == 0u || controlNormals.empty())
+  {
+    return {};
+  }
+
+  auto resized = std::vector<vm::vec3d>{};
+  resized.reserve(targetRowCount * targetColumnCount);
+
+  for (size_t row = 0u; row < targetRowCount; ++row)
+  {
+    const auto sourceRow = std::min(row, sourceRowCount - 1u);
+    for (size_t col = 0u; col < targetColumnCount; ++col)
+    {
+      const auto sourceCol = std::min(col, sourceColumnCount - 1u);
+      resized.push_back(
+        controlNormals[sourceRow * sourceColumnCount + sourceCol]);
+    }
+  }
+
+  return resized;
 }
 
 } // namespace
@@ -165,7 +247,7 @@ QuakeMapTokenizer::Token QuakeMapTokenizer::emitToken()
         return Token{QuakeMapToken::String, c, e, offset(c), startLine, startColumn};
       }
 
-      throw ParserException{startLocation, fmt::format("Unexpected character: {}", *c)};
+      throw ParserException{startLocation, std::format("Unexpected character: {}", *c)};
     }
   }
   return Token{QuakeMapToken::Eof, nullptr, nullptr, length(), line(), column()};
@@ -173,6 +255,7 @@ QuakeMapTokenizer::Token QuakeMapTokenizer::emitToken()
 
 const std::string StandardMapParser::BrushPrimitiveId = "brushDef";
 const std::string StandardMapParser::PatchId = "patchDef2";
+const std::string StandardMapParser::Patch3Id = "patchDef3";
 
 StandardMapParser::StandardMapParser(
   const std::string_view str,
@@ -256,8 +339,7 @@ void StandardMapParser::parseEntity(ParserStatus& status)
     const auto startLocation = token.location();
 
     auto properties = std::vector<mdl::EntityProperty>();
-    auto propertyKeys = EntityPropertyKeys();
-    parseEntityProperties(properties, propertyKeys, status);
+    parseEntityProperties(properties, status);
 
     onBeginEntity(startLocation, properties, status);
     parseObjects(status);
@@ -269,9 +351,7 @@ void StandardMapParser::parseEntity(ParserStatus& status)
 }
 
 void StandardMapParser::parseEntityProperties(
-  std::vector<mdl::EntityProperty>& properties,
-  EntityPropertyKeys& keys,
-  ParserStatus& status)
+  std::vector<mdl::EntityProperty>& properties, ParserStatus& status)
 {
   while (m_tokenizer
            .skipAndPeekToken(
@@ -279,33 +359,22 @@ void StandardMapParser::parseEntityProperties(
              QuakeMapToken::String | QuakeMapToken::OBrace | QuakeMapToken::CBrace)
            .hasType(QuakeMapToken::String))
   {
-    parseEntityProperty(properties, keys, status);
+    parseEntityProperty(properties, status);
   }
 }
 
 void StandardMapParser::parseEntityProperty(
-  std::vector<mdl::EntityProperty>& properties,
-  EntityPropertyKeys& keys,
-  ParserStatus& status)
+  std::vector<mdl::EntityProperty>& properties, ParserStatus& /* status */)
 {
   auto token =
     m_tokenizer.skipAndNextToken(QuakeMapToken::Comment, QuakeMapToken::String);
 
   const auto name = token.data();
-  const auto location = token.location();
 
   token = m_tokenizer.nextToken(QuakeMapToken::String);
   const auto value = token.data();
 
-  if (keys.count(name) == 0)
-  {
-    properties.emplace_back(name, value);
-    keys.insert(name);
-  }
-  else
-  {
-    status.warn(location, fmt::format("Ignoring duplicate entity property '{}'", name));
-  }
+  properties.emplace_back(name, value);
 }
 
 void StandardMapParser::parseObjects(ParserStatus& status)
@@ -338,7 +407,7 @@ void StandardMapParser::parseObject(ParserStatus& status)
     token = m_tokenizer.peekToken(QuakeMapToken::String | QuakeMapToken::OParenthesis);
     if (token.hasType(QuakeMapToken::String))
     {
-      expect({BrushPrimitiveId, PatchId}, token);
+      expect({BrushPrimitiveId, PatchId, Patch3Id}, token);
       if (token.data() == BrushPrimitiveId)
       {
         parseBrushPrimitive(status, startLocation);
@@ -361,7 +430,7 @@ void StandardMapParser::parseObject(ParserStatus& status)
     token = m_tokenizer.peekToken(QuakeMapToken::String | QuakeMapToken::OParenthesis);
     if (token.hasType(QuakeMapToken::String))
     {
-      expect(PatchId, token);
+      expect({PatchId, Patch3Id}, token);
       parsePatch(status, startLocation);
     }
     else
@@ -663,7 +732,8 @@ void StandardMapParser::parsePatch(
   ParserStatus& status, const FileLocation& startLocation)
 {
   auto token = m_tokenizer.nextToken(QuakeMapToken::String);
-  expect(PatchId, token);
+  expect({PatchId, Patch3Id}, token);
+  const bool isPatchDef3 = token.data() == Patch3Id;
   m_tokenizer.nextToken(QuakeMapToken::OBrace);
 
   auto materialName = parseMaterialName(status);
@@ -682,31 +752,38 @@ void StandardMapParser::parsePatch(
   */
 
   token = m_tokenizer.nextToken(QuakeMapToken::Integer);
+  const auto rowLocation = token.location();
   int rowCountInt = token.toInteger<int>();
-  if (rowCountInt < 3 || rowCountInt % 2 != 1)
+  if (rowCountInt <= 0)
   {
-    status.warn(token.location(), "Invalid patch height, assuming 3");
-    rowCountInt = 3;
+    status.warn(rowLocation, "Invalid patch height, assuming 1");
+    rowCountInt = 1;
   }
 
   token = m_tokenizer.nextToken(QuakeMapToken::Integer);
+  const auto columnLocation = token.location();
   int columnCountInt = token.toInteger<int>();
-  if (columnCountInt < 3 || columnCountInt % 2 != 1)
+  if (columnCountInt <= 0)
   {
-    status.warn(token.location(), "Invalid patch width, assuming 3");
-    columnCountInt = 3;
+    status.warn(columnLocation, "Invalid patch width, assuming 1");
+    columnCountInt = 1;
   }
 
   const auto rowCount = static_cast<size_t>(rowCountInt);
   const auto columnCount = static_cast<size_t>(columnCountInt);
 
-  m_tokenizer.nextToken(QuakeMapToken::Integer);
-  m_tokenizer.nextToken(QuakeMapToken::Integer);
-  m_tokenizer.nextToken(QuakeMapToken::Integer);
+  const auto surfaceContents = parseInteger();
+  const auto surfaceFlags = parseInteger();
+  const auto surfaceValue = parseFloat();
   m_tokenizer.nextToken(QuakeMapToken::CParenthesis);
 
   auto controlPoints = std::vector<vm::vec<double, 5>>{};
   controlPoints.reserve(columnCount * rowCount);
+  auto controlNormals = std::vector<vm::vec3d>{};
+  if (isPatchDef3)
+  {
+    controlNormals.reserve(columnCount * rowCount);
+  }
 
   m_tokenizer.nextToken(QuakeMapToken::OParenthesis);
   for (size_t i = 0; i < size_t(rowCount); ++i)
@@ -714,23 +791,61 @@ void StandardMapParser::parsePatch(
     m_tokenizer.nextToken(QuakeMapToken::OParenthesis);
     for (size_t j = 0; j < size_t(columnCount); ++j)
     {
-      const auto controlPoint =
-        parseFloatVector<5>(QuakeMapToken::OParenthesis, QuakeMapToken::CParenthesis);
-      controlPoints.push_back(controlPoint);
+      if (isPatchDef3)
+      {
+        const auto controlPoint = parseFloatVector<8>(
+          QuakeMapToken::OParenthesis, QuakeMapToken::CParenthesis);
+        controlPoints.push_back(
+          {controlPoint[0], controlPoint[1], controlPoint[2], controlPoint[6], controlPoint[7]});
+        controlNormals.push_back(vm::slice<3>(controlPoint, 3));
+      }
+      else
+      {
+        const auto controlPoint =
+          parseFloatVector<5>(QuakeMapToken::OParenthesis, QuakeMapToken::CParenthesis);
+        controlPoints.push_back(controlPoint);
+      }
     }
     m_tokenizer.nextToken(QuakeMapToken::CParenthesis);
   }
   m_tokenizer.nextToken(QuakeMapToken::CParenthesis);
+
+  const auto sanitizedRowCount =
+    sanitizePatchCount(rowCount, "height", rowLocation, status);
+  const auto sanitizedColumnCount =
+    sanitizePatchCount(columnCount, "width", columnLocation, status);
+  if (sanitizedRowCount != rowCount || sanitizedColumnCount != columnCount)
+  {
+    controlPoints = resizePatchControlPoints(
+      rowCount,
+      columnCount,
+      sanitizedRowCount,
+      sanitizedColumnCount,
+      controlPoints);
+    if (isPatchDef3)
+    {
+      controlNormals = resizePatchControlNormals(
+        rowCount,
+        columnCount,
+        sanitizedRowCount,
+        sanitizedColumnCount,
+        controlNormals);
+    }
+  }
 
   token = m_tokenizer.nextToken(QuakeMapToken::CBrace);
   onPatch(
     startLocation,
     token.location(),
     m_targetMapFormat,
-    rowCount,
-    columnCount,
+    sanitizedRowCount,
+    sanitizedColumnCount,
     std::move(controlPoints),
+    std::move(controlNormals),
     std::move(materialName),
+    surfaceContents,
+    surfaceFlags,
+    surfaceValue,
     status);
 }
 

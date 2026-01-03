@@ -24,8 +24,7 @@
 
 #include "kd/result.h"
 
-#include <fmt/format.h>
-#include <fmt/std.h>
+#include <format>
 
 #include <filesystem>
 
@@ -108,9 +107,9 @@ TEST_CASE("TestFileSystem")
   {
     CHECK(
       fs.find("does_not_exist", fs::TraversalMode::Flat)
-      == Result<std::vector<std::filesystem::path>>{Error{fmt::format(
+      == Result<std::vector<std::filesystem::path>>{Error{std::format(
         "Path {} does not denote a directory",
-        std::filesystem::path{"does_not_exist"})}});
+        std::filesystem::path{"does_not_exist"}.string())}});
 
     CHECK(
       fs.find("", fs::TraversalMode::Flat)

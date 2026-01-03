@@ -30,6 +30,8 @@
 #include "mdl/Map_Groups.h"
 #include "mdl/Map_Nodes.h"
 #include "mdl/Map_Selection.h"
+#include "mdl/Material.h"
+#include "mdl/Texture.h"
 #include "mdl/UpdateBrushFaceAttributes.h"
 
 #include "catch/CatchConfig.h"
@@ -391,6 +393,55 @@ TEST_CASE("Map_Brushes")
           CHECK(attrs.materialName() == "abc");
         }
       }
+    }
+  }
+
+  SECTION("alignTexturesToFaceEdge")
+  {
+    auto& map = fixture.create({.mapFormat = MapFormat::Valve});
+
+    auto material = Material{"testMaterial", createTextureResource(Texture{64, 64})};
+
+    auto* brushNode = createBrushNode(map, material.name());
+    addNodes(map, {{parentForNodes(map), {brushNode}}});
+
+    const auto faceIndex = brushNode->brush().findFace(vm::vec3d{0, 1, 0});
+    REQUIRE(faceIndex.has_value());
+
+    brushNode->brush().face(*faceIndex).setMaterial(&material);
+
+    deselectAll(map);
+    selectBrushFaces(map, {{brushNode, *faceIndex}});
+
+    auto options = TextureAlignOptions{};
+    options.mode = TextureAlignMode::Fit;
+    options.scaleU = true;
+    options.scaleV = true;
+    options.repeats = vm::vec2i{1, 1};
+
+    const auto cameraUp = vm::vec3f{0, 0, 1};
+    const auto cameraRight = vm::vec3f{1, 0, 0};
+
+    REQUIRE(alignTexturesToFaceEdge(map, cameraUp, cameraRight, options));
+
+    {
+      const auto& face = brushNode->brush().face(*faceIndex);
+      const auto bottomLeft = vm::vec3d{-16, 16, -16};
+      const auto uvBottomLeft = face.uvCoords(bottomLeft) * face.textureSize();
+
+      CHECK(uvBottomLeft == vm::approx{vm::vec2f{0.0f, 0.0f}});
+      CHECK(face.attributes().xScale() == vm::approx{0.5f});
+      CHECK(face.attributes().yScale() == vm::approx{0.5f});
+    }
+
+    REQUIRE(alignTexturesToFaceEdge(map, cameraUp, cameraRight, options));
+
+    {
+      const auto& face = brushNode->brush().face(*faceIndex);
+      const auto topLeft = vm::vec3d{-16, 16, 16};
+      const auto uvTopLeft = face.uvCoords(topLeft) * face.textureSize();
+
+      CHECK(uvTopLeft == vm::approx{vm::vec2f{0.0f, 0.0f}});
     }
   }
 }

@@ -47,9 +47,9 @@ namespace
 bool shouldEnableUpdating()
 {
 #if defined(_WIN32)
-  return io::SystemPaths::appFile().filename() == "TrenchBroom.exe";
+  return io::SystemPaths::appFile().filename() == "BrumSchtick.exe";
 #elif defined(__APPLE__)
-  return io::SystemPaths::appFile().filename() == "TrenchBroom";
+  return io::SystemPaths::appFile().filename() == "BrumSchtick";
 #else
   return std::getenv("APPIMAGE") != nullptr;
 #endif
@@ -119,9 +119,9 @@ bool getRequiresAdminPrivileges([[maybe_unused]] const std::filesystem::path& ta
 auto getRelativeAppPath()
 {
 #if defined(_WIN32)
-  return std::filesystem::path{"trenchbroom.exe"};
+  return std::filesystem::path{"BrumSchtick.exe"};
 #elif defined(__APPLE__)
-  return std::filesystem::path{"Contents/MacOS/TrenchBroom"};
+  return std::filesystem::path{"Contents/MacOS/BrumSchtick"};
 #else
   return std::filesystem::path{};
 #endif
@@ -129,12 +129,12 @@ auto getRelativeAppPath()
 
 auto getWorkDirPath()
 {
-  return io::SystemPaths::tempDirectory() / "TrenchBroom-update";
+  return io::SystemPaths::tempDirectory() / "BrumSchtick-update";
 }
 
 auto getLogFilePath()
 {
-  return io::SystemPaths::userDataDirectory() / "TrenchBroom-update.log";
+  return io::SystemPaths::userDataDirectory() / "BrumSchtick-update.log";
 }
 
 auto makeCheckForUpdates(const UpdateVersion& currentVersion)
@@ -156,19 +156,19 @@ auto prepareUpdate(
 #if defined(_WIN32)
   return upd::unzip(
            downloadedUpdatePath,
-           updateConfig.workDirPath + "/TrenchBroom",
+           updateConfig.workDirPath + "/BrumSchtick",
            updateConfig.logFilePath)
-           ? std::optional{updateConfig.workDirPath + "/TrenchBroom"}
+           ? std::optional{updateConfig.workDirPath + "/BrumSchtick"}
            : std::nullopt;
 #elif defined(__APPLE__)
   return upd::unzip(
            downloadedUpdatePath, updateConfig.workDirPath, updateConfig.logFilePath)
-           ? std::optional{updateConfig.workDirPath + "/TrenchBroom.app"}
+           ? std::optional{updateConfig.workDirPath + "/BrumSchtick.app"}
            : std::nullopt;
 #elif defined(__linux__)
   return upd::unzip(
            downloadedUpdatePath, updateConfig.workDirPath, updateConfig.logFilePath)
-           ? std::optional{updateConfig.workDirPath + "/TrenchBroom.AppImage"}
+           ? std::optional{updateConfig.workDirPath + "/BrumSchtick.AppImage"}
            : std::nullopt;
 #endif
 }
@@ -224,8 +224,8 @@ std::optional<upd::UpdateConfig> makeUpdateConfig()
     std::move(prepareUpdate),
     std::move(installUpdate),
 
-    "TrenchBroom",
-    "TrenchBroom",
+    "themuffinator",
+    "BrumSchtick",
     io::pathAsQPath(scriptPath),
     io::pathAsQPath(*appFolderPath),
     requiresAdminPrivileges,

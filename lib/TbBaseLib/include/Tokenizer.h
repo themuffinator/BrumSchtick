@@ -26,8 +26,9 @@
 #include "kd/contracts.h"
 #include "kd/ranges/to.h"
 #include "kd/string_format.h"
+#include "kd/string_utils.h"
 
-#include <fmt/format.h>
+#include <format>
 
 #include <string>
 #include <string_view>
@@ -271,7 +272,7 @@ public:
 
   std::string expectString(const Token& token, const std::string_view expected) const
   {
-    return fmt::format(
+    return std::format(
       "Expected {}, but got {} (raw data: '{}')",
       expected,
       tokenName(token.type()),

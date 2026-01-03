@@ -518,6 +518,21 @@ TEST_CASE("EntityTest")
     CHECK(*entity.property("key") == "value");
   }
 
+  SECTION("duplicate properties")
+  {
+    auto entity = Entity{};
+    entity.setProperties({{"key", "value1"}, {"key", "value2"}});
+
+    const auto properties = entity.propertiesWithKey("key");
+    REQUIRE(properties.size() == 2u);
+    CHECK(properties[0].value() == "value1");
+    CHECK(properties[1].value() == "value2");
+
+    CHECK(entity.hasProperty("key", "value1"));
+    CHECK(entity.hasProperty("key", "value2"));
+    CHECK(*entity.property("key") == "value1");
+  }
+
   SECTION("classname")
   {
     auto entity = Entity{};

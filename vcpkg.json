@@ -1,5 +1,5 @@
 {
-  "name": "trenchbroom",
+  "name": "brumschtick",
   "version": "1.0.0",
   "dependencies": [
     {
@@ -13,10 +13,6 @@
     {
       "name": "cpptrace",
       "version>=": "1.0.4"
-    },
-    {
-      "name": "fmt",
-      "version>=": "11.2.0"
     },
     {
       "name": "freeimage",

@@ -28,8 +28,7 @@
 #include "kd/ranges/to.h"
 #include "kd/result.h"
 
-#include <fmt/format.h>
-#include <fmt/std.h>
+#include <format>
 
 #include <memory>
 #include <string>
@@ -53,7 +52,7 @@ Result<std::filesystem::path> DiskFileSystem::makeAbsolute(
   const auto canonicalPath = path.lexically_normal();
   if (!canonicalPath.empty() && kdl::path_front(canonicalPath) == "..")
   {
-    return Error{fmt::format("Failed to make absolute path of {}", path)};
+    return Error{std::format("Failed to make absolute path of {}", path.string())};
   }
   return canonicalPath.empty() ? m_root : m_root / canonicalPath;
 }

@@ -41,8 +41,7 @@
 
 #include "kd/ranges/to.h"
 
-#include <fmt/format.h>
-#include <fmt/ostream.h>
+#include <format>
 
 #include <ranges>
 

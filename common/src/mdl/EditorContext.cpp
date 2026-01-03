@@ -33,9 +33,46 @@
 #include "mdl/WorldNode.h"
 
 #include "kd/contracts.h"
+#include "kd/string_compare.h"
+#include "kd/string_utils.h"
+
+#include <algorithm>
 
 namespace tb::mdl
 {
+
+namespace
+{
+bool isMaterialKey(std::string_view key)
+{
+  return kdl::ci::str_is_equal(key, "texture")
+         || kdl::ci::str_is_equal(key, "material")
+         || kdl::ci::str_is_equal(key, "mat");
+}
+
+bool keyMatches(std::string_view key, std::string_view pattern)
+{
+  if (kdl::ci::str_is_equal(key, pattern))
+  {
+    return true;
+  }
+
+  if (key.size() <= pattern.size())
+  {
+    return false;
+  }
+
+  if (!kdl::ci::str_is_prefix(key, pattern))
+  {
+    return false;
+  }
+
+  const auto suffix = key.substr(pattern.size());
+  return std::ranges::all_of(
+    suffix, [](const char c) { return c >= '0' && c <= '9'; });
+}
+
+} // namespace
 
 EditorContext::EditorContext()
 {
@@ -46,6 +83,8 @@ void EditorContext::reset()
 {
   m_hiddenTags = 0;
   m_hiddenEntityDefinitions.reset();
+  m_searchText.clear();
+  m_searchTerms.clear();
   m_blockSelection = false;
   m_currentGroup = nullptr;
   m_currentLayer = nullptr;
@@ -61,6 +100,21 @@ void EditorContext::setHiddenTags(const TagType::Type hiddenTags)
   if (hiddenTags != m_hiddenTags)
   {
     m_hiddenTags = hiddenTags;
+    editorContextDidChangeNotifier();
+  }
+}
+
+const std::string& EditorContext::searchText() const
+{
+  return m_searchText;
+}
+
+void EditorContext::setSearchText(std::string searchText)
+{
+  if (searchText != m_searchText)
+  {
+    m_searchText = std::move(searchText);
+    m_searchTerms = parseSearchTerms(m_searchText);
     editorContextDidChangeNotifier();
   }
 }
@@ -200,7 +254,7 @@ bool EditorContext::visible(const EntityNode& entityNode) const
     return false;
   }
 
-  return true;
+  return !searchActive() || matchesSearch(entityNode);
 }
 
 bool EditorContext::visible(const BrushNode& brushNode) const
@@ -231,7 +285,7 @@ bool EditorContext::visible(const BrushNode& brushNode) const
     return false;
   }
 
-  return brushNode.visible();
+  return brushNode.visible() && (!searchActive() || matchesSearch(brushNode));
 }
 
 bool EditorContext::visible(const BrushNode& brushNode, const BrushFace& face) const
@@ -251,7 +305,143 @@ bool EditorContext::visible(const PatchNode& patchNode) const
     return false;
   }
 
-  return patchNode.visible();
+  return patchNode.visible() && (!searchActive() || matchesSearch(patchNode));
+}
+
+bool EditorContext::searchActive() const
+{
+  return !m_searchTerms.empty();
+}
+
+bool EditorContext::matchesSearch(const EntityNode& entityNode) const
+{
+  const auto& entity = entityNode.entity();
+  return std::ranges::all_of(
+    m_searchTerms, [&](const auto& term) { return matchesEntityTerm(term, entity); });
+}
+
+bool EditorContext::matchesSearch(const BrushNode& brushNode) const
+{
+  const auto* entityNode = brushNode.entity();
+
+  const auto matchesMaterial = [&](const auto& term) {
+    for (size_t i = 0; i < brushNode.brush().faceCount(); ++i)
+    {
+      const auto& face = brushNode.brush().face(i);
+      if (matchesMaterialTerm(face.attributes().materialName(), term))
+      {
+        return true;
+      }
+    }
+    return false;
+  };
+
+  const auto matchesEntity = [&](const auto& term) {
+    if (!entityNode)
+    {
+      return false;
+    }
+    return matchesEntityTerm(term, entityNode->entity());
+  };
+
+  return std::ranges::all_of(m_searchTerms, [&](const auto& term) {
+    const auto materialTerm =
+      term.kind == SearchTerm::Kind::Any
+      || (term.kind == SearchTerm::Kind::KeyValue && isMaterialKey(term.key));
+    const auto entityTerm =
+      term.kind == SearchTerm::Kind::Any
+      || (term.kind == SearchTerm::Kind::KeyValue && !isMaterialKey(term.key));
+
+    const auto materialMatches = materialTerm && matchesMaterial(term.value);
+    if (materialMatches)
+    {
+      return true;
+    }
+
+    return entityTerm && matchesEntity(term);
+  });
+}
+
+bool EditorContext::matchesSearch(const PatchNode& patchNode) const
+{
+  const auto* entityNode = patchNode.entity();
+
+  return std::ranges::all_of(m_searchTerms, [&](const auto& term) {
+    const auto materialTerm =
+      term.kind == SearchTerm::Kind::Any
+      || (term.kind == SearchTerm::Kind::KeyValue && isMaterialKey(term.key));
+    const auto entityTerm =
+      term.kind == SearchTerm::Kind::Any
+      || (term.kind == SearchTerm::Kind::KeyValue && !isMaterialKey(term.key));
+
+    const auto materialMatches =
+      materialTerm && matchesMaterialTerm(patchNode.patch().materialName(), term.value);
+    if (materialMatches)
+    {
+      return true;
+    }
+
+    return entityTerm && entityNode && matchesEntityTerm(term, entityNode->entity());
+  });
+}
+
+bool EditorContext::matchesEntityTerm(const SearchTerm& term, const Entity& entity) const
+{
+  if (term.kind == SearchTerm::Kind::KeyValue)
+  {
+    if (isMaterialKey(term.key))
+    {
+      return false;
+    }
+
+    return std::ranges::any_of(entity.properties(), [&](const auto& property) {
+      return keyMatches(property.key(), term.key)
+             && kdl::ci::str_contains(property.value(), term.value);
+    });
+  }
+
+  return std::ranges::any_of(entity.properties(), [&](const auto& property) {
+    return kdl::ci::str_contains(property.value(), term.value);
+  });
+}
+
+bool EditorContext::matchesMaterialTerm(
+  const std::string_view materialName, const std::string_view term) const
+{
+  if (term.find('/') == std::string_view::npos)
+  {
+    const auto pos = materialName.find_last_of('/');
+    if (pos != std::string_view::npos)
+    {
+      return kdl::ci::str_contains(materialName.substr(pos + 1), term);
+    }
+  }
+
+  return kdl::ci::str_contains(materialName, term);
+}
+
+std::vector<EditorContext::SearchTerm> EditorContext::parseSearchTerms(
+  const std::string_view text)
+{
+  auto terms = std::vector<SearchTerm>{};
+
+  for (const auto& token : kdl::str_split(text, " "))
+  {
+    const auto separator = token.find_first_of("=:");
+    if (separator != std::string::npos && separator > 0 && separator + 1 < token.size())
+    {
+      terms.push_back(SearchTerm{
+        SearchTerm::Kind::KeyValue,
+        token.substr(0, separator),
+        token.substr(separator + 1)});
+    }
+    else if (!token.empty())
+    {
+      terms.push_back(SearchTerm{SearchTerm::Kind::Any, std::string{}, token});
+    }
+  }
+
+  return terms;
 }
 
 bool EditorContext::anyChildVisible(const Node& node) const

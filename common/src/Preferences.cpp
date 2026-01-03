@@ -49,6 +49,7 @@ QString darkTheme()
   return QStringLiteral("Dark");
 }
 Preference<QString> Theme("Theme", systemTheme());
+Preference<QString> Language("UI/Language", QStringLiteral("system"));
 
 Preference<bool> ShowAxes("render/Show axes", true);
 Preference<Color> SoftMapBoundsColor(
@@ -298,6 +299,7 @@ Preference<QString> FaceRenderMode("Map view/Face render mode", "textured");
 Preference<bool> ShadeFaces("Map view/Shade faces", true);
 Preference<bool> ShowFog("Map view/Show fog", false);
 Preference<bool> ShowEdges("Map view/Show edges", true);
+Preference<bool> ShowLightPreview("Map view/Show light preview", false);
 
 Preference<bool> ShowSoftMapBounds("Map view/Show soft map bounds", true);
 
@@ -327,6 +329,7 @@ const std::vector<PreferenceBase*>& staticPreferences()
   static const std::vector<PreferenceBase*> list{
     &MapViewLayout,
     &Theme,
+    &Language,
     &ShowAxes,
     &BackgroundColor,
     &AxisLength,
@@ -432,6 +435,7 @@ const std::vector<PreferenceBase*>& staticPreferences()
     &ShadeFaces,
     &ShowFog,
     &ShowEdges,
+    &ShowLightPreview,
     &ShowSoftMapBounds,
     &ShowPointEntities,
     &ShowBrushes,

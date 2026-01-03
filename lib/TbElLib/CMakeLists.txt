@@ -12,7 +12,7 @@ add_library(TbElLib STATIC
 target_include_directories(TbElLib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 target_link_libraries(TbElLib PRIVATE CompilerConfig PrecompileStdHeaders)
-target_link_libraries(TbElLib PUBLIC KdLib TbBaseLib fmt::fmt-header-only)
+target_link_libraries(TbElLib PUBLIC KdLib TbBaseLib)
 
 add_subdirectory(test)
 add_subdirectory(test-utils)

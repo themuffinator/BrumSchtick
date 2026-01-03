@@ -41,33 +41,36 @@
 namespace tb::mdl
 {
 
+GameFileSystem::GameFileSystem(Logger& logger)
+  : m_logger{logger}
+{
+}
+
 void GameFileSystem::initialize(
   const GameConfig& config,
   const std::filesystem::path& gamePath,
-  const std::vector<std::filesystem::path>& additionalSearchPaths,
-  Logger& logger)
+  const std::vector<std::filesystem::path>& additionalSearchPaths)
 {
   unmountAll();
 
-  addDefaultAssetPaths(config, logger);
+  addDefaultAssetPaths(config);
 
   if (!gamePath.empty() && fs::Disk::pathInfo(gamePath) == fs::PathInfo::Directory)
   {
-    addGameFileSystems(config, gamePath, additionalSearchPaths, logger);
+    addGameFileSystems(config, gamePath, additionalSearchPaths);
   }
 }
 
 void GameFileSystem::reloadWads(
   const std::filesystem::path& rootPath,
   const std::vector<std::filesystem::path>& wadSearchPaths,
-  const std::vector<std::filesystem::path>& wadPaths,
-  Logger& logger)
+  const std::vector<std::filesystem::path>& wadPaths)
 {
   unmountWads();
-  mountWads(rootPath, wadSearchPaths, wadPaths, logger);
+  mountWads(rootPath, wadSearchPaths, wadPaths);
 }
 
-void GameFileSystem::addDefaultAssetPaths(const GameConfig& config, Logger& logger)
+void GameFileSystem::addDefaultAssetPaths(const GameConfig& config)
 {
   // There are two ways of providing default assets: The 'defaults/assets' folder in
   // TrenchBroom's resources folder, and the 'assets' folder in the game configuration
@@ -85,7 +88,7 @@ void GameFileSystem::addDefaultAssetPaths(const GameConfig& config, Logger& logg
     const auto defaultAssetsPath = defaultFolderPath / std::filesystem::path("assets");
     if (fs::Disk::pathInfo(defaultAssetsPath) == fs::PathInfo::Directory)
     {
-      addFileSystemPath(defaultAssetsPath, logger);
+      addFileSystemPath(defaultAssetsPath);
     }
   }
 }
@@ -93,32 +96,30 @@ void GameFileSystem::addDefaultAssetPaths(const GameConfig& config, Logger& logg
 void GameFileSystem::addGameFileSystems(
   const GameConfig& config,
   const std::filesystem::path& gamePath,
-  const std::vector<std::filesystem::path>& additionalSearchPaths,
-  Logger& logger)
+  const std::vector<std::filesystem::path>& additionalSearchPaths)
 {
   const auto& fileSystemConfig = config.fileSystemConfig;
-  addSearchPath(config, gamePath, fileSystemConfig.searchPath, logger);
+  addSearchPath(config, gamePath, fileSystemConfig.searchPath);
 
   for (const auto& searchPath : additionalSearchPaths)
   {
-    addSearchPath(config, gamePath, searchPath, logger);
+    addSearchPath(config, gamePath, searchPath);
   }
 }
 
 void GameFileSystem::addSearchPath(
   const GameConfig& config,
   const std::filesystem::path& gamePath,
-  const std::filesystem::path& searchPath,
-  Logger& logger)
+  const std::filesystem::path& searchPath)
 {
   const auto fixedPath = fs::Disk::fixPath(gamePath / searchPath);
-  addFileSystemPath(fixedPath, logger);
-  addFileSystemPackages(config, fixedPath, logger);
+  addFileSystemPath(fixedPath);
+  addFileSystemPackages(config, fixedPath);
 }
 
-void GameFileSystem::addFileSystemPath(const std::filesystem::path& path, Logger& logger)
+void GameFileSystem::addFileSystemPath(const std::filesystem::path& path)
 {
-  logger.info() << "Adding file system path " << path;
+  m_logger.info() << "Adding file system path " << path;
   mount("", std::make_unique<fs::DiskFileSystem>(path));
 }
 
@@ -158,7 +159,7 @@ Result<std::unique_ptr<fs::FileSystem>> createImageFileSystem(
 } // namespace
 
 void GameFileSystem::addFileSystemPackages(
-  const GameConfig& config, const std::filesystem::path& searchPath, Logger& logger)
+  const GameConfig& config, const std::filesystem::path& searchPath)
 {
   const auto& fileSystemConfig = config.fileSystemConfig;
   const auto& packageFormatConfig = fileSystemConfig.packageFormat;
@@ -183,7 +184,7 @@ void GameFileSystem::addFileSystemPackages(
                                   packageFormat, absPackagePath);
                               })
                             | kdl::transform([&](auto fs) {
-                                logger.info()
+                                m_logger.info()
                                   << "Adding file system package " << packagePath;
                                 mount("", std::move(fs));
                               });
@@ -191,7 +192,7 @@ void GameFileSystem::addFileSystemPackages(
                  | kdl::fold;
         })
       | kdl::transform_error([&](auto e) {
-          logger.error() << "Could not add file system packages: " << e.msg;
+          m_logger.error() << "Could not add file system packages: " << e.msg;
         });
   }
 }
@@ -199,8 +200,7 @@ void GameFileSystem::addFileSystemPackages(
 void GameFileSystem::mountWads(
   const std::filesystem::path& rootPath,
   const std::vector<std::filesystem::path>& wadSearchPaths,
-  const std::vector<std::filesystem::path>& wadPaths,
-  Logger& logger)
+  const std::vector<std::filesystem::path>& wadPaths)
 {
   for (const auto& wadPath : wadPaths)
   {
@@ -211,7 +211,7 @@ void GameFileSystem::mountWads(
       fs->setMetadata(fs::makeImageFileSystemMetadata(resolvedWadPath));
       m_wadMountPoints.push_back(mount(rootPath, std::move(fs)));
     }) | kdl::transform_error([&](auto e) {
-      logger.error() << "Could not load wad file at '" << wadPath << "': " << e.msg;
+      m_logger.error() << "Could not load wad file at '" << wadPath << "': " << e.msg;
     });
   }
 }

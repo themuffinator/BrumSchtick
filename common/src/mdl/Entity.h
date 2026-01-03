@@ -155,6 +155,9 @@ public: // property management
 
   void addOrUpdateProperty(
     std::string key, std::string value, bool defaultToProtected = false);
+  bool updatePropertyValue(size_t index, std::string value);
+  bool updatePropertyKey(size_t index, std::string key);
+  bool removePropertyAt(size_t index);
   void renameProperty(const std::string& oldKey, std::string newKey);
   void removeProperty(const std::string& key);
   void removeNumberedProperty(const std::string& prefix);
@@ -165,6 +168,7 @@ public: // property management
   bool hasPropertyWithPrefix(const std::string& prefix, const std::string& value) const;
   bool hasNumberedProperty(const std::string& prefix, const std::string& value) const;
 
+  const EntityProperty* propertyAt(size_t index) const;
   const std::string* property(const std::string& key) const;
   std::vector<std::string> propertyKeys() const;
 

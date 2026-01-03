@@ -20,6 +20,7 @@
 #include "MapViewBase.h"
 
 #include <QDebug>
+#include <QDateTime>
 #include <QMenu>
 #include <QMimeData>
 #include <QShortcut>
@@ -64,6 +65,7 @@
 #include "render/Compass.h"
 #include "render/FontDescriptor.h"
 #include "render/FontManager.h"
+#include "render/LightPreview.h"
 #include "render/MapRenderer.h"
 #include "render/PrimitiveRenderer.h"
 #include "render/RenderBatch.h"
@@ -685,13 +687,13 @@ void MapViewBase::disableTag(const mdl::SmartTag& tag)
 void MapViewBase::makeStructural()
 {
   auto& map = m_document.map();
-  if (!map.selection().hasBrushes())
+  const auto selectedBrushes = map.selection().allBrushes();
+  if (selectedBrushes.empty())
   {
     return;
   }
 
   auto toReparent = std::vector<mdl::Node*>{};
-  const auto& selectedBrushes = map.selection().brushes;
   std::ranges::copy_if(
     selectedBrushes, std::back_inserter(toReparent), [&](const auto* brushNode) {
       return brushNode->entity() != &map.worldNode();
@@ -706,7 +708,7 @@ void MapViewBase::makeStructural()
 
   auto anyTagDisabled = false;
   auto callback = EnableDisableTagCallback{};
-  for (auto* brush : map.selection().brushes)
+  for (auto* brush : selectedBrushes)
   {
     for (const auto& tag : map.smartTags())
     {
@@ -873,6 +875,7 @@ ActionContext::Type MapViewBase::actionContext() const
   const auto viewContext = viewActionContext();
   const auto toolContext =
     m_toolBox.assembleBrushToolActive() ? ActionContext::AssembleBrushTool
+    : m_toolBox.brushBuilderToolActive() ? ActionContext::BrushBuilderTool
     : m_toolBox.clipToolActive()        ? ActionContext::ClipTool
     : m_toolBox.anyVertexToolActive()   ? ActionContext::AnyVertexTool
     : m_toolBox.rotateToolActive()      ? ActionContext::RotateTool
@@ -972,6 +975,14 @@ void MapViewBase::renderContents()
     pref(Preferences::ShowSoftMapBounds)
       ? vm::bbox3f{softMapBounds(map).bounds.value_or(vm::bbox3d{})}
       : vm::bbox3f{});
+
+  if (renderContext.render3D() && pref(Preferences::ShowLightPreview))
+  {
+    const auto timeSeconds =
+      static_cast<float>(QDateTime::currentMSecsSinceEpoch()) / 1000.0f;
+    renderContext.setLightPreview(
+      std::make_shared<render::LightPreview>(m_document.map(), timeSeconds));
+  }
 
   setupGL(renderContext);
   setRenderOptions(renderContext);
@@ -1117,6 +1128,57 @@ void MapViewBase::processEvent(const KeyEvent& event)
 
 void MapViewBase::processEvent(const MouseEvent& event)
 {
+  if (m_document.hasEntityPropertyPickRequest())
+  {
+    if (event.type == MouseEvent::Type::Click)
+    {
+      if (event.button == MouseEvent::Button::Left)
+      {
+        auto& map = m_document.map();
+        const auto pickRay = vm::ray3d{camera().pickRay(event.posX, event.posY)};
+        const auto pickResult = pick(pickRay);
+
+        using namespace mdl::HitFilters;
+        const auto& hit = pickResult.first(type(mdl::BrushNode::BrushHitType));
+        const auto& grid = map.grid();
+
+        vm::vec3d point;
+        if (hit.isMatch())
+        {
+          const auto hitPoint = hit.hitPoint();
+          if (const auto faceHandle = mdl::hitToFaceHandle(hit))
+          {
+            point = grid.snap(hitPoint, faceHandle->face().boundary());
+          }
+          else
+          {
+            point = grid.snap(hitPoint);
+          }
+        }
+        else
+        {
+          point = vm::vec3d{grid.snap(camera().defaultPoint(event.posX, event.posY))};
+        }
+
+        m_document.applyEntityPropertyPick(point);
+      }
+      else if (event.button == MouseEvent::Button::Right)
+      {
+        m_document.cancelEntityPropertyPick();
+      }
+      return;
+    }
+
+    if (
+      event.type == MouseEvent::Type::Down || event.type == MouseEvent::Type::Up
+      || event.type == MouseEvent::Type::DoubleClick
+      || event.type == MouseEvent::Type::DragStart || event.type == MouseEvent::Type::Drag
+      || event.type == MouseEvent::Type::DragEnd)
+    {
+      return;
+    }
+  }
+
   ToolBoxConnector::processEvent(event);
 }
 
@@ -1132,6 +1194,11 @@ void MapViewBase::processEvent(const GestureEvent& event)
 
 void MapViewBase::processEvent(const CancelEvent& event)
 {
+  if (m_document.hasEntityPropertyPickRequest())
+  {
+    m_document.cancelEntityPropertyPick();
+    return;
+  }
   ToolBoxConnector::processEvent(event);
 }
 
@@ -1521,7 +1588,8 @@ bool MapViewBase::canReparentNode(const mdl::Node* node, const mdl::Node* newPar
 void MapViewBase::moveSelectedBrushesToEntity()
 {
   auto& map = m_document.map();
-  const auto nodes = map.selection().nodes;
+  const auto brushNodes = map.selection().allBrushes();
+  const auto nodes = kdl::vec_static_cast<mdl::Node*>(brushNodes);
   auto* newParent = findNewParentEntityForBrushes(nodes);
   contract_assert(newParent);
 
@@ -1657,7 +1725,7 @@ bool MapViewBase::canMakeStructural() const
   const auto& map = m_document.map();
   if (map.selection().hasOnlyBrushes())
   {
-    const auto& brushes = map.selection().brushes;
+    const auto& brushes = map.selection().allBrushes();
     return std::ranges::any_of(brushes, [&](const auto* brush) {
       return brush->hasAnyTag() || brush->entity() != &map.worldNode()
              || brush->anyFaceHasAnyTag();

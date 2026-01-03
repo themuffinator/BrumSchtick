@@ -24,9 +24,14 @@
 
 #include "kd/dynamic_bitset.h"
 
+#include <string>
+#include <string_view>
+#include <vector>
+
 namespace tb::mdl
 {
 struct EntityDefinition;
+class Entity;
 class EntityNodeBase;
 class BrushNode;
 class BrushFace;
@@ -41,8 +46,23 @@ class WorldNode;
 class EditorContext
 {
 private:
+  struct SearchTerm
+  {
+    enum class Kind
+    {
+      Any,
+      KeyValue
+    };
+
+    Kind kind = Kind::Any;
+    std::string key;
+    std::string value;
+  };
+
   TagType::Type m_hiddenTags;
   kdl::dynamic_bitset m_hiddenEntityDefinitions;
+  std::string m_searchText;
+  std::vector<SearchTerm> m_searchTerms;
 
   bool m_blockSelection;
 
@@ -59,6 +79,9 @@ public:
 
   TagType::Type hiddenTags() const;
   void setHiddenTags(TagType::Type hiddenTags);
+
+  const std::string& searchText() const;
+  void setSearchText(std::string searchText);
 
   bool entityDefinitionHidden(const EntityNodeBase& entityNode) const;
   bool entityDefinitionHidden(const EntityDefinition& definition) const;
@@ -86,6 +109,14 @@ public:
   bool visible(const PatchNode& patchNode) const;
 
 private:
+  bool searchActive() const;
+  bool matchesSearch(const EntityNode& entityNode) const;
+  bool matchesSearch(const BrushNode& brushNode) const;
+  bool matchesSearch(const PatchNode& patchNode) const;
+  bool matchesEntityTerm(const SearchTerm& term, const Entity& entity) const;
+  bool matchesMaterialTerm(std::string_view materialName, std::string_view term) const;
+  static std::vector<SearchTerm> parseSearchTerms(std::string_view text);
+
   bool anyChildVisible(const Node& node) const;
 
 public:

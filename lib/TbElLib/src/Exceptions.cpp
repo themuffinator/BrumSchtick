@@ -23,7 +23,7 @@
 #include "el/Types.h"
 #include "el/Value.h"
 
-#include <fmt/format.h>
+#include <format>
 
 namespace tb::el
 {
@@ -35,7 +35,7 @@ ConversionError::ConversionError(
   const ValueType to)
   : Exception{prependLocation(
       fileLocation,
-      fmt::format(
+      std::format(
         "Cannot convert value '{}' of type '{}' to type '{}'",
         value,
         typeName(from),
@@ -50,7 +50,7 @@ DereferenceError::DereferenceError(
   const ValueType to)
   : Exception{prependLocation(
       fileLocation,
-      fmt::format(
+      std::format(
         "Cannot dereference value '{}' of type '{}' as type '{}'",
         value,
         typeName(from),
@@ -62,7 +62,7 @@ EvaluationError::EvaluationError(
   const ExpressionNode& expression, const std::string_view reason)
   : EvaluationError{
       expression.location(),
-      fmt::format("Cannot evaluate expression '{}': {}", expression.asString(), reason)}
+      std::format("Cannot evaluate expression '{}': {}", expression.asString(), reason)}
 {
 }
 
@@ -76,7 +76,7 @@ IndexError::IndexError(
   const ExpressionNode& expression, const Value& indexableValue, const Value& indexValue)
   : EvaluationError{
       expression,
-      fmt::format(
+      std::format(
         "'{}' is not a compatible index for '{}'",
         indexValue.describe(),
         indexableValue.describe())}
@@ -89,7 +89,7 @@ IndexError::IndexError(
   const size_t index)
   : EvaluationError{
       location,
-      fmt::format(
+      std::format(
         "{} is not a compatible index for '{}'", index, indexableValue.describe())}
 {
 }
@@ -100,7 +100,7 @@ IndexError::IndexError(
   const std::string_view key)
   : EvaluationError{
       location,
-      fmt::format(
+      std::format(
         "'{}' is not a compatible index for '{}'", key, indexableValue.describe())}
 {
 }
@@ -109,7 +109,7 @@ IndexOutOfBoundsError::IndexOutOfBoundsError(
   const ExpressionNode& expression, const Value& indexableValue, const size_t index)
   : EvaluationError{
       expression,
-      fmt::format("{} is out of bounds for '{}'", index, indexableValue.describe())}
+      std::format("{} is out of bounds for '{}'", index, indexableValue.describe())}
 {
 }
 
@@ -119,7 +119,7 @@ IndexOutOfBoundsError::IndexOutOfBoundsError(
   const size_t index)
   : EvaluationError{
       location,
-      fmt::format("{} is out of bounds for '{}'", index, indexableValue.describe())}
+      std::format("{} is out of bounds for '{}'", index, indexableValue.describe())}
 {
 }
 
@@ -128,7 +128,7 @@ IndexOutOfBoundsError::IndexOutOfBoundsError(
   const Value& indexableValue,
   const std::string_view key)
   : EvaluationError{
-      location, fmt::format("'{}' not found in '{}'", key, indexableValue.describe())}
+      location, std::format("'{}' not found in '{}'", key, indexableValue.describe())}
 {
 }
 

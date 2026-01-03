@@ -28,6 +28,7 @@
 namespace tb::mdl
 {
 class BrushFaceAttributes;
+class BrushFaceHandle;
 class Map;
 class UVCoordSystemSnapshot;
 
@@ -61,5 +62,29 @@ bool flipUV(
   const vm::vec3f& cameraUp,
   const vm::vec3f& cameraRight,
   vm::direction cameraRelativeFlipDirection);
+
+enum class TextureAlignMode
+{
+  Align,
+  Fit,
+  Rotate,
+};
+
+struct TextureAlignOptions
+{
+  TextureAlignMode mode = TextureAlignMode::Align;
+  bool scaleU = true;
+  bool scaleV = true;
+  vm::vec2i repeats = vm::vec2i{1, 1};
+};
+
+bool alignTexturesToFaceEdge(
+  Map& map,
+  const vm::vec3f& cameraUp,
+  const vm::vec3f& cameraRight,
+  const TextureAlignOptions& options);
+
+bool applyHotspotTexturing(
+  Map& map, const BrushFaceHandle& faceHandle, const vm::vec3d& hitPoint);
 
 } // namespace tb::mdl

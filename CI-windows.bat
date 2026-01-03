@@ -78,7 +78,7 @@ GOTO END
 
 :ERROR
 
-echo "Building TrenchBroom failed"
+echo "Building BrümSchtick failed"
 exit /b 1
 
 :END

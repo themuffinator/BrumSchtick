@@ -153,6 +153,76 @@ void ShapeParameters::setAccuracy(const size_t accuracy)
   }
 }
 
+double ShapeParameters::stepHeight() const
+{
+  return m_stepHeight;
+}
+
+void ShapeParameters::setStepHeight(const double stepHeight)
+{
+  if (stepHeight != m_stepHeight)
+  {
+    m_stepHeight = stepHeight;
+    parametersDidChangeNotifier();
+  }
+}
+
+StairDirection ShapeParameters::stairDirection() const
+{
+  return m_stairDirection;
+}
+
+void ShapeParameters::setStairDirection(const StairDirection direction)
+{
+  if (direction != m_stairDirection)
+  {
+    m_stairDirection = direction;
+    parametersDidChangeNotifier();
+  }
+}
+
+size_t ShapeParameters::stairsPerRotation() const
+{
+  return m_stairsPerRotation;
+}
+
+void ShapeParameters::setStairsPerRotation(const size_t steps)
+{
+  if (steps != m_stairsPerRotation)
+  {
+    m_stairsPerRotation = steps;
+    parametersDidChangeNotifier();
+  }
+}
+
+double ShapeParameters::stairInnerRadius() const
+{
+  return m_stairInnerRadius;
+}
+
+void ShapeParameters::setStairInnerRadius(const double radius)
+{
+  if (radius != m_stairInnerRadius)
+  {
+    m_stairInnerRadius = radius;
+    parametersDidChangeNotifier();
+  }
+}
+
+double ShapeParameters::stairOffsetAngle() const
+{
+  return m_stairOffsetAngle;
+}
+
+void ShapeParameters::setStairOffsetAngle(const double angle)
+{
+  if (angle != m_stairOffsetAngle)
+  {
+    m_stairOffsetAngle = angle;
+    parametersDidChangeNotifier();
+  }
+}
+
 DrawShapeToolExtension::DrawShapeToolExtension(MapDocument& document)
   : m_document{document}
 {

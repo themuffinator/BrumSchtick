@@ -51,6 +51,11 @@ TEST_CASE("EntityPropertyModel")
     {"some_key", "some_value"},
   }}};
 
+  auto* duplicateEntityNode = new mdl::EntityNode{mdl::Entity{{
+    {"output", "first"},
+    {"output", "second"},
+  }}};
+
   auto* groupNode = new mdl::GroupNode{mdl::Group{"group"}};
   groupNode->addChild(groupedEntityNode);
 
@@ -114,6 +119,7 @@ TEST_CASE("EntityPropertyModel")
          entityNode1,
          entityNode2,
          groupNode,
+         duplicateEntityNode,
          sourceEntity,
          targetEntity,
          readonlyEntity,
@@ -136,6 +142,7 @@ TEST_CASE("EntityPropertyModel")
             .key = "classname",
             .value = "worldspawn",
             .valueState = ValueState::SingleValue,
+            .propertyIndex = 0,
             .keyMutable = false,
             .valueMutable = false,
             .protection = PropertyProtection::NotProtectable,
@@ -163,6 +170,7 @@ TEST_CASE("EntityPropertyModel")
           .key = "some_key",
           .value = "some_value",
           .valueState = ValueState::SingleValue,
+          .propertyIndex = 0,
           .keyMutable = true,
           .valueMutable = true,
           .protection = PropertyProtection::NotProtectable,
@@ -222,6 +230,7 @@ TEST_CASE("EntityPropertyModel")
           .key = "some_key",
           .value = "some_other_value",
           .valueState = ValueState::SingleValue,
+          .propertyIndex = 0,
           .keyMutable = true,
           .valueMutable = true,
           .protection = PropertyProtection::NotProtectable,
@@ -232,6 +241,7 @@ TEST_CASE("EntityPropertyModel")
           .key = "some_other_key",
           .value = "yet_another_value",
           .valueState = ValueState::SingleValue,
+          .propertyIndex = 1,
           .keyMutable = true,
           .valueMutable = true,
           .protection = PropertyProtection::NotProtectable,
@@ -259,16 +269,17 @@ TEST_CASE("EntityPropertyModel")
 
       CHECK(
         model.rows()
-        == std::vector<PropertyRow>{
-          {
-            .key = "classname",
-            .value = "worldspawn",
-            .valueState = ValueState::SingleValue,
-            .keyMutable = false,
-            .valueMutable = false,
-            .protection = PropertyProtection::NotProtectable,
-            .linkType = LinkType::None,
-            .tooltip = "No description found",
+      == std::vector<PropertyRow>{
+        {
+          .key = "classname",
+          .value = "worldspawn",
+          .valueState = ValueState::SingleValue,
+          .propertyIndex = 0,
+          .keyMutable = false,
+          .valueMutable = false,
+          .protection = PropertyProtection::NotProtectable,
+          .linkType = LinkType::None,
+          .tooltip = "No description found",
           },
         });
     }
@@ -280,11 +291,45 @@ TEST_CASE("EntityPropertyModel")
 
       CHECK(
         model.rows()
+      == std::vector<PropertyRow>{
+        {
+          .key = "some_key",
+          .value = "some_value",
+          .valueState = ValueState::SingleValue,
+          .propertyIndex = 0,
+          .keyMutable = true,
+          .valueMutable = true,
+          .protection = PropertyProtection::NotProtectable,
+          .linkType = LinkType::None,
+          .tooltip = "No description found",
+          },
+        });
+    }
+
+    SECTION("single entity with duplicate keys")
+    {
+      mdl::selectNodes(map, {duplicateEntityNode});
+      model.updateFromMap();
+
+      CHECK(
+        model.rows()
         == std::vector<PropertyRow>{
           {
-            .key = "some_key",
-            .value = "some_value",
+            .key = "output",
+            .value = "first",
             .valueState = ValueState::SingleValue,
+            .propertyIndex = 0,
+            .keyMutable = true,
+            .valueMutable = true,
+            .protection = PropertyProtection::NotProtectable,
+            .linkType = LinkType::None,
+            .tooltip = "No description found",
+          },
+          {
+            .key = "output",
+            .value = "second",
+            .valueState = ValueState::SingleValue,
+            .propertyIndex = 1,
             .keyMutable = true,
             .valueMutable = true,
             .protection = PropertyProtection::NotProtectable,
@@ -332,26 +377,28 @@ TEST_CASE("EntityPropertyModel")
 
       CHECK(
         model.rows()
-        == std::vector<PropertyRow>{
-          {
-            .key = "classname",
-            .value = "source_entity",
-            .valueState = ValueState::SingleValue,
-            .keyMutable = true,
-            .valueMutable = true,
-            .protection = PropertyProtection::NotProtectable,
-            .linkType = LinkType::None,
-            .tooltip = "No description found",
-          },
-          {
-            .key = mdl::EntityPropertyKeys::Target,
-            .value = "some_target",
-            .valueState = ValueState::SingleValue,
-            .keyMutable = true,
-            .valueMutable = true,
-            .protection = PropertyProtection::NotProtectable,
-            .linkType = LinkType::Source,
-            .tooltip = "",
+      == std::vector<PropertyRow>{
+        {
+          .key = "classname",
+          .value = "source_entity",
+          .valueState = ValueState::SingleValue,
+          .propertyIndex = 0,
+          .keyMutable = true,
+          .valueMutable = true,
+          .protection = PropertyProtection::NotProtectable,
+          .linkType = LinkType::None,
+          .tooltip = "No description found",
+        },
+        {
+          .key = mdl::EntityPropertyKeys::Target,
+          .value = "some_target",
+          .valueState = ValueState::SingleValue,
+          .propertyIndex = 1,
+          .keyMutable = true,
+          .valueMutable = true,
+          .protection = PropertyProtection::NotProtectable,
+          .linkType = LinkType::Source,
+          .tooltip = "",
           },
         });
     }
@@ -363,26 +410,28 @@ TEST_CASE("EntityPropertyModel")
 
       CHECK(
         model.rows()
-        == std::vector<PropertyRow>{
-          {
-            .key = "classname",
-            .value = "target_entity",
-            .valueState = ValueState::SingleValue,
-            .keyMutable = true,
-            .valueMutable = true,
-            .protection = PropertyProtection::NotProtectable,
-            .linkType = LinkType::None,
-            .tooltip = "No description found",
-          },
-          {
-            .key = mdl::EntityPropertyKeys::Targetname,
-            .value = "some_target",
-            .valueState = ValueState::SingleValue,
-            .keyMutable = true,
-            .valueMutable = true,
-            .protection = PropertyProtection::NotProtectable,
-            .linkType = LinkType::Target,
-            .tooltip = "",
+      == std::vector<PropertyRow>{
+        {
+          .key = "classname",
+          .value = "target_entity",
+          .valueState = ValueState::SingleValue,
+          .propertyIndex = 0,
+          .keyMutable = true,
+          .valueMutable = true,
+          .protection = PropertyProtection::NotProtectable,
+          .linkType = LinkType::None,
+          .tooltip = "No description found",
+        },
+        {
+          .key = mdl::EntityPropertyKeys::Targetname,
+          .value = "some_target",
+          .valueState = ValueState::SingleValue,
+          .propertyIndex = 1,
+          .keyMutable = true,
+          .valueMutable = true,
+          .protection = PropertyProtection::NotProtectable,
+          .linkType = LinkType::Target,
+          .tooltip = "",
           },
         });
     }
@@ -394,26 +443,28 @@ TEST_CASE("EntityPropertyModel")
 
       CHECK(
         model.rows()
-        == std::vector<PropertyRow>{
-          {
-            .key = "classname",
-            .value = "readonly_entity",
-            .valueState = ValueState::SingleValue,
-            .keyMutable = true,
-            .valueMutable = true,
-            .protection = PropertyProtection::NotProtectable,
-            .linkType = LinkType::None,
-            .tooltip = "No description found",
-          },
-          {
-            .key = "readonly",
-            .value = "some_value",
-            .valueState = ValueState::SingleValue,
-            .keyMutable = false,
-            .valueMutable = false,
-            .protection = PropertyProtection::NotProtectable,
-            .linkType = LinkType::None,
-            .tooltip = "",
+      == std::vector<PropertyRow>{
+        {
+          .key = "classname",
+          .value = "readonly_entity",
+          .valueState = ValueState::SingleValue,
+          .propertyIndex = 0,
+          .keyMutable = true,
+          .valueMutable = true,
+          .protection = PropertyProtection::NotProtectable,
+          .linkType = LinkType::None,
+          .tooltip = "No description found",
+        },
+        {
+          .key = "readonly",
+          .value = "some_value",
+          .valueState = ValueState::SingleValue,
+          .propertyIndex = 1,
+          .keyMutable = false,
+          .valueMutable = false,
+          .protection = PropertyProtection::NotProtectable,
+          .linkType = LinkType::None,
+          .tooltip = "",
           },
         });
     }

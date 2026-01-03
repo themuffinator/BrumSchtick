@@ -30,8 +30,7 @@
 #include "kd/path_utils.h"
 #include "kd/reflection_impl.h"
 
-#include <fmt/format.h>
-#include <fmt/std.h>
+#include <format>
 
 #include <cstring>
 #include <ostream>
@@ -234,11 +233,13 @@ Result<Palette> loadPalette(const fs::File& file, const std::filesystem::path& p
     }
 
     return Error{
-      fmt::format("Could not load palette file {}: Unknown palette format", path)};
+      std::format(
+        "Could not load palette file {}: Unknown palette format", path.string())};
   }
   catch (const fs::ReaderException& e)
   {
-    return Error{fmt::format("Could not load palette file {}: {}", path, e.what())};
+    return Error{
+      std::format("Could not load palette file {}: {}", path.string(), e.what())};
   }
 }
 

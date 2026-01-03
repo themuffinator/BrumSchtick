@@ -29,7 +29,7 @@
 
 #include "kd/result.h"
 
-#include <fmt/format.h>
+#include <format>
 
 namespace tb::io
 {
@@ -82,7 +82,7 @@ Result<mdl::Texture> readMipTexture(
 
     if (!checkTextureDimensions(width, height))
     {
-      return Error{fmt::format("Invalid texture dimensions: {}*{}", width, height)};
+      return Error{std::format("Invalid texture dimensions: {}*{}", width, height)};
     }
 
     for (size_t i = 0; i < MipLevels; ++i)

@@ -28,12 +28,14 @@
 #include "mdl/Map.h"
 #include "mdl/PropertyDefinition.h"
 #include "ui/MapDocument.h"
+#include "ui/SmartAngleEditor.h"
 #include "ui/SmartChoiceEditor.h"
 #include "ui/SmartColorEditor.h"
 #include "ui/SmartDefaultPropertyEditor.h"
 #include "ui/SmartFlagsEditor.h"
 #include "ui/SmartPropertyEditor.h"
 #include "ui/SmartWadEditor.h"
+#include "ui/SmartVectorEditor.h"
 
 #include "kd/contracts.h"
 #include "kd/functional.h"
@@ -142,6 +144,14 @@ void SmartPropertyEditorManager::createEditors()
       makeSmartTypeEditorMatcher<mdl::PropertyValueTypes::Color<RgbB>>(),
       makeSmartTypeEditorMatcher<mdl::PropertyValueTypes::Color<Rgb>>()),
     new SmartColorEditor{m_document, this});
+  registerEditor(
+    makeSmartTypeEditorMatcher<mdl::PropertyValueTypes::Angle>(),
+    new SmartAngleEditor{m_document, this});
+  registerEditor(
+    kdl::logical_or(
+      makeSmartTypeEditorMatcher<mdl::PropertyValueTypes::Vector>(),
+      makeSmartTypeEditorMatcher<mdl::PropertyValueTypes::Origin>()),
+    new SmartVectorEditor{m_document, this});
   registerEditor(
     [](const auto&, const auto&) { return true; },
     new SmartDefaultPropertyEditor{m_document, this});

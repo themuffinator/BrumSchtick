@@ -49,9 +49,9 @@ These icons are to be used in several places all over the editor and therefore s
 - Patch icon (as in Quake 3 patch): A 3D curve something?
 
 # Application Icon
-Currently, TB has a Quake crate as its icon, which I like. However, this crate is recognizable only to Quake players, and since TB is going to be available for other games as well, it is not a very good icon anymore. Maybe we can abstract from the look of the crate a bit. One element of the current icon I definitely like is that the crate has grid lines projected onto its faces. Since the grid projection is quite unique to TrenchBroom, I think it's a good idea that it shows up in the icon as well.
+Currently, BrümSchtick has a Quake crate as its icon, which I like. However, this crate is recognizable only to Quake players, and since BrümSchtick is going to be available for other games as well, it is not a very good icon anymore. Maybe we can abstract from the look of the crate a bit. One element of the current icon I definitely like is that the crate has grid lines projected onto its faces. Since the grid projection is quite unique to BrümSchtick, I think it's a good idea that it shows up in the icon as well.
 
 In addition to the crate, I can imagine the icon featuring some sort of instrument that is being used by architects (e.g., pair of compasses, set square, steel square, etc.).
 
 # Document Icon
-The document icon is what the user sees when they associate a file type (such as .map) with TrenchBroom. It should be some combination of a generic document icon (a white sheet of paper) and the TB logo, or an element of it.
+The document icon is what the user sees when they associate a file type (such as .map) with BrümSchtick. It should be some combination of a generic document icon (a white sheet of paper) and the BrümSchtick logo, or an element of it.

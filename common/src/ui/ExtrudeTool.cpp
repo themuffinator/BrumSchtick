@@ -45,6 +45,7 @@
 #include "kd/reflection_impl.h"
 #include "kd/result.h"
 #include "kd/result_fold.h"
+#include "kd/vector_utils.h"
 
 #include "vm/distance.h"
 #include "vm/line_io.h"  // IWYU pragma: keep
@@ -97,7 +98,7 @@ ExtrudeTool::ExtrudeTool(MapDocument& document)
 
 bool ExtrudeTool::applies() const
 {
-  return m_document.map().selection().hasBrushes();
+  return !m_document.map().selection().allBrushes().empty();
 }
 
 const mdl::Grid& ExtrudeTool::grid() const
@@ -190,14 +191,17 @@ mdl::Hit ExtrudeTool::pick2D(
 {
   using namespace mdl::HitFilters;
 
-  const auto& hit = pickResult.first(type(mdl::BrushNode::BrushHitType) && selected());
+  const auto& hit =
+    pickResult.first(type(mdl::BrushNode::BrushHitType) && transitivelySelected());
   if (hit.isMatch())
   {
     return mdl::Hit::NoHit;
   }
 
   const auto edgeInfo =
-    findClosestHorizonEdge(m_document.map().selection().nodes, pickRay);
+    findClosestHorizonEdge(
+      kdl::vec_static_cast<mdl::Node*>(m_document.map().selection().allBrushes()),
+      pickRay);
   if (!edgeInfo)
   {
     return mdl::Hit::NoHit;
@@ -231,7 +235,8 @@ mdl::Hit ExtrudeTool::pick3D(
 {
   using namespace mdl::HitFilters;
 
-  const auto& hit = pickResult.first(type(mdl::BrushNode::BrushHitType) && selected());
+  const auto& hit =
+    pickResult.first(type(mdl::BrushNode::BrushHitType) && transitivelySelected());
   if (const auto faceHandle = hitToFaceHandle(hit))
   {
     return {
@@ -245,7 +250,9 @@ mdl::Hit ExtrudeTool::pick3D(
   }
 
   const auto edgeInfo =
-    findClosestHorizonEdge(m_document.map().selection().nodes, pickRay);
+    findClosestHorizonEdge(
+      kdl::vec_static_cast<mdl::Node*>(m_document.map().selection().allBrushes()),
+      pickRay);
   if (!edgeInfo)
   {
     return mdl::Hit::NoHit;
@@ -342,7 +349,8 @@ void ExtrudeTool::updateProposedDragHandles(const mdl::PickResult& pickResult)
   }
 
   const auto& hit = pickResult.first(type(ExtrudeHitType));
-  const auto& nodes = map.selection().nodes;
+  const auto nodes =
+    kdl::vec_static_cast<mdl::Node*>(map.selection().allBrushes());
 
   auto newDragHandles = getDragHandles(nodes, hit);
   if (newDragHandles != m_proposedDragHandles)

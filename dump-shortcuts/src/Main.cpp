@@ -166,7 +166,7 @@ int main(int argc, char* argv[])
 {
   QSettings::setDefaultFormat(QSettings::IniFormat);
 
-  // We can't use auto mnemonics in TrenchBroom. e.g. by default with Qt, Alt+D opens the
+  // We can't use auto mnemonics in BrümSchtick. e.g. by default with Qt, Alt+D opens the
   // "Debug" menu, Alt+S activates the "Show default properties" checkbox in the entity
   // inspector. Flying with Alt held down and pressing WASD is a fundamental behaviour in
   // TB, so we can't have shortcuts randomly activating.
@@ -178,11 +178,11 @@ int main(int argc, char* argv[])
 
   // QKeySequence requires that an application instance is created!
   auto app = QApplication{argc, argv};
-  app.setApplicationName("TrenchBroom");
+  app.setApplicationName("BrumSchtick");
   // Needs to be "" otherwise Qt adds this to the paths returned by QStandardPaths
   // which would cause preferences to move from where they were with wx
   app.setOrganizationName("");
-  app.setOrganizationDomain("io.github.trenchbroom");
+  app.setOrganizationDomain("io.github.themuffinator");
 
   tb::ui::printKeys(out);
   tb::ui::printMenuShortcuts(out);

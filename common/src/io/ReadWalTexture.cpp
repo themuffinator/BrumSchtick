@@ -27,7 +27,7 @@
 
 #include "kd/contracts.h"
 
-#include <fmt/format.h>
+#include <format>
 
 #include <cassert>
 
@@ -125,7 +125,7 @@ Result<mdl::Texture> readQ2Wal(
 
     if (!checkTextureDimensions(width, height))
     {
-      return Error{fmt::format("Invalid texture dimensions: {}*{}", width, height)};
+      return Error{std::format("Invalid texture dimensions: {}*{}", width, height)};
     }
 
     const auto mipLevels = readMipOffsets(MaxMipLevels, offsets, width, height, reader);
@@ -184,7 +184,7 @@ Result<mdl::Texture> readDkWal(fs::Reader& reader)
 
     if (!checkTextureDimensions(width, height))
     {
-      return Error{fmt::format("Invalid texture dimensions: {}*{}", width, height)};
+      return Error{std::format("Invalid texture dimensions: {}*{}", width, height)};
     }
 
     const auto mipLevels = readMipOffsets(MaxMipLevels, offsets, width, height, reader);

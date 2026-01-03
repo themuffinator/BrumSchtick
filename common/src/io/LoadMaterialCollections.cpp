@@ -25,6 +25,7 @@
 #include "fs/PathMatcher.h"
 #include "fs/TraversalMode.h"
 #include "io/LoadShaders.h"
+#include "io/HotspotRectParser.h"
 #include "io/MaterialUtils.h"
 #include "io/ReadDdsTexture.h"
 #include "io/ReadFreeImageTexture.h"
@@ -34,6 +35,7 @@
 #include "io/ResourceUtils.h"
 #include "mdl/GameConfig.h"
 #include "mdl/MaterialCollection.h"
+#include "mdl/Material.h"
 #include "mdl/Palette.h"
 #include "mdl/Quake3Shader.h"
 #include "mdl/Texture.h"
@@ -52,8 +54,7 @@
 #include "kd/string_format.h"
 #include "kd/vector_utils.h"
 
-#include <fmt/format.h>
-#include <fmt/std.h>
+#include <format>
 
 #include <algorithm>
 #include <ranges>
@@ -76,6 +77,77 @@ std::optional<Result<mdl::Palette>> loadPalette(
   return fs.openFile(materialConfig.palette) | kdl::and_then([&](auto file) {
            return mdl::loadPalette(*file, materialConfig.palette);
          });
+}
+
+Result<HotspotRectMap> loadHotspotRectFile(
+  const fs::FileSystem& fs,
+  const std::filesystem::path& path,
+  std::optional<std::string> defaultTextureName)
+{
+  return fs.openFile(path) | kdl::and_then([&](auto file) {
+           const auto buffer = file->reader().buffer();
+           return parseHotspotRectFile(buffer.stringView(), std::move(defaultTextureName));
+         });
+}
+
+std::vector<mdl::HotspotRect> findHotspotRectsForMaterial(
+  const HotspotRectMap& rectMap, const std::string& materialName)
+{
+  if (auto it = rectMap.find(materialName); it != rectMap.end())
+  {
+    return it->second;
+  }
+
+  const auto basename = std::filesystem::path{materialName}.filename().string();
+  if (auto it = rectMap.find(basename); it != rectMap.end())
+  {
+    return it->second;
+  }
+
+  return {};
+}
+
+std::vector<mdl::HotspotRect> loadHotspotsForMaterial(
+  const fs::FileSystem& fs,
+  const mdl::MaterialConfig& materialConfig,
+  const std::filesystem::path& materialPath,
+  const std::string& materialName,
+  Logger& logger)
+{
+  const auto rectPath = kdl::path_replace_extension(materialPath, ".rect");
+  if (fs.pathInfo(rectPath) == fs::PathInfo::File)
+  {
+    auto rectsResult =
+      loadHotspotRectFile(fs, rectPath, materialName)
+        | kdl::or_else([&](const auto& e) {
+            logger.warn() << "Could not read hotspot rects from " << rectPath << ": "
+                          << e.msg;
+            return HotspotRectMap{};
+          });
+    auto rects = rectsResult.value();
+    auto result = findHotspotRectsForMaterial(rects, materialName);
+    if (result.empty() && rects.size() == 1u)
+    {
+      return rects.begin()->second;
+    }
+    return result;
+  }
+
+  const auto sharedRectPath = materialConfig.root / "rectangles.rect";
+  if (fs.pathInfo(sharedRectPath) == fs::PathInfo::File)
+  {
+    auto rectsResult =
+      loadHotspotRectFile(fs, sharedRectPath, std::nullopt)
+        | kdl::or_else([&](const auto& e) {
+            logger.warn() << "Could not read hotspot rects from " << sharedRectPath
+                          << ": " << e.msg;
+            return HotspotRectMap{};
+          });
+    const auto rects = rectsResult.value();
+    return findHotspotRectsForMaterial(rects, materialName);
+  }
+
+  return {};
 }
 
 bool shouldExclude(
@@ -157,7 +229,7 @@ Result<std::filesystem::path> findShaderTexture(
              {
                return candidates.front();
              }
-             return Error{fmt::format("File not found: {}", texturePath)};
+             return Error{std::format("File not found: {}", texturePath.string())};
            });
 }
 
@@ -324,7 +396,8 @@ Result<mdl::Texture> loadTexture(
                });
       }
 
-      return Error{fmt::format("Unknown texture file extension: {}", extension)};
+      return Error{
+        std::format("Unknown texture file extension: {}", extension.string())};
     });
 }
 
@@ -338,7 +411,8 @@ mdl::ResourceLoader<mdl::Texture> makeTextureResourceLoader(
   return [&, path, name, paletteResult]() -> Result<mdl::Texture> {
     return loadTexture(path, name, extensions, fs, paletteResult)
            | kdl::or_else([&](auto e) -> Result<mdl::Texture> {
-               return Error{fmt::format("Could not load texture '{}': {}", path, e.msg)};
+               return Error{
+                 std::format("Could not load texture '{}': {}", path.string(), e.msg)};
              });
   };
 }
@@ -434,7 +508,8 @@ Result<mdl::Material> loadMaterial(
   const std::filesystem::path& materialPath,
   const mdl::CreateTextureResource& createResource,
   const std::vector<mdl::Quake3Shader>& shaders,
-  const std::optional<Result<mdl::Palette>>& paletteResult)
+  const std::optional<Result<mdl::Palette>>& paletteResult,
+  Logger& logger)
 {
   const auto materialPathStem = kdl::path_remove_extension(materialPath);
   const auto iShader = std::ranges::find_if(
@@ -451,6 +526,8 @@ Result<mdl::Material> loadMaterial(
              material.setRelativePath(materialPath);
              material.setCollectionName(
                materialCollectionName(fs, materialConfig, materialPath));
+             material.setHotspots(loadHotspotsForMaterial(
+               fs, materialConfig, materialPath, material.name(), logger));
              return material;
            });
 }
@@ -482,7 +559,8 @@ Result<std::vector<mdl::MaterialCollection>> loadMaterialCollections(
                                      materialPath,
                                      createResource,
                                      shaders,
-                                     paletteResult);
+                                     paletteResult,
+                                     logger);
                                  })
                                | kdl::fold;
                       });

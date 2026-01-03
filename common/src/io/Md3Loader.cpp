@@ -33,7 +33,7 @@
 #include "kd/result.h"
 #include "kd/result_fold.h" // IWYU pragma: keep
 
-#include <fmt/core.h>
+#include <format>
 
 #include <ranges>
 #include <string>
@@ -106,7 +106,7 @@ Result<void> parseSurfaces(
 
     if (ident != Md3Layout::Ident)
     {
-      return Error{fmt::format("Unknown MD3 model surface ident: {}", ident)};
+      return Error{std::format("Unknown MD3 model surface ident: {}", ident)};
     }
 
     const auto surfaceName = reader.readString(Md3Layout::SurfaceNameLength);
@@ -256,7 +256,7 @@ Result<void> parseFrameSurfaces(
 
     if (ident != Md3Layout::Ident)
     {
-      return Error{fmt::format("Unknown MD3 model surface ident: {}", ident)};
+      return Error{std::format("Unknown MD3 model surface ident: {}", ident)};
     }
 
     /* const auto surfaceName = */ reader.readString(Md3Layout::SurfaceNameLength);
@@ -333,12 +333,12 @@ Result<mdl::EntityModelData> Md3Loader::load(Logger&)
 
     if (ident != Md3Layout::Ident)
     {
-      return Error{fmt::format("Unknown MD3 model ident: {}", ident)};
+      return Error{std::format("Unknown MD3 model ident: {}", ident)};
     }
 
     if (version != Md3Layout::Version)
     {
-      return Error{fmt::format("Unknown MD3 model version: {}", version)};
+      return Error{std::format("Unknown MD3 model version: {}", version)};
     }
 
     /* const auto name = */ reader.readString(Md3Layout::ModelNameLength);

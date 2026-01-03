@@ -38,7 +38,7 @@
 #include "vm/mat_ext.h"
 #include "vm/vec.h"
 
-#include <fmt/format.h>
+#include <format>
 
 #include <filesystem>
 #include <string>
@@ -120,6 +120,30 @@ TEST_CASE("WorldReader")
     CHECK(!defaultLayer->locked());
     CHECK(!defaultLayer->hidden());
     CHECK(!defaultLayer->layer().omitFromExport());
+  }
+
+  SECTION("Duplicate entity properties")
+  {
+    const auto data = R"(
+{
+"classname" "worldspawn"
+"message" "first"
+"message" "second"
+}
+)";
+
+    auto reader = WorldReader{data, mdl::MapFormat::Standard, {}};
+
+    auto worldResult = reader.read(worldBounds, status, taskManager);
+    REQUIRE(worldResult);
+
+    const auto& worldNode = worldResult.value();
+    REQUIRE(worldNode != nullptr);
+
+    const auto messages = worldNode->entity().propertiesWithKey("message");
+    REQUIRE(messages.size() == 2u);
+    CHECK(messages[0].value() == "first");
+    CHECK(messages[1].value() == "second");
   }
 
   SECTION("Default layer properties")
@@ -1236,6 +1260,9 @@ common/caulk
 
     const auto& patch = patchNode->patch();
     CHECK(patch.materialName() == "common/caulk");
+    CHECK(patch.surfaceContents() == 0);
+    CHECK(patch.surfaceFlags() == 0);
+    CHECK(patch.surfaceValue() == 0.0f);
     CHECK(patch.pointRowCount() == 5);
     CHECK(patch.pointColumnCount() == 3);
 
@@ -1257,6 +1284,75 @@ common/caulk
         {192, -64, 4, 0.8, 0},
         {192, 0, 4, 0.8, -0.25},
         {192, 64, 4, 0.8, -0.5},
+      }));
+  }
+
+  SECTION("Quake 3 patchDef3")
+  {
+    const auto data = R"(
+{
+"classname" "worldspawn"
+{
+patchDef3
+{
+common/caulk
+( 3 3 7 8 9 )
+(
+( (0 0 0 0 0 1 0 0) (64 0 0 0 0 1 0.5 0) (128 0 0 0 0 1 1 0) )
+( (0 64 0 0 1 0 0 0.5) (64 64 0 0 1 0 0.5 0.5) (128 64 0 0 1 0 1 0.5) )
+( (0 128 0 1 0 0 0 1) (64 128 0 1 0 0 0.5 1) (128 128 0 1 0 0 1 1) )
+)
+}
+}
+})";
+
+    auto reader = WorldReader{data, mdl::MapFormat::Quake3, {}};
+
+    auto worldResult = reader.read(worldBounds, status, taskManager);
+    REQUIRE(worldResult);
+
+    const auto& world = worldResult.value();
+    CHECK(world->defaultLayer()->childCount() == 1u);
+
+    const auto* patchNode =
+      dynamic_cast<mdl::PatchNode*>(world->defaultLayer()->children().front());
+    CHECK(patchNode != nullptr);
+
+    const auto& patch = patchNode->patch();
+    CHECK(patch.materialName() == "common/caulk");
+    CHECK(patch.surfaceContents() == 7);
+    CHECK(patch.surfaceFlags() == 8);
+    CHECK(patch.surfaceValue() == 9.0f);
+    CHECK(patch.pointRowCount() == 3);
+    CHECK(patch.pointColumnCount() == 3);
+    CHECK(patch.hasControlNormals());
+
+    CHECK_THAT(
+      patch.controlPoints(),
+      Equals(std::vector<mdl::BezierPatch::Point>{
+        {0, 0, 0, 0, 0},
+        {64, 0, 0, 0.5, 0},
+        {128, 0, 0, 1, 0},
+        {0, 64, 0, 0, 0.5},
+        {64, 64, 0, 0.5, 0.5},
+        {128, 64, 0, 1, 0.5},
+        {0, 128, 0, 0, 1},
+        {64, 128, 0, 0.5, 1},
+        {128, 128, 0, 1, 1},
+      }));
+
+    CHECK_THAT(
+      patch.controlNormals(),
+      Equals(std::vector<vm::vec3d>{
+        {0, 0, 1},
+        {0, 0, 1},
+        {0, 0, 1},
+        {0, 1, 0},
+        {0, 1, 0},
+        {0, 1, 0},
+        {1, 0, 0},
+        {1, 0, 0},
+        {1, 0, 0},
       }));
   }
 
@@ -1479,7 +1575,7 @@ common/caulk
 
     CAPTURE(materialName, expectedName);
 
-    const auto data = fmt::format(
+    const auto data = std::format(
       R"(
 // entity 0
 {{

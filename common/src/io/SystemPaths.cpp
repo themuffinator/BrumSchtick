@@ -39,7 +39,7 @@ namespace
 
 std::filesystem::path appImageDirectory()
 {
-  return appDirectory() / ".." / "share" / "TrenchBroom";
+  return appDirectory() / ".." / "share" / "BrumSchtick";
 }
 
 } // namespace
@@ -58,11 +58,11 @@ std::filesystem::path userDataDirectory()
 {
   if (isPortable())
   {
-    return appDirectory() / "config";
+    return io::pathFromQString(QDir::currentPath()) / "config";
   }
 #if defined __linux__ || defined __FreeBSD__
   // Compatibility with wxWidgets
-  return io::pathFromQString(QDir::homePath()) / ".TrenchBroom";
+  return io::pathFromQString(QDir::homePath()) / ".BrumSchtick";
 #else
   return io::pathFromQString(
     QStandardPaths::writableLocation(QStandardPaths::AppDataLocation));
@@ -82,7 +82,7 @@ std::filesystem::path tempDirectory()
 
 std::filesystem::path logFilePath()
 {
-  return userDataDirectory() / "TrenchBroom.log";
+  return userDataDirectory() / "BrumSchtick.log";
 }
 
 std::filesystem::path findResourceFile(const std::filesystem::path& file)

@@ -20,11 +20,13 @@
 #include "MapViewBar.h"
 
 #include <QHBoxLayout>
+#include <QLineEdit>
 #include <QResizeEvent>
 #include <QStackedLayout>
 
 #include "PreferenceManager.h"
 #include "Preferences.h"
+#include "mdl/Map.h"
 #include "ui/MapDocument.h"
 #include "ui/QtUtils.h"
 #include "ui/ViewConstants.h"
@@ -53,6 +55,15 @@ void MapViewBar::createGui(MapDocument& document)
 
   m_viewEditor = new ViewPopupEditor{document};
 
+  m_searchBox = createSearchBox();
+  makeSmall(m_searchBox);
+  m_searchBox->setToolTip(
+    tr("Filter map objects. Use key=value (or key:value). Use texture=... for materials."));
+  m_searchBox->setText(QString::fromStdString(document.map().editorContext().searchText()));
+  connect(m_searchBox, &QLineEdit::textChanged, this, [&document, this]() {
+    document.map().editorContext().setSearchText(m_searchBox->text().toStdString());
+  });
+
 #ifdef __APPLE__
   const auto vMargin = pref(Preferences::Theme) == Preferences::darkTheme()
                          ? LayoutConstants::MediumVMargin
@@ -66,9 +77,18 @@ void MapViewBar::createGui(MapDocument& document)
     LayoutConstants::WideHMargin, vMargin, LayoutConstants::WideHMargin, vMargin);
   layout->setSpacing(LayoutConstants::WideHMargin);
   layout->addLayout(m_toolBook, 1);
+  layout->addWidget(m_searchBox, 0, Qt::AlignVCenter);
   layout->addWidget(m_viewEditor, 0, Qt::AlignVCenter);
 
   setLayout(layout);
+
+  const auto syncSearchBox = [&document, this]() {
+    m_searchBox->setText(QString::fromStdString(
+      document.map().editorContext().searchText()));
+  };
+
+  m_notifierConnection += document.documentWasLoadedNotifier.connect(syncSearchBox);
+  m_notifierConnection += document.editorContextDidChangeNotifier.connect(syncSearchBox);
 }
 
 } // namespace tb::ui

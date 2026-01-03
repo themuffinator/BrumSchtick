@@ -72,8 +72,8 @@ TEST_CASE("EntityModel")
     const auto& gameInfo = QuakeGameInfo;
 
     auto logger = TestLogger{};
-    auto fs = GameFileSystem{};
-    fs.initialize(gameInfo.gameConfig, pref(gameInfo.gamePathPreference), {}, logger);
+    auto fs = GameFileSystem{logger};
+    fs.initialize(gameInfo.gameConfig, pref(gameInfo.gamePathPreference), {});
 
     const auto path = std::filesystem::path{"cube.bsp"};
     const auto loadMaterial = [](auto) -> Material {

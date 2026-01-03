@@ -164,6 +164,7 @@ void FaceRenderer::doRender(RenderContext& context)
     shader.set("CameraPosition", context.camera().position());
     shader.set("ShadeFaces", shadeFaces);
     shader.set("ShowFog", showFog);
+    shader.set("ApplyLightPreview", context.lightPreview() != nullptr);
     shader.set("Alpha", m_alpha);
     shader.set("EnableMasked", false);
     shader.set("ShowSoftMapBounds", !context.softMapBounds().is_empty());

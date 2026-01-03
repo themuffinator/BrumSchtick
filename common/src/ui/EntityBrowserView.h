@@ -32,6 +32,8 @@
 #include <string>
 #include <vector>
 
+class QContextMenuEvent;
+
 namespace tb
 {
 class Logger;
@@ -129,6 +131,7 @@ private:
 
   void doClear() override;
   void doRender(Layout& layout, float y, float height) override;
+  void doContextMenu(Layout& layout, float x, float y, QContextMenuEvent* event) override;
   bool shouldRenderFocusIndicator() const override;
   const Color& getBackgroundColor() override;
 

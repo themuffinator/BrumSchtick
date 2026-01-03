@@ -103,7 +103,7 @@ TEST_CASE("convertToString")
               m_children: [],
             },
             PatchNode{
-              m_patch: BezierPatch{m_pointRowCount: 3, m_pointColumnCount: 3, m_bounds: { min: (0 0 0), max: (2 2 2) }, m_controlPoints: [0 0 0 0 0, 1 0 1 0 0, 2 0 0 0 0, 0 1 1 0 0, 1 1 2 0 0, 2 1 1 0 0, 0 2 0 0 0, 1 2 1 0 0, 2 2 0 0 0], m_materialName: material},
+              m_patch: BezierPatch{m_pointRowCount: 3, m_pointColumnCount: 3, m_bounds: { min: (0 0 0), max: (2 2 2) }, m_controlPoints: [0 0 0 0 0, 1 0 1 0 0, 2 0 0 0 0, 0 1 1 0 0, 1 1 2 0 0, 2 1 1 0 0, 0 2 0 0 0, 1 2 1 0 0, 2 2 0 0 0], m_controlNormals: [], m_materialName: material, m_surfaceContents: 0, m_surfaceFlags: 0, m_surfaceValue: 0},
               m_linkId: patch_link_id,
               m_children: [],
             }

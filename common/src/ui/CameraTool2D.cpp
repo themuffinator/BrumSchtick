@@ -30,6 +30,16 @@ namespace tb::ui
 namespace
 {
 
+float moveSpeedScale()
+{
+  const auto defaultSpeed = Preferences::CameraMoveSpeed.defaultValue();
+  if (defaultSpeed <= 0.0f)
+  {
+    return 1.0f;
+  }
+  return pref(Preferences::CameraMoveSpeed) / defaultSpeed;
+}
+
 bool shouldZoom(const InputState& inputState)
 {
   return (
@@ -94,7 +104,8 @@ public:
 
   bool update(const InputState& inputState) override
   {
-    const auto speed = pref(Preferences::CameraAltMoveInvert) ? 1.0f : -1.0f;
+    const auto speed =
+      (pref(Preferences::CameraAltMoveInvert) ? 1.0f : -1.0f) * moveSpeedScale();
     const auto factor = 1.0f + static_cast<float>(inputState.mouseDY()) / 100.0f * speed;
     zoom(m_camera, m_lastMousePos, factor);
     return true;
@@ -144,7 +155,8 @@ void CameraTool2D::mouseScroll(const InputState& inputState)
   {
     if (inputState.scrollY() != 0.0f)
     {
-      const float speed = pref(Preferences::CameraMouseWheelInvert) ? -1.0f : 1.0f;
+      const float speed = (pref(Preferences::CameraMouseWheelInvert) ? -1.0f : 1.0f)
+                          * moveSpeedScale();
       const float factor = 1.0f + inputState.scrollY() / 50.0f * speed;
       const auto mousePos = vm::vec2f{inputState.mouseX(), inputState.mouseY()};
 

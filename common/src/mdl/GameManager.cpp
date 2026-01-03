@@ -37,6 +37,7 @@
 #include "kd/result_fold.h"
 
 #include <algorithm>
+#include <format>
 #include <iostream>
 #include <sstream>
 
@@ -285,9 +286,12 @@ Result<void> writeGameEngineConfig(
 } // namespace
 
 GameManager::GameManager(
-  std::unique_ptr<fs::WritableFileSystem> configFs, std::vector<GameInfo> gameInfos)
+  std::unique_ptr<fs::WritableFileSystem> configFs,
+  std::vector<GameInfo> gameInfos,
+  Logger& logger)
   : m_configFs{std::move(configFs)}
   , m_gameInfos{std::move(gameInfos)}
+  , m_logger{logger}
 {
   std::ranges::sort(m_gameInfos, [](const auto& lhs, const auto& rhs) {
     return lhs.gameConfig.name < rhs.gameConfig.name;
@@ -295,7 +299,6 @@ GameManager::GameManager(
 }
 
 GameManager::GameManager(GameManager&&) noexcept = default;
-GameManager& GameManager::operator=(GameManager&&) noexcept = default;
 GameManager::~GameManager() = default;
 
 const std::vector<GameInfo>& GameManager::gameInfos() const
@@ -321,29 +324,31 @@ GameInfo* GameManager::gameInfo(const std::string_view gameName)
 }
 
 Result<void> GameManager::updateCompilationConfig(
-  const std::string_view gameName, CompilationConfig compilationConfig, Logger& logger)
+  const std::string_view gameName, CompilationConfig compilationConfig)
 {
   if (auto* info = gameInfo(gameName))
   {
     return writeCompilationConfig(
-      *m_configFs, *info, std::move(compilationConfig), logger);
+      *m_configFs, *info, std::move(compilationConfig), m_logger);
   }
-  return Error{fmt::format("Unknown game: {}", gameName)};
+  return Error{std::format("Unknown game: {}", gameName)};
 }
 
 Result<void> GameManager::updateGameEngineConfig(
-  const std::string_view gameName, GameEngineConfig gameEngineConfig, Logger& logger)
+  const std::string_view gameName, GameEngineConfig gameEngineConfig)
 {
   if (auto* info = gameInfo(gameName))
   {
-    return writeGameEngineConfig(*m_configFs, *info, std::move(gameEngineConfig), logger);
+    return writeGameEngineConfig(
+      *m_configFs, *info, std::move(gameEngineConfig), m_logger);
   }
-  return Error{fmt::format("Unknown game: {}", gameName)};
+  return Error{std::format("Unknown game: {}", gameName)};
 }
 
 Result<kdl::multi_value<GameManager, std::vector<std::string>>> initializeGameManager(
   const std::vector<std::filesystem::path>& gameConfigSearchDirs,
-  const std::filesystem::path& userGameDir)
+  const std::filesystem::path& userGameDir,
+  Logger& logger)
 {
   return createFileSystem(gameConfigSearchDirs, userGameDir)
          | kdl::and_then([&](auto fs) {
@@ -351,7 +356,7 @@ Result<kdl::multi_value<GameManager, std::vector<std::string>>> initializeGameMa
              return loadGameInfos(*fs, userGameDir, warnings)
                     | kdl::transform([&](auto gameInfos) {
                         return kdl::multi_value{
-                          GameManager{std::move(fs), std::move(gameInfos)},
+                          GameManager{std::move(fs), std::move(gameInfos), logger},
                           std::move(warnings)};
                       });
            });

@@ -23,8 +23,7 @@
 
 #include "vm/from_chars.h"
 
-#include <fmt/format.h>
-#include <fmt/ranges.h>
+#include <format>
 
 #include <limits>
 #include <optional>

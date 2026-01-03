@@ -44,7 +44,7 @@ WelcomeWindow::WelcomeWindow()
 void WelcomeWindow::createGui()
 {
   setWindowIconTB(this);
-  setWindowTitle("Welcome to TrenchBroom");
+  setWindowTitle("Welcome to BrümSchtick");
 
   m_recentDocumentListBox = new RecentDocumentListBox{};
   m_recentDocumentListBox->setToolTip("Double click on a file to open it");

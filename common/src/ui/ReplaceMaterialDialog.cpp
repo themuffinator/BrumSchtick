@@ -43,7 +43,7 @@
 #include "kd/contracts.h"
 #include "kd/ranges/to.h"
 
-#include <fmt/format.h>
+#include <format>
 
 #include <ranges>
 #include <vector>
@@ -92,7 +92,7 @@ void ReplaceMaterialDialog::accept()
   {
     replaceMaterials(m_document.map(), faces, replacement->name());
 
-    const auto msg = fmt::format(
+    const auto msg = std::format(
       "Replaced material '{}' with '{}' on {} faces.",
       subject->name(),
       replacement->name(),

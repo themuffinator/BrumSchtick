@@ -28,7 +28,7 @@
 #include "kd/ranges/to.h"
 #include "kd/vector_utils.h"
 
-#include <fmt/format.h>
+#include <format>
 
 #include <ranges>
 #include <sstream>
@@ -342,7 +342,7 @@ Value evaluateAddition(
 
   throw EvaluationError{
     expressionNode,
-    fmt::format("Invalid operand types {} and {}", lhs.typeName(), rhs.typeName())};
+    std::format("Invalid operand types {} and {}", lhs.typeName(), rhs.typeName())};
 }
 
 Value evaluateSubtraction(
@@ -362,7 +362,7 @@ Value evaluateSubtraction(
 
   throw EvaluationError{
     expressionNode,
-    fmt::format("Invalid operand types {} and {}", lhs.typeName(), rhs.typeName())};
+    std::format("Invalid operand types {} and {}", lhs.typeName(), rhs.typeName())};
 }
 
 Value evaluateMultiplication(
@@ -382,7 +382,7 @@ Value evaluateMultiplication(
 
   throw EvaluationError{
     expressionNode,
-    fmt::format("Invalid operand types {} and {}", lhs.typeName(), rhs.typeName())};
+    std::format("Invalid operand types {} and {}", lhs.typeName(), rhs.typeName())};
 }
 
 Value evaluateDivision(
@@ -402,7 +402,7 @@ Value evaluateDivision(
 
   throw EvaluationError{
     expressionNode,
-    fmt::format("Invalid operand types {} and {}", lhs.typeName(), rhs.typeName())};
+    std::format("Invalid operand types {} and {}", lhs.typeName(), rhs.typeName())};
 }
 
 Value evaluateModulus(
@@ -422,7 +422,7 @@ Value evaluateModulus(
 
   throw EvaluationError{
     expressionNode,
-    fmt::format("Invalid operand types {} and {}", lhs.typeName(), rhs.typeName())};
+    std::format("Invalid operand types {} and {}", lhs.typeName(), rhs.typeName())};
 }
 
 template <typename EvaluateLhs, typename EvaluateRhs>
@@ -468,7 +468,7 @@ Value evaluateLogicalAnd(
 
   throw EvaluationError{
     expressionNode,
-    fmt::format("Invalid operand types {} and {}", lhs.typeName(), rhs->typeName())};
+    std::format("Invalid operand types {} and {}", lhs.typeName(), rhs->typeName())};
 }
 
 template <typename EvaluateLhs, typename EvaluateRhs>
@@ -514,7 +514,7 @@ Value evaluateLogicalOr(
 
   throw EvaluationError{
     expressionNode,
-    fmt::format("Invalid operand types {} and {}", lhs.typeName(), rhs->typeName())};
+    std::format("Invalid operand types {} and {}", lhs.typeName(), rhs->typeName())};
 }
 
 template <typename Eval>
@@ -553,7 +553,7 @@ Value evaluateBitwiseAnd(
 
   throw EvaluationError{
     expressionNode,
-    fmt::format("Invalid operand types {} and {}", lhs.typeName(), rhs.typeName())};
+    std::format("Invalid operand types {} and {}", lhs.typeName(), rhs.typeName())};
 }
 
 Value evaluateBitwiseXOr(
@@ -573,7 +573,7 @@ Value evaluateBitwiseXOr(
 
   throw EvaluationError{
     expressionNode,
-    fmt::format("Invalid operand types {} and {}", lhs.typeName(), rhs.typeName())};
+    std::format("Invalid operand types {} and {}", lhs.typeName(), rhs.typeName())};
 }
 
 Value evaluateBitwiseOr(
@@ -593,7 +593,7 @@ Value evaluateBitwiseOr(
 
   throw EvaluationError{
     expressionNode,
-    fmt::format("Invalid operand types {} and {}", lhs.typeName(), rhs.typeName())};
+    std::format("Invalid operand types {} and {}", lhs.typeName(), rhs.typeName())};
 }
 
 Value evaluateBitwiseShiftLeft(
@@ -613,7 +613,7 @@ Value evaluateBitwiseShiftLeft(
 
   throw EvaluationError{
     expressionNode,
-    fmt::format("Invalid operand types {} and {}", lhs.typeName(), rhs.typeName())};
+    std::format("Invalid operand types {} and {}", lhs.typeName(), rhs.typeName())};
 }
 
 Value evaluateBitwiseShiftRight(
@@ -633,7 +633,7 @@ Value evaluateBitwiseShiftRight(
 
   throw EvaluationError{
     expressionNode,
-    fmt::format("Invalid operand types {} and {}", lhs.typeName(), rhs.typeName())};
+    std::format("Invalid operand types {} and {}", lhs.typeName(), rhs.typeName())};
 }
 
 int compareAsBooleans(EvaluationContext& context, const Value& lhs, const Value& rhs)
@@ -777,7 +777,7 @@ int evaluateCompare(
 
     throw EvaluationError{
       expressionNode,
-      fmt::format("Invalid operand types {} and {}", lhs.typeName(), rhs.typeName())};
+      std::format("Invalid operand types {} and {}", lhs.typeName(), rhs.typeName())};
   }
   catch (const ConversionError& c)
   {

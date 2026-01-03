@@ -54,6 +54,8 @@ enum class SelectionItem
 {
   nothing,
   outerGroupNode,
+  innerGroupNode,
+  brushGroupNode,
   entityNode,
   brushNode,
   patchNode,
@@ -69,6 +71,12 @@ enum class SelectionItem
     break;
   case SelectionItem::outerGroupNode:
     lhs << "outerGroupNode";
+    break;
+  case SelectionItem::innerGroupNode:
+    lhs << "innerGroupNode";
+    break;
+  case SelectionItem::brushGroupNode:
+    lhs << "brushGroupNode";
     break;
   case SelectionItem::entityNode:
     lhs << "entityNode";
@@ -125,6 +133,13 @@ TEST_CASE("Selection")
   auto* otherGroupNode = new GroupNode{Group{"other"}};
   auto* groupedEntityNode = new EntityNode{{}};
 
+  auto* brushGroupNode = new GroupNode{Group{"brush_only"}};
+  auto* groupedBrushNode =
+    brushBuilder.createCube(64.0, "material")
+      .transform([](auto brush) { return std::make_unique<BrushNode>(std::move(brush)); })
+      .value()
+      .release();
+
   /*
    worldNode
      outerGroupNode
@@ -136,17 +151,20 @@ TEST_CASE("Selection")
        entityBrushNode
      otherGroupNode
        groupedEntityNode
+     brushGroupNode
+       groupedBrushNode
   */
 
   innerGroupNode->addChildren({patchNode});
   outerGroupNode->addChildren({innerGroupNode, brushNode});
   brushEntityNode->addChildren({entityBrushNode});
   otherGroupNode->addChildren({groupedEntityNode});
+  brushGroupNode->addChildren({groupedBrushNode});
 
   addNodes(
     map,
     {{parentForNodes(map),
-      {outerGroupNode, entityNode, brushEntityNode, otherGroupNode}}});
+      {outerGroupNode, entityNode, brushEntityNode, otherGroupNode, brushGroupNode}}});
 
   const auto selectItem = [&](const auto selectionItem) {
     switch (selectionItem)
@@ -156,6 +174,12 @@ TEST_CASE("Selection")
       break;
     case SelectionItem::outerGroupNode:
       selectNodes(map, {outerGroupNode});
+      break;
+    case SelectionItem::innerGroupNode:
+      selectNodes(map, {innerGroupNode});
+      break;
+    case SelectionItem::brushGroupNode:
+      selectNodes(map, {brushGroupNode});
       break;
     case SelectionItem::entityNode:
       selectNodes(map, {entityNode});
@@ -306,6 +330,7 @@ TEST_CASE("Selection")
     const auto [selectionItems, expected] = GENERATE(values<T>({
       {{SelectionItem::nothing}, false},
       {{SelectionItem::brushNode}, true},
+      {{SelectionItem::brushGroupNode}, true},
       {{SelectionItem::entityNode, SelectionItem::brushNode}, false},
       {{SelectionItem::entityNode}, false},
       {{SelectionItem::brushFace}, false},
@@ -340,6 +365,7 @@ TEST_CASE("Selection")
     const auto [selectionItems, expected] = GENERATE(values<T>({
       {{SelectionItem::nothing}, false},
       {{SelectionItem::patchNode}, true},
+      {{SelectionItem::innerGroupNode}, true},
       {{SelectionItem::entityNode, SelectionItem::patchNode}, false},
       {{SelectionItem::entityNode}, false},
       {{SelectionItem::brushFace}, false},
@@ -374,6 +400,7 @@ TEST_CASE("Selection")
     const auto [selectionItems, expected] = GENERATE(values<T>({
       {{SelectionItem::nothing}, false},
       {{SelectionItem::entityNode}, false},
+      {{SelectionItem::brushGroupNode}, true},
       {{SelectionItem::entityNode, SelectionItem::brushNode}, true},
       {{SelectionItem::brushNode}, true},
       {{SelectionItem::brushFace}, true},

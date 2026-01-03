@@ -33,7 +33,7 @@
 #include "kd/result.h"
 #include "kd/task_manager.h"
 
-#include <fmt/format.h>
+#include <format>
 
 #include <memory>
 #include <optional>
@@ -443,7 +443,7 @@ TEST_CASE("ObjSerializer.writeRelativeMaterialPath")
     map, std::make_unique<ObjSerializer>(objStream, mtlStream, mtlName, options)};
   writer.writeMap(taskManager);
 
-  const auto expectedMtl = expectedPath ? fmt::format(
+  const auto expectedMtl = expectedPath ? std::format(
                                             R"(newmtl some_material
 map_Kd {}
 

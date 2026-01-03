@@ -232,6 +232,7 @@ void BrushRenderer::clear()
   m_brushInfo.clear();
   m_allBrushes.clear();
   m_invalidBrushes.clear();
+  m_lightPreviewRevision = 0;
 
   m_vertexArray = std::make_shared<BrushVertexArray>();
   m_edgeIndices = std::make_shared<BrushIndexArray>();
@@ -311,6 +312,16 @@ void BrushRenderer::setShowHiddenBrushes(const bool showHiddenBrushes)
   }
 }
 
+void BrushRenderer::ensureLightPreviewRevision(const RenderContext& renderContext)
+{
+  const auto revision = renderContext.lightPreviewRevision();
+  if (revision != m_lightPreviewRevision)
+  {
+    m_lightPreviewRevision = revision;
+    invalidate();
+  }
+}
+
 void BrushRenderer::render(RenderContext& renderContext, RenderBatch& renderBatch)
 {
   renderOpaque(renderContext, renderBatch);
@@ -319,11 +330,12 @@ void BrushRenderer::render(RenderContext& renderContext, RenderBatch& renderBatc
 
 void BrushRenderer::renderOpaque(RenderContext& renderContext, RenderBatch& renderBatch)
 {
+  ensureLightPreviewRevision(renderContext);
   if (!m_allBrushes.empty())
   {
     if (!valid())
     {
-      validate();
+      validate(renderContext.lightPreview());
     }
     if (renderContext.showFaces())
     {
@@ -339,11 +351,12 @@ void BrushRenderer::renderOpaque(RenderContext& renderContext, RenderBatch& rend
 void BrushRenderer::renderTransparent(
   RenderContext& renderContext, RenderBatch& renderBatch)
 {
+  ensureLightPreviewRevision(renderContext);
   if (!m_allBrushes.empty())
   {
     if (!valid())
     {
-      validate();
+      validate(renderContext.lightPreview());
     }
     if (renderContext.showFaces())
     {
@@ -378,13 +391,13 @@ void BrushRenderer::renderEdges(RenderBatch& renderBatch)
   m_edgeRenderer.render(renderBatch, m_edgeColor);
 }
 
-void BrushRenderer::validate()
+void BrushRenderer::validate(const LightPreview* lightPreview)
 {
   contract_pre(!valid());
 
   for (auto* brushNode : m_invalidBrushes)
   {
-    validateBrush(*brushNode);
+    validateBrush(*brushNode, lightPreview);
   }
   m_invalidBrushes.clear();
 
@@ -511,7 +524,8 @@ bool BrushRenderer::shouldDrawFaceInTransparentPass(
   return false;
 }
 
-void BrushRenderer::validateBrush(const mdl::BrushNode& brushNode)
+void BrushRenderer::validateBrush(
+  const mdl::BrushNode& brushNode, const LightPreview* lightPreview)
 {
   contract_pre(m_allBrushes.find(&brushNode) != std::end(m_allBrushes));
   contract_pre(m_invalidBrushes.find(&brushNode) != std::end(m_invalidBrushes));
@@ -535,7 +549,7 @@ void BrushRenderer::validateBrush(const mdl::BrushNode& brushNode)
 
   // collect vertices
   auto& brushCache = brushNode.brushRendererBrushCache();
-  brushCache.validateVertexCache(brushNode);
+  brushCache.validateVertexCache(brushNode, lightPreview);
   const auto& cachedVertices = brushCache.cachedVertices();
   contract_assert(!cachedVertices.empty());
 

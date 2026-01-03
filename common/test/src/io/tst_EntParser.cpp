@@ -162,11 +162,11 @@ Updated: 2011-03-02
     )",
           std::vector<mdl::PropertyDefinition>{
             {"angle",
-             mdl::PropertyValueTypes::Unknown{},
+             mdl::PropertyValueTypes::Angle{},
              "Yaw Angle",
              R"(Rotation angle of the sky surfaces.)"},
             {"angles",
-             mdl::PropertyValueTypes::Unknown{},
+             mdl::PropertyValueTypes::Vector{},
              "Pitch Yaw Roll",
              R"(Individual control of PITCH, YAW, and ROLL (default 0 0 0).)"},
             {"_scale",

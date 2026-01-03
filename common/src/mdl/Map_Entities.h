@@ -23,10 +23,13 @@
 
 #include "vm/vec.h"
 
+#include <cstddef>
 #include <string>
+#include <vector>
 
 namespace tb::mdl
 {
+class EntityNodeBase;
 class EntityNode;
 class Map;
 
@@ -44,8 +47,17 @@ bool setEntityProperty(
   const std::string& key,
   const std::string& value,
   bool defaultToProtected = false);
+bool setEntityProperty(
+  Map& map,
+  const std::vector<EntityNodeBase*>& nodes,
+  const std::string& key,
+  const std::string& value,
+  bool defaultToProtected = false);
 bool renameEntityProperty(Map& map, const std::string& oldKey, const std::string& newKey);
 bool removeEntityProperty(Map& map, const std::string& key);
+bool updateEntityPropertyValueAtIndex(Map& map, size_t propertyIndex, const std::string& value);
+bool renameEntityPropertyAtIndex(Map& map, size_t propertyIndex, const std::string& newKey);
+bool removeEntityPropertyAtIndex(Map& map, size_t propertyIndex);
 
 bool setEntityColorProperty(Map& map, const std::string& key, const Rgb& newColor);
 bool convertEntityColorRange(Map& map, const std::string& key, ColorRange::Type range);

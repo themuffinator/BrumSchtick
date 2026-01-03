@@ -32,7 +32,7 @@
 #include "ui/InputEvent.h"
 #include "ui/QtUtils.h"
 
-#include <fmt/format.h>
+#include <format>
 
 /*
  * - glew requires it is included before <OpenGL/gl.h>
@@ -104,7 +104,7 @@ RenderView::RenderView(GLContextManager& contextManager, QWidget* parent)
     m_maxFrameTimeMsecs = 0;
     m_lastFPSCounterUpdate = currentTime;
 
-    m_currentFPS = fmt::format(
+    m_currentFPS = std::format(
       R"(Avg FPS: {} Max time between frames: {}ms. {} currentVBOS({} peak) totalling {} KiB)",
       avgFps,
       maxFrameTime,

@@ -21,6 +21,7 @@
 
 #include "render/GLVertexType.h"
 
+#include <cstdint>
 #include <vector>
 
 namespace tb
@@ -34,11 +35,12 @@ class Material;
 
 namespace render
 {
+class LightPreview;
 
 class BrushRendererBrushCache
 {
 public:
-  using VertexSpec = render::GLVertexTypes::P3NT2;
+  using VertexSpec = render::GLVertexTypes::P3NT2C4;
   using Vertex = VertexSpec::Vertex;
 
   struct CachedFace
@@ -64,6 +66,7 @@ private:
   std::vector<CachedEdge> m_cachedEdges;
   std::vector<CachedFace> m_cachedFacesSortedByMaterial;
   bool m_rendererCacheValid;
+  uint64_t m_lightPreviewRevision = 0;
 
 public:
   BrushRendererBrushCache();
@@ -80,7 +83,7 @@ public:
    * different rendering styles (default/selected/locked), or need to re-evaluate the
    * BrushRenderer::Filter to exclude certain faces/edges.
    */
-  void validateVertexCache(const mdl::BrushNode& brushNode);
+  void validateVertexCache(const mdl::BrushNode& brushNode, const LightPreview* lightPreview);
 
   /**
    * Returns all vertices for all faces of the brush.

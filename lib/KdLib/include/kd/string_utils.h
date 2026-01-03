@@ -28,6 +28,7 @@
 #include <sstream>
 #include <string>
 #include <string_view>
+#include <tuple>
 #include <vector>
 
 namespace kdl
@@ -240,6 +241,37 @@ template <typename C>
 std::string str_join(const C& c, const std::string_view delim = ", ")
 {
   return str_join(std::begin(c), std::end(c), delim, delim, delim);
+}
+
+/**
+ * Joins the values in the given tuple using the given delimiter.
+ *
+ * The tuple values are converted to string using the stream insertion operator.
+ */
+template <typename... Ts>
+std::string str_join(const std::tuple<Ts...>& values, const std::string_view delim = ", ")
+{
+  if constexpr (sizeof...(Ts) == 0)
+  {
+    return "";
+  }
+
+  auto result = std::stringstream{};
+  auto first = true;
+  std::apply(
+    [&](const auto&... value) {
+      const auto append = [&](const auto& item) {
+        if (!first)
+        {
+          result << delim;
+        }
+        result << item;
+        first = false;
+      };
+      (append(value), ...);
+    },
+    values);
+  return result.str();
 }
 
 /**

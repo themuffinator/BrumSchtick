@@ -46,8 +46,7 @@
 #include "kd/result_fold.h"
 #include "kd/string_utils.h"
 
-#include <fmt/format.h>
-#include <fmt/std.h>
+#include <format>
 
 #include <ranges>
 #include <string>
@@ -98,7 +97,7 @@ Result<std::string> CompilationTaskRunner::interpolate(const std::string& spec) 
   catch (const el::Exception& e)
   {
     return Error{
-      fmt::format("Could not interpolate expression '{}': {}", spec, e.what())};
+      std::format("Could not interpolate expression '{}': {}", spec, e.what())};
   }
 }
 
@@ -165,7 +164,7 @@ void CompilationCopyFilesTaskRunner::doExecute()
                | kdl::and_then([&](const auto& pathsToCopy) {
                    const auto pathStrsToCopy =
                      pathsToCopy | std::views::transform([](const auto& path) {
-                       return fmt::format("{}", path);
+                       return std::format("{}", path.string());
                      })
                      | kdl::ranges::to<std::vector>();
 
@@ -260,7 +259,7 @@ void CompilationDeleteFilesTaskRunner::doExecute()
            | kdl::transform([&](const auto& pathsToDelete) {
                const auto pathStrsToDelete =
                  pathsToDelete | std::views::transform([](const auto& path) {
-                   return fmt::format("{}", path);
+                   return std::format("{}", path.string());
                  })
                  | kdl::ranges::to<std::vector>();
 

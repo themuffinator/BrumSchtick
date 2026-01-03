@@ -36,8 +36,7 @@
 #include "kd/string_utils.h"
 #include "kd/vector_utils.h"
 
-#include <fmt/format.h>
-#include <fmt/std.h>
+#include <format>
 
 #include <algorithm>
 #include <memory>
@@ -92,7 +91,7 @@ Result<mdl::PropertyValueTypes::IOParameterType> parseIOParameterType(
     return iParameterType->second;
   }
 
-  return Error{fmt::format("Unknown IO parameter type: {}", typeName)};
+  return Error{std::format("Unknown IO parameter type: {}", typeName)};
 }
 
 } // namespace
@@ -191,7 +190,7 @@ FgdTokenizer::Token FgdTokenizer::emitToken()
       {
         throw ParserException{
           FileLocation{startLine, startColumn},
-          fmt::format("Unexpected character: '{}'", c)};
+          std::format("Unexpected character: '{}'", c)};
       }
       else
       {
@@ -325,7 +324,7 @@ std::optional<EntityDefinitionClassInfo> FgdParser::parseClassInfo(ParserStatus&
     return std::nullopt;
   }
 
-  const auto msg = fmt::format("Unknown entity definition class '{}'", classname);
+  const auto msg = std::format("Unknown entity definition class '{}'", classname);
   status.error(token.location(), msg);
   throw ParserException{token.location(), msg};
 }
@@ -422,7 +421,7 @@ EntityDefinitionClassInfo FgdParser::parseClassInfo(
     {
       status.warn(
         token.location(),
-        fmt::format("Unknown entity definition header properties '{}'", typeName));
+        std::format("Unknown entity definition header properties '{}'", typeName));
       skipClassProperty(status);
     }
     token = m_tokenizer.nextToken(FgdToken::Equality | FgdToken::Word);
@@ -574,7 +573,7 @@ std::vector<mdl::PropertyDefinition> FgdParser::parsePropertyDefinitions(
     {
       status.warn(
         location,
-        fmt::format("Skipping duplicate property definition: '{}'", propertyKey));
+        std::format("Skipping duplicate property definition: '{}'", propertyKey));
     }
 
     token =
@@ -634,6 +633,10 @@ mdl::PropertyDefinition FgdParser::parsePropertyDefinition(ParserStatus& status)
   {
     return parseFloatPropertyDefinition(status, std::move(propertyKey));
   }
+  if (kdl::ci::str_is_equal(typeName, "angle"))
+  {
+    return parseAnglePropertyDefinition(status, std::move(propertyKey));
+  }
   if (kdl::ci::str_is_equal(typeName, "choices"))
   {
     return parseChoicesPropertyDefinition(status, std::move(propertyKey));
@@ -642,9 +645,17 @@ mdl::PropertyDefinition FgdParser::parsePropertyDefinition(ParserStatus& status)
   {
     return parseFlagsPropertyDefinition(std::move(propertyKey));
   }
+  if (kdl::ci::str_is_equal(typeName, "vector"))
+  {
+    return parseVectorPropertyDefinition(status, std::move(propertyKey));
+  }
   if (kdl::ci::str_is_equal(typeName, "origin"))
   {
     return parseOriginPropertyDefinition(status, std::move(propertyKey));
+  }
+  if (kdl::ci::str_is_equal(typeName, "target_name_or_class"))
+  {
+    return parseTargetNameOrClassPropertyDefinition(status, std::move(propertyKey));
   }
   if (kdl::ci::str_is_equal(typeName, "color1"))
   {
@@ -659,7 +670,7 @@ mdl::PropertyDefinition FgdParser::parsePropertyDefinition(ParserStatus& status)
 
   status.debug(
     location,
-    fmt::format(
+    std::format(
       "Unknown property definition type '{}' for property '{}'", typeName, propertyKey));
   return parseUnknownPropertyDefinition(status, std::move(propertyKey));
 }
@@ -734,6 +745,21 @@ mdl::PropertyDefinition FgdParser::parseFloatPropertyDefinition(
   return {
     std::move(propertyKey),
     mdl::PropertyValueTypes::Float{std::move(defaultValue)},
+    std::move(shortDescription),
+    std::move(longDescription),
+    readOnly};
+}
+
+mdl::PropertyDefinition FgdParser::parseAnglePropertyDefinition(
+  ParserStatus& status, std::string propertyKey)
+{
+  const auto readOnly = parseReadOnlyFlag(status);
+  auto shortDescription = parsePropertyDescription();
+  auto defaultValue = parseDefaultFloatValue(status);
+  auto longDescription = parsePropertyDescription();
+  return {
+    std::move(propertyKey),
+    mdl::PropertyValueTypes::Angle{std::move(defaultValue)},
     std::move(shortDescription),
     std::move(longDescription),
     readOnly};
@@ -827,6 +853,21 @@ mdl::PropertyDefinition FgdParser::parseFlagsPropertyDefinition(std::string prop
     false};
 }
 
+mdl::PropertyDefinition FgdParser::parseVectorPropertyDefinition(
+  ParserStatus& status, std::string propertyKey)
+{
+  const auto readOnly = parseReadOnlyFlag(status);
+  auto shortDescription = parsePropertyDescription();
+  auto defaultValue = parseDefaultStringValue(status);
+  auto longDescription = parsePropertyDescription();
+  return {
+    std::move(propertyKey),
+    mdl::PropertyValueTypes::Vector{std::move(defaultValue)},
+    std::move(shortDescription),
+    std::move(longDescription),
+    readOnly};
+}
+
 mdl::PropertyDefinition FgdParser::parseOriginPropertyDefinition(
   ParserStatus& status, std::string propertyKey)
 {
@@ -837,6 +878,21 @@ mdl::PropertyDefinition FgdParser::parseOriginPropertyDefinition(
   return {
     std::move(propertyKey),
     mdl::PropertyValueTypes::Origin{std::move(defaultValue)},
+    std::move(shortDescription),
+    std::move(longDescription),
+    readOnly};
+}
+
+mdl::PropertyDefinition FgdParser::parseTargetNameOrClassPropertyDefinition(
+  ParserStatus& status, std::string propertyKey)
+{
+  const auto readOnly = parseReadOnlyFlag(status);
+  auto shortDescription = parsePropertyDescription();
+  auto defaultValue = parseDefaultStringValue(status);
+  auto longDescription = parsePropertyDescription();
+  return {
+    std::move(propertyKey),
+    mdl::PropertyValueTypes::TargetNameOrClass{std::move(defaultValue)},
     std::move(shortDescription),
     std::move(longDescription),
     readOnly};
@@ -998,7 +1054,7 @@ std::optional<float> FgdParser::parseDefaultFloatValue(ParserStatus& status)
       if (token.type() != FgdToken::String)
       {
         status.warn(
-          token.location(), fmt::format("Unquoted float default value {}", token.data()));
+          token.location(), std::format("Unquoted float default value {}", token.data()));
       }
       return token.toFloat<float>();
     }
@@ -1142,20 +1198,24 @@ std::vector<EntityDefinitionClassInfo> FgdParser::handleInclude(
       m_tokenizer.restoreStateAndSource(snapshot);
     }};
 
-  status.debug(m_tokenizer.location(), fmt::format("Parsing included file '{}'", path));
+  status.debug(
+    m_tokenizer.location(),
+    std::format("Parsing included file '{}'", path.string()));
 
   const auto filePath = currentRoot() / path;
   return m_fs->openFile(filePath) | kdl::transform([&](auto file) {
            status.debug(
              m_tokenizer.location(),
-             fmt::format("Resolved '{}' to '{}'", path, filePath));
+             std::format("Resolved '{}' to '{}'", path.string(), filePath.string()));
 
            if (isRecursiveInclude(filePath))
            {
              status.error(
                m_tokenizer.location(),
-               fmt::format(
-                 "Skipping recursively included file: {} ({})", path, filePath));
+               std::format(
+                 "Skipping recursively included file: {} ({})",
+                 path.string(),
+                 filePath.string()));
              return std::vector<EntityDefinitionClassInfo>{};
            }
 
@@ -1167,7 +1227,7 @@ std::vector<EntityDefinitionClassInfo> FgdParser::handleInclude(
          | kdl::transform_error([&](auto e) {
              status.error(
                m_tokenizer.location(),
-               fmt::format("Failed to parse included file: {}", e.msg));
+               std::format("Failed to parse included file: {}", e.msg));
              return std::vector<EntityDefinitionClassInfo>{};
            })
          | kdl::value();

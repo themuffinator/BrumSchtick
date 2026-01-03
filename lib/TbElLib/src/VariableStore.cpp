@@ -24,7 +24,7 @@
 
 #include "kd/ranges/to.h"
 
-#include <fmt/format.h>
+#include <format>
 
 #include <algorithm>
 #include <ostream>

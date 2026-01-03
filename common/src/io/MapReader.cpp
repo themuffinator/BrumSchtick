@@ -44,8 +44,7 @@
 
 #include "vm/mat_io.h"
 
-#include <fmt/format.h>
-#include <fmt/ostream.h>
+#include <format>
 
 #include <optional>
 #include <ostream>
@@ -153,7 +152,7 @@ void MapReader::onStandardBrushFace(
         onBrushFace(std::move(face), status);
       })
     | kdl::transform_error(
-      [&](auto e) { status.error(location, fmt::format("Skipping face: {}", e.msg)); });
+      [&](auto e) { status.error(location, std::format("Skipping face: {}", e.msg)); });
 }
 
 void MapReader::onValveBrushFace(
@@ -174,7 +173,7 @@ void MapReader::onValveBrushFace(
         onBrushFace(std::move(face), status);
       })
     | kdl::transform_error(
-      [&](auto e) { status.error(location, fmt::format("Skipping face: {}", e.msg)); });
+      [&](auto e) { status.error(location, std::format("Skipping face: {}", e.msg)); });
 }
 
 void MapReader::onPatch(
@@ -184,14 +183,22 @@ void MapReader::onPatch(
   const size_t rowCount,
   const size_t columnCount,
   std::vector<vm::vec<double, 5>> controlPoints,
+  std::vector<vm::vec3d> controlNormals,
   std::string materialName,
+  const int surfaceContents,
+  const int surfaceFlags,
+  const float surfaceValue,
   ParserStatus&)
 {
   m_objectInfos.emplace_back(PatchInfo{
     rowCount,
     columnCount,
     std::move(controlPoints),
+    std::move(controlNormals),
     std::move(materialName),
+    surfaceContents,
+    surfaceFlags,
+    surfaceValue,
     startLocation,
     endLocation,
     m_currentEntityInfo});
@@ -402,7 +409,7 @@ CreateNodeResult createLayerNode(const MapReader::EntityInfo& entityInfo)
   {
     return NodeError{
       entityInfo.startLocation,
-      fmt::format("Skipping layer entity: '{}' is not a valid id", idStr)};
+      std::format("Skipping layer entity: '{}' is not a valid id", idStr)};
   }
 
   auto layer = mdl::Layer{name};
@@ -474,7 +481,7 @@ CreateNodeResult createGroupNode(const MapReader::EntityInfo& entityInfo)
   {
     return NodeError{
       entityInfo.startLocation,
-      fmt::format("Skipping group entity: '{}' is not a valid id", idStr)};
+      std::format("Skipping group entity: '{}' is not a valid id", idStr)};
   }
 
   auto transformation = std::optional<vm::mat4x4d>{};
@@ -617,7 +624,11 @@ CreateNodeResult createPatchNode(MapReader::PatchInfo patchInfo)
     patchInfo.rowCount,
     patchInfo.columnCount,
     std::move(patchInfo.controlPoints),
-    std::move(patchInfo.materialName)});
+    std::move(patchInfo.materialName),
+    patchInfo.surfaceContents,
+    patchInfo.surfaceFlags,
+    patchInfo.surfaceValue,
+    std::move(patchInfo.controlNormals)});
   const auto [startLine, lineCount] = getFilePosition(patchInfo);
   patchNode->setFilePosition(startLine, lineCount);
 
@@ -698,7 +709,7 @@ void validateDuplicateLayersAndGroups(
           {
             status.error(
               FileLocation{layerNode->lineNumber()},
-              fmt::format("Skipping duplicate layer with ID '{}'", persistentId));
+              std::format("Skipping duplicate layer with ID '{}'", persistentId));
             nodeInfo.reset();
           }
         },
@@ -708,7 +719,7 @@ void validateDuplicateLayersAndGroups(
           {
             status.error(
               FileLocation{groupNode->lineNumber()},
-              fmt::format("Skipping duplicate group with ID '{}'", persistentId));
+              std::format("Skipping duplicate group with ID '{}'", persistentId));
             nodeInfo.reset();
           }
         },
@@ -746,16 +757,16 @@ void logValidationIssues(
             [&](const MalformedTransformationIssue& m) {
               status.warn(
                 FileLocation{nodeInfo->node->lineNumber()},
-                fmt::format(
+                std::format(
                   "Not linking group: malformed transformation '{}'",
                   m.transformationStr));
             },
             [&](const InvalidContainerId& c) {
               status.warn(
                 FileLocation{nodeInfo->node->lineNumber()},
-                fmt::format(
+                std::format(
                   "Adding object to default layer: Invalid {} ID '{}'",
-                  fmt::streamed(c.type),
+                  kdl::str_to_string(c.type),
                   c.idStr));
             }),
           issue);
@@ -793,7 +804,7 @@ void validateRecursiveLinkedGroups(
           {
             status.error(
               FileLocation{groupNode->lineNumber()},
-              fmt::format(
+              std::format(
                 "Unlinking recursive linked group with ID '{}'",
                 *groupNode->persistentId()));
 
@@ -887,7 +898,7 @@ std::unordered_map<mdl::Node*, mdl::Node*> buildNodeToParentMap(
               {
                 status.warn(
                   FileLocation{nodeInfo->node->lineNumber()},
-                  fmt::format(
+                  std::format(
                     "Entity references missing layer '{}', adding to default layer",
                     containerInfo.id));
               }
@@ -895,7 +906,7 @@ std::unordered_map<mdl::Node*, mdl::Node*> buildNodeToParentMap(
               {
                 status.warn(
                   FileLocation{nodeInfo->node->lineNumber()},
-                  fmt::format(
+                  std::format(
                     "Entity references missing group '{}', adding to default layer",
                     containerInfo.id));
               }

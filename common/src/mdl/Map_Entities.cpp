@@ -133,7 +133,7 @@ EntityNode* createBrushEntity(Map& map, const EntityDefinition& definition)
 {
   contract_pre(getType(definition) == EntityDefinitionType::Brush);
 
-  const auto brushes = map.selection().brushes;
+  const auto brushes = map.selection().allBrushes();
   contract_assert(!brushes.empty());
 
   // if all brushes belong to the same entity, and that entity is not worldspawn, copy
@@ -203,6 +203,29 @@ bool setEntityProperty(
       [](BezierPatch&) { return true; }));
 }
 
+bool setEntityProperty(
+  Map& map,
+  const std::vector<EntityNodeBase*>& entityNodes,
+  const std::string& key,
+  const std::string& value,
+  const bool defaultToProtected)
+{
+  return applyAndSwap(
+    map,
+    "Set Property",
+    entityNodes,
+    collectContainingGroups(kdl::vec_static_cast<Node*>(entityNodes)),
+    kdl::overload(
+      [](Layer&) { return true; },
+      [](Group&) { return true; },
+      [&](Entity& entity) {
+        entity.addOrUpdateProperty(key, value, defaultToProtected);
+        return true;
+      },
+      [](Brush&) { return true; },
+      [](BezierPatch&) { return true; }));
+}
+
 bool renameEntityProperty(Map& map, const std::string& oldKey, const std::string& newKey)
 {
   const auto entityNodes = map.selection().allEntities();
@@ -237,6 +260,71 @@ bool removeEntityProperty(Map& map, const std::string& key)
         entity.removeProperty(key);
         return true;
       },
+      [](Brush&) { return true; },
+      [](BezierPatch&) { return true; }));
+}
+
+bool updateEntityPropertyValueAtIndex(
+  Map& map, const size_t propertyIndex, const std::string& value)
+{
+  const auto entityNodes = map.selection().allEntities();
+  if (entityNodes.size() != 1u)
+  {
+    return false;
+  }
+
+  return applyAndSwap(
+    map,
+    "Set Property",
+    entityNodes,
+    collectContainingGroups(kdl::vec_static_cast<Node*>(entityNodes)),
+    kdl::overload(
+      [](Layer&) { return true; },
+      [](Group&) { return true; },
+      [&](Entity& entity) { return entity.updatePropertyValue(propertyIndex, value); },
+      [](Brush&) { return true; },
+      [](BezierPatch&) { return true; }));
+}
+
+bool renameEntityPropertyAtIndex(
+  Map& map, const size_t propertyIndex, const std::string& newKey)
+{
+  const auto entityNodes = map.selection().allEntities();
+  if (entityNodes.size() != 1u)
+  {
+    return false;
+  }
+
+  return applyAndSwap(
+    map,
+    "Rename Property",
+    entityNodes,
+    collectContainingGroups(kdl::vec_static_cast<Node*>(entityNodes)),
+    kdl::overload(
+      [](Layer&) { return true; },
+      [](Group&) { return true; },
+      [&](Entity& entity) { return entity.updatePropertyKey(propertyIndex, newKey); },
+      [](Brush&) { return true; },
+      [](BezierPatch&) { return true; }));
+}
+
+bool removeEntityPropertyAtIndex(Map& map, const size_t propertyIndex)
+{
+  const auto entityNodes = map.selection().allEntities();
+  if (entityNodes.size() != 1u)
+  {
+    return false;
+  }
+
+  return applyAndSwap(
+    map,
+    "Remove Property",
+    entityNodes,
+    collectContainingGroups(kdl::vec_static_cast<Node*>(entityNodes)),
+    kdl::overload(
+      [](Layer&) { return true; },
+      [](Group&) { return true; },
+      [&](Entity& entity) { return entity.removePropertyAt(propertyIndex); },
       [](Brush&) { return true; },
       [](BezierPatch&) { return true; }));
 }

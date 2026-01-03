@@ -34,8 +34,7 @@
 #include "vm/scalar.h"
 #include "vm/vec_io.h" // IWYU pragma: keep
 
-#include <fmt/format.h>
-#include <fmt/ostream.h>
+#include <format>
 
 #include <tuple>
 

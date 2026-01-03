@@ -22,9 +22,6 @@
 #include "QtPrettyPrinters.h" // IWYU pragma: keep
 #include "io/PathQt.h"
 
-#include <fmt/format.h>
-#include <fmt/std.h>
-
 #include <filesystem>
 #include <string>
 
@@ -61,7 +58,7 @@ TEST_CASE("pathAsQPath")
   #endif
   // clang-format on
 
-  CAPTURE(fmt::format("{}", fsPath));
+  CAPTURE(pathAsQString(fsPath).toUtf8().toStdString());
 
   CHECK(pathAsQPath(fsPath) == qPath);
 }
@@ -91,7 +88,7 @@ TEST_CASE("pathAsQString")
   #endif
   // clang-format on
 
-  CAPTURE(fmt::format("{}", fsPath));
+  CAPTURE(pathAsQString(fsPath).toUtf8().toStdString());
 
   CHECK(pathAsQString(fsPath) == QString::fromStdString(qPath));
 }
@@ -121,7 +118,7 @@ TEST_CASE("pathAsGenericQString")
   #endif
   // clang-format on
 
-  CAPTURE(fmt::format("{}", fsPath));
+  CAPTURE(pathAsQString(fsPath).toUtf8().toStdString());
 
   CHECK(pathAsGenericQString(fsPath) == qPath);
 }
@@ -158,10 +155,12 @@ TEST_CASE("pathFromQString")
 
   // We cannot just use a CHECK macro here because it triggers Catch2's builtin string
   // conversion for std::filesystem::path, which throws on windows if the path contains
-  // wide characters. Instead, we use fmt::format, which handles everything correctly.
+  // wide characters. Instead, we capture UTF-8 strings via pathAsQString.
   if (pathFromQString(qPath) != fsPath)
   {
-    CAPTURE(fmt::format("{}", pathFromQString(qPath)), fmt::format("{}", fsPath));
+    const auto actual = pathAsQString(pathFromQString(qPath)).toUtf8().toStdString();
+    const auto expected = pathAsQString(fsPath).toUtf8().toStdString();
+    CAPTURE(actual, expected);
     FAIL();
   }
 }

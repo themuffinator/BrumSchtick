@@ -50,7 +50,6 @@
 #include "kd/overload.h"
 #include "kd/vector_set.h"
 
-#include <fmt/ostream.h>
 
 namespace tb::ui
 {

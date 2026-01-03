@@ -23,7 +23,6 @@
 #include <QByteArray>
 #include <QDebug>
 #include <QIcon>
-#include <QMessageBox>
 #include <QString>
 #include <QTimer>
 
@@ -51,7 +50,7 @@
 #include "kd/reflection_impl.h"
 #include "kd/string_utils.h"
 
-#include <fmt/format.h>
+#include <format>
 
 #include <algorithm>
 #include <iterator>
@@ -166,7 +165,7 @@ LinkType getLinkType(const mdl::Entity& entity, const std::string& key)
                                                                : LinkType::None;
 }
 
-PropertyRow makeRow(std::string key, const mdl::EntityNodeBase& entityNode)
+PropertyRow makeRowForKey(std::string key, const mdl::EntityNodeBase& entityNode)
 {
   auto row = PropertyRow{};
   row.key = std::move(key);
@@ -183,6 +182,29 @@ PropertyRow makeRow(std::string key, const mdl::EntityNodeBase& entityNode)
   {
     row.value = mdl::PropertyDefinition::defaultValue(*definition).value_or("");
   }
+
+  row.keyMutable = isPropertyKeyMutable(entity, row.key);
+  row.valueMutable = isPropertyValueMutable(entity, row.key);
+  row.protection = getPropertyProtection(entityNode, row.key);
+  row.linkType = getLinkType(entity, row.key);
+  row.tooltip = definition ? definition->shortDescription : "No description found";
+
+  return row;
+}
+
+PropertyRow makeRowForProperty(
+  const mdl::EntityProperty& property,
+  const mdl::EntityNodeBase& entityNode,
+  const size_t propertyIndex)
+{
+  auto row = PropertyRow{};
+  row.key = property.key();
+  row.value = property.value();
+  row.valueState = ValueState::SingleValue;
+  row.propertyIndex = propertyIndex;
+
+  const auto& entity = entityNode.entity();
+  const auto* definition = mdl::propertyDefinition(&entityNode, row.key);
 
   row.keyMutable = isPropertyKeyMutable(entity, row.key);
   row.valueMutable = isPropertyValueMutable(entity, row.key);
@@ -261,7 +283,7 @@ PropertyRow makeRow(std::string key, const std::vector<mdl::EntityNodeBase*>& en
   return std::accumulate(
     std::next(entityNodes.begin()),
     entityNodes.end(),
-    makeRow(std::move(key), *entityNodes.front()),
+    makeRowForKey(std::move(key), *entityNodes.front()),
     [](auto lhs, const auto* rhs) { return mergeRows(std::move(lhs), *rhs); });
 }
 
@@ -304,26 +326,28 @@ std::vector<std::string> allKeys(
   return result.release_data();
 }
 
-auto makeKeyToPropertyRowMap(const std::vector<PropertyRow>& rows)
+auto makeIdToPropertyRowMap(const std::vector<PropertyRow>& rows)
 {
   return rows
-         | std::views::transform([](const auto& row) { return std::pair{row.key, row}; })
+         | std::views::transform([](const auto& row) {
+             return std::pair{PropertyRowId{row.key, row.propertyIndex}, row};
+           })
          | kdl::ranges::to<std::map>();
 }
 
-struct KeyDiff
+struct PropertyRowDiff
 {
-  std::vector<std::string> removed;
-  std::vector<std::string> added;
-  std::vector<std::string> updated;
-  std::vector<std::string> unchanged;
+  std::vector<PropertyRowId> removed;
+  std::vector<PropertyRowId> added;
+  std::vector<PropertyRowId> updated;
+  std::vector<PropertyRowId> unchanged;
 };
 
-KeyDiff comparePropertyMaps(
-  const std::map<std::string, PropertyRow>& oldRows,
-  const std::map<std::string, PropertyRow>& newRows)
+PropertyRowDiff comparePropertyMaps(
+  const std::map<PropertyRowId, PropertyRow>& oldRows,
+  const std::map<PropertyRowId, PropertyRow>& newRows)
 {
-  auto result = KeyDiff{};
+  auto result = PropertyRowDiff{};
   result.removed.reserve(oldRows.size());
   result.added.reserve(newRows.size());
   result.updated.reserve(newRows.size());
@@ -360,15 +384,65 @@ KeyDiff comparePropertyMaps(
   return result;
 }
 
-std::map<std::string, PropertyRow> rowsForEntityNodes(
+std::vector<PropertyRow> rowsForSingleEntity(
+  const mdl::EntityNodeBase& entityNode,
+  const bool showDefaultRows,
+  const bool showProtectedProperties)
+{
+  auto result = std::vector<PropertyRow>{};
+  const auto& entity = entityNode.entity();
+
+  auto knownKeys = kdl::vector_set<std::string>{};
+  result.reserve(entity.properties().size());
+  for (size_t index = 0; index < entity.properties().size(); ++index)
+  {
+    const auto& property = entity.properties()[index];
+    result.push_back(makeRowForProperty(property, entityNode, index));
+    knownKeys.insert(property.key());
+  }
+
+  if (showDefaultRows)
+  {
+    if (const auto* entityDefinition = entity.definition())
+    {
+      for (const auto& propertyDefinition : entityDefinition->propertyDefinitions)
+      {
+        if (!knownKeys.count(propertyDefinition.key))
+        {
+          result.push_back(makeRowForKey(propertyDefinition.key, entityNode));
+        }
+      }
+    }
+  }
+
+  if (showProtectedProperties)
+  {
+    for (const auto& protectedKey : entity.protectedProperties())
+    {
+      if (!knownKeys.count(protectedKey))
+      {
+        result.push_back(makeRowForKey(protectedKey, entityNode));
+      }
+    }
+  }
+
+  return result;
+}
+
+std::vector<PropertyRow> rowsForEntityNodes(
   const std::vector<mdl::EntityNodeBase*>& entityNodes,
   const bool showDefaultRows,
   const bool showProtectedProperties)
 {
-  auto result = std::map<std::string, PropertyRow>{};
+  if (entityNodes.size() == 1u)
+  {
+    return rowsForSingleEntity(*entityNodes.front(), showDefaultRows, showProtectedProperties);
+  }
+
+  auto result = std::vector<PropertyRow>{};
   for (const auto& key : allKeys(entityNodes, showDefaultRows, showProtectedProperties))
   {
-    result[key] = makeRow(key, entityNodes);
+    result.push_back(makeRow(key, entityNodes));
   }
   return result;
 }
@@ -420,7 +494,7 @@ std::vector<std::string> getAllValuesForPropertyKeys(
   for (const auto& key : propertyKeys)
   {
     for (const auto* entityNode :
-         map.findNodes<mdl::EntityNodeBase>(fmt::format("{}%*", key)))
+         map.findNodes<mdl::EntityNodeBase>(std::format("{}%*", key)))
     {
       const auto values =
         entityNode->entity().numberedProperties(key)
@@ -551,14 +625,23 @@ std::ostream& operator<<(std::ostream& lhs, const PropertyProtection& rhs)
   }
 }
 
+bool operator<(const PropertyRowId& lhs, const PropertyRowId& rhs)
+{
+  if (lhs.key != rhs.key)
+  {
+    return lhs.key < rhs.key;
+  }
+  return lhs.propertyIndex < rhs.propertyIndex;
+}
+
 std::string newPropertyKeyForEntityNodes(const std::vector<mdl::EntityNodeBase*>& nodes)
 {
-  const auto rows = rowsForEntityNodes(nodes, true, false);
+  const auto existingKeys = kdl::wrap_set(allKeys(nodes, true, false));
 
   for (int i = 1;; ++i)
   {
     const auto newKey = kdl::str_to_string("property ", i);
-    if (rows.find(newKey) == rows.end())
+    if (existingKeys.count(newKey) == 0)
     {
       return newKey;
     }
@@ -616,6 +699,25 @@ int EntityPropertyModel::rowIndexForPropertyKey(const std::string& propertyKey) 
   return it != m_rows.end() ? static_cast<int>(std::distance(m_rows.begin(), it)) : -1;
 }
 
+PropertyRowId EntityPropertyModel::rowId(const int row) const
+{
+  if (row < 0 || row >= static_cast<int>(m_rows.size()))
+  {
+    return {};
+  }
+
+  const auto& rowData = m_rows[static_cast<size_t>(row)];
+  return {rowData.key, rowData.propertyIndex};
+}
+
+int EntityPropertyModel::rowIndexForPropertyId(const PropertyRowId& rowId) const
+{
+  const auto it = std::ranges::find_if(m_rows, [&](const auto& row) {
+    return row.key == rowId.key && row.propertyIndex == rowId.propertyIndex;
+  });
+  return it != m_rows.end() ? static_cast<int>(std::distance(m_rows.begin(), it)) : -1;
+}
+
 QStringList EntityPropertyModel::getCompletions(const QModelIndex& index) const
 {
   if (index.row() < 0 || index.row() >= static_cast<int>(m_rows.size()))
@@ -633,22 +735,42 @@ QStringList EntityPropertyModel::getCompletions(const QModelIndex& index) const
   }
   else if (index.column() == ColumnValue)
   {
-    switch (row.linkType)
+    if (
+      const auto* propertyDef =
+        mdl::selectPropertyDefinition(row.key, map.selection().allEntities());
+      propertyDef
+      && std::holds_alternative<mdl::PropertyValueTypes::TargetNameOrClass>(
+        propertyDef->valueType))
     {
-    case LinkType::Source:
-      result =
+      auto values = kdl::vector_set<std::string>{};
+      const auto targetNames =
         getAllValuesForPropertyValueTypes<mdl::PropertyValueTypes::LinkTarget>(map);
-      break;
-    case LinkType::Target:
-      result =
-        getAllValuesForPropertyValueTypes<mdl::PropertyValueTypes::LinkSource>(map);
-      break;
-    case LinkType::None:
-      if (row.key == mdl::EntityPropertyKeys::Classname)
+      values.insert(targetNames.begin(), targetNames.end());
+
+      const auto classNames = getAllClassnames(map);
+      values.insert(classNames.begin(), classNames.end());
+
+      result = values.release_data();
+    }
+    else
+    {
+      switch (row.linkType)
       {
-        result = getAllClassnames(map);
+      case LinkType::Source:
+        result =
+          getAllValuesForPropertyValueTypes<mdl::PropertyValueTypes::LinkTarget>(map);
+        break;
+      case LinkType::Target:
+        result =
+          getAllValuesForPropertyValueTypes<mdl::PropertyValueTypes::LinkSource>(map);
+        break;
+      case LinkType::None:
+        if (row.key == mdl::EntityPropertyKeys::Classname)
+        {
+          result = getAllClassnames(map);
+        }
+        break;
       }
-      break;
     }
   }
 
@@ -672,9 +794,8 @@ void EntityPropertyModel::updateFromMap()
   MODEL_LOG(qDebug() << "updateFromMapDocument");
 
   const auto entityNodes = m_document.map().selection().allEntities();
-  const auto rowsMap = rowsForEntityNodes(entityNodes, m_showDefaultRows, true);
-
-  setRows(rowsMap);
+  auto rows = rowsForEntityNodes(entityNodes, m_showDefaultRows, true);
+  setRows(std::move(rows));
   m_shouldShowProtectedProperties = computeShouldShowProtectedProperties(entityNodes);
 }
 
@@ -986,9 +1107,10 @@ std::vector<std::string> EntityPropertyModel::propertyKeys(
   return result;
 }
 
-void EntityPropertyModel::setRows(const std::map<std::string, PropertyRow>& newRowMap)
+void EntityPropertyModel::setRows(std::vector<PropertyRow> newRows)
 {
-  const auto oldRowMap = makeKeyToPropertyRowMap(m_rows);
+  const auto oldRowMap = makeIdToPropertyRowMap(m_rows);
+  const auto newRowMap = makeIdToPropertyRowMap(newRows);
 
   if (newRowMap == oldRowMap)
   {
@@ -1098,7 +1220,7 @@ bool EntityPropertyModel::hasRowWithPropertyKey(const std::string& propertyKey) 
 bool EntityPropertyModel::renameProperty(
   const size_t rowIndex,
   const std::string& newKey,
-  const std::vector<mdl::EntityNodeBase*>& /* nodes */)
+  const std::vector<mdl::EntityNodeBase*>& nodes)
 {
   contract_pre(rowIndex < m_rows.size());
 
@@ -1114,28 +1236,9 @@ bool EntityPropertyModel::renameProperty(
   contract_assert(row.keyMutable);
 
   auto& map = m_document.map();
-  if (hasRowWithPropertyKey(newKey))
+  if (row.propertyIndex && nodes.size() == 1u)
   {
-    const auto& rowToOverwrite =
-      m_rows.at(static_cast<size_t>(rowIndexForPropertyKey(newKey)));
-    if (!rowToOverwrite.valueMutable)
-    {
-      // Prevent changing an immutable value via a rename
-      // TODO: would this be better checked inside MapDocument::renameProperty?
-      return false;
-    }
-
-    auto msgBox = QMessageBox{};
-    msgBox.setWindowTitle(tr("Error"));
-    msgBox.setText(
-      tr("A property with key '%1' already exists.\n\n Do you wish to overwrite it?")
-        .arg(mapStringToUnicode(map.encoding(), newKey)));
-    msgBox.setIcon(QMessageBox::Critical);
-    msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
-    if (msgBox.exec() == QMessageBox::No)
-    {
-      return false;
-    }
+    return renameEntityPropertyAtIndex(map, *row.propertyIndex, newKey);
   }
 
   return renameEntityProperty(map, oldKey, newKey);
@@ -1149,7 +1252,28 @@ bool EntityPropertyModel::updateProperty(
   contract_pre(rowIndex < m_rows.size());
 
   auto hasChange = false;
-  const auto& key = m_rows.at(rowIndex).key;
+  const auto& row = m_rows.at(rowIndex);
+  const auto& key = row.key;
+  if (row.propertyIndex && nodes.size() == 1u)
+  {
+    const auto* property =
+      nodes.front()->entity().propertyAt(static_cast<size_t>(*row.propertyIndex));
+    if (!property)
+    {
+      return false;
+    }
+
+    // this should be guaranteed by the PropertyRow constructor
+    contract_assert(isPropertyValueMutable(nodes.front()->entity(), key));
+
+    if (property->value() == newValue)
+    {
+      return true;
+    }
+
+    return updateEntityPropertyValueAtIndex(m_document.map(), *row.propertyIndex, newValue);
+  }
+
   for (const auto* node : nodes)
   {
     if (const auto* oldValue = node->entity().property(key))
@@ -1200,7 +1324,27 @@ bool EntityPropertyModel::lessThan(const size_t rowIndexA, const size_t rowIndex
   }
 
   // 2. sort by name
-  return rowA.key < rowB.key;
+  if (rowA.key != rowB.key)
+  {
+    return rowA.key < rowB.key;
+  }
+
+  if (rowA.propertyIndex && rowB.propertyIndex)
+  {
+    return *rowA.propertyIndex < *rowB.propertyIndex;
+  }
+
+  if (rowA.propertyIndex && !rowB.propertyIndex)
+  {
+    return true;
+  }
+
+  if (!rowA.propertyIndex && rowB.propertyIndex)
+  {
+    return false;
+  }
+
+  return false;
 }
 
 } // namespace tb::ui

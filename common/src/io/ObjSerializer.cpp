@@ -29,7 +29,7 @@
 #include "kd/contracts.h"
 #include "kd/overload.h"
 
-#include <fmt/format.h>
+#include <format>
 
 #include <iostream>
 #include <utility>
@@ -159,7 +159,7 @@ static void writeVertices(std::ostream& str, const std::vector<vm::vec3d>& verti
   for (const auto& elem : vertices)
   {
     // no idea why I have to switch Y and Z
-    fmt::format_to(
+    std::format_to(
       std::ostreambuf_iterator<char>(str), "v {} {} {}\n", elem.x(), elem.z(), -elem.y());
   }
 }
@@ -171,7 +171,7 @@ static void writeUVCoords(std::ostream& str, const std::vector<vm::vec2f>& uvCoo
   {
     // multiplying Y by -1 needed to get the UV's to appear correct in Blender and UE4
     // (see: https://github.com/TrenchBroom/TrenchBroom/issues/2851 )
-    fmt::format_to(
+    std::format_to(
       std::ostreambuf_iterator<char>(str), "vt {} {}\n", elem.x(), -elem.y());
   }
 }
@@ -182,7 +182,7 @@ static void writeNormals(std::ostream& str, const std::vector<vm::vec3d>& normal
   for (const auto& elem : normals)
   {
     // no idea why I have to switch Y and Z
-    fmt::format_to(
+    std::format_to(
       std::ostreambuf_iterator<char>(str),
       "vn {} {} {}\n",
       elem.x(),

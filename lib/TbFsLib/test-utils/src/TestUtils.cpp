@@ -24,6 +24,7 @@
 
 #include "kd/result.h"
 
+#include <format>
 #include <string>
 
 namespace tb::fs
@@ -52,7 +53,7 @@ Result<std::string> readTextFile(const FileSystem& fs, const std::filesystem::pa
   }
   catch (const ReaderException& e)
   {
-    return Error{fmt::format("Failed to read file {}: {}", path, e.what())};
+    return Error{std::format("Failed to read file {}: {}", path.string(), e.what())};
   }
 }
 

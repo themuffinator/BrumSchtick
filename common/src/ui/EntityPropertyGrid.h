@@ -22,6 +22,7 @@
 #include <QWidget>
 
 #include "NotifierConnection.h"
+#include "ui/EntityPropertyModel.h"
 
 #include <string>
 #include <vector>
@@ -34,13 +35,12 @@ class QToolButton;
 
 namespace tb::ui
 {
-class EntityPropertyModel;
 class EntityPropertyTable;
 class MapDocument;
 
 struct PropertyGridSelection
 {
-  std::string propertyKey;
+  PropertyRowId rowId;
   int column;
 };
 

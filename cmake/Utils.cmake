@@ -14,6 +14,20 @@ macro(ADD_TARGET_PROPERTY TARGET PROPERTY VALUE)
     endif()
 endmacro(ADD_TARGET_PROPERTY)
 
+macro(GET_VERSION_FROM_FILE VERSION_FILE VERSION_TAG)
+    if(EXISTS "${VERSION_FILE}")
+        file(READ "${VERSION_FILE}" VERSION_CONTENTS)
+        string(STRIP "${VERSION_CONTENTS}" VERSION_CONTENTS)
+        if(VERSION_CONTENTS MATCHES "^v[0-9]+(\\.[0-9]+){1,2}(-RC[0-9]+)?$")
+            set(${VERSION_TAG} "${VERSION_CONTENTS}")
+        else()
+            message(
+              WARNING
+              "Version file \"${VERSION_FILE}\" does not match expected format (vYYYY.N or vX.Y.Z with optional -RCn)")
+        endif()
+    endif()
+endmacro(GET_VERSION_FROM_FILE)
+
 macro(GET_APP_VERSION_STR VERSION_YEAR VERSION_NUMBER VERSION_RC VERSION_STR)
   if(NOT "${${VERSION_RC}}" STREQUAL "")
     set(${VERSION_STR} "${${VERSION_YEAR}}.${${VERSION_NUMBER}}-RC${${VERSION_RC}}")
@@ -67,6 +81,19 @@ macro(GET_GIT_DESCRIBE GIT SOURCE_DIR GIT_DESCRIBE)
             set(${GIT_DESCRIBE} "unstable-$ENV{GITHUB_REF}-$ENV{GITHUB_SHA}")
             string(REPLACE "/" "_" ${GIT_DESCRIBE} ${${GIT_DESCRIBE}})
             message(STATUS "Using version description \"${${GIT_DESCRIBE}}\" from environment variables GITHUB_SHA and GITHUB_REF")
+        endif()
+    endif()
+
+    if(NOT ${GIT_DESCRIBE})
+        if(DEFINED APP_VERSION_FILE)
+            set(VERSION_FROM_FILE "")
+            get_version_from_file("${APP_VERSION_FILE}" VERSION_FROM_FILE)
+            if(VERSION_FROM_FILE)
+                set(${GIT_DESCRIBE} "${VERSION_FROM_FILE}")
+                message(
+                  STATUS
+                  "Using version description \"${${GIT_DESCRIBE}}\" from ${APP_VERSION_FILE}")
+            endif()
         endif()
     endif()
 

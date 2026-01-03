@@ -25,12 +25,16 @@
 
 #include "kd/vector_set.h"
 
+#include <string>
+#include <unordered_set>
+
 namespace tb
 {
 namespace mdl
 {
 class EditorContext;
 class GroupNode;
+class WorldNode;
 } // namespace mdl
 
 namespace render
@@ -57,6 +61,9 @@ private:
   Color m_boundsColor;
   bool m_showOccludedBounds = false;
   Color m_occludedBoundsColor;
+
+  mutable bool m_linkedGroupIdsValid = false;
+  mutable std::unordered_set<std::string> m_linkedGroupIds;
 
 public:
   explicit GroupRenderer(const mdl::EditorContext& editorContext);
@@ -106,11 +113,14 @@ private:
 
   void invalidateBounds();
   void validateBounds();
+  void invalidateLinkedGroupIds();
+  void validateLinkedGroupIds() const;
 
   bool shouldRenderGroup(const mdl::GroupNode& group) const;
 
   AttrString groupString(const mdl::GroupNode& group) const;
   Color groupColor(const mdl::GroupNode& group) const;
+  bool isLinkedGroup(const mdl::GroupNode& group) const;
 };
 
 } // namespace render

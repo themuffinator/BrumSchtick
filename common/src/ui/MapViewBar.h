@@ -19,10 +19,12 @@
 
 #pragma once
 
+#include "NotifierConnection.h"
 #include "ui/ContainerBar.h"
 
 class QStackedLayout;
 class QLabel;
+class QLineEdit;
 
 namespace tb::ui
 {
@@ -35,6 +37,8 @@ class MapViewBar : public ContainerBar
 private:
   QStackedLayout* m_toolBook = nullptr;
   ViewPopupEditor* m_viewEditor = nullptr;
+  QLineEdit* m_searchBox = nullptr;
+  NotifierConnection m_notifierConnection;
 
 public:
   explicit MapViewBar(MapDocument& document, QWidget* parent = nullptr);

@@ -259,8 +259,30 @@ void transferFaceAttributes(
   const std::vector<mdl::BrushFaceHandle>& targetFaceHandles,
   const mdl::BrushFaceHandle& faceToSelectAfter)
 {
+  using namespace mdl::HitFilters;
+
   const auto targetFaceHandlesForLinkedGroups =
     selectTargetFaceHandlesForLinkedGroups(sourceFaceHandle, targetFaceHandles);
+
+  std::optional<mdl::BrushFaceHandle> hotspotTarget;
+  std::optional<vm::vec3d> hotspotHitPoint;
+  if (
+    copyMaterialOnlyModifiersDown(inputState)
+    && targetFaceHandlesForLinkedGroups.size() == 1u)
+  {
+    const auto& hit = inputState.pickResult().first(type(mdl::BrushNode::BrushHitType));
+    if (const auto hitHandle = mdl::hitToFaceHandle(hit))
+    {
+      const auto& candidate = targetFaceHandlesForLinkedGroups.front();
+      if (
+        hitHandle->node() == candidate.node()
+        && hitHandle->faceIndex() == candidate.faceIndex())
+      {
+        hotspotTarget = candidate;
+        hotspotHitPoint = hit.hitPoint();
+      }
+    }
+  }
 
   const auto style = copyMaterialAttribsRotationModifiersDown(inputState)
                        ? mdl::WrapStyle::Rotation
@@ -289,6 +311,11 @@ void transferFaceAttributes(
         sourceFaceHandle.face().boundary(),
         style);
     }
+  }
+
+  if (hotspotTarget && hotspotHitPoint)
+  {
+    applyHotspotTexturing(map, *hotspotTarget, *hotspotHitPoint);
   }
 
   deselectAll(map);

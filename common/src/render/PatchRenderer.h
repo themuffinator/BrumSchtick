@@ -26,6 +26,8 @@
 
 #include "kd/vector_set.h"
 
+#include <cstdint>
+
 namespace tb
 {
 namespace mdl
@@ -38,6 +40,7 @@ namespace render
 {
 class RenderBatch;
 class RenderContext;
+class LightPreview;
 class VboManager;
 
 class PatchRenderer : public IndexedRenderable
@@ -46,6 +49,7 @@ private:
   const mdl::EditorContext& m_editorContext;
 
   bool m_valid = true;
+  uint64_t m_lightPreviewRevision = 0;
   kdl::vector_set<const mdl::PatchNode*> m_patchNodes;
 
   MaterialIndexArrayRenderer m_patchMeshRenderer;
@@ -118,7 +122,8 @@ public:
   void render(RenderContext& renderContext, RenderBatch& renderBatch);
 
 private:
-  void validate();
+  void ensureLightPreviewRevision(const RenderContext& renderContext);
+  void validate(const LightPreview* lightPreview);
 
 private: // implement IndexedRenderable interface
   void prepareVerticesAndIndices(VboManager& vboManager) override;

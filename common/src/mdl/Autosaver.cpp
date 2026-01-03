@@ -36,7 +36,7 @@
 #include "kd/string_utils.h"
 #include "kd/vector_utils.h"
 
-#include <fmt/format.h>
+#include <format>
 
 #include <algorithm>
 #include <ranges>
@@ -92,7 +92,7 @@ Result<std::vector<std::filesystem::path>> thinBackups(
 std::filesystem::path makeBackupName(
   const std::filesystem::path& mapBasename, const size_t index)
 {
-  return kdl::path_add_extension(mapBasename, fmt::format(".{}.map", index));
+  return kdl::path_add_extension(mapBasename, std::format(".{}.map", index));
 }
 
 Result<void> cleanBackups(

@@ -29,6 +29,7 @@
 #include "render/Camera.h"
 #include "render/GLVertexType.h"
 #include "render/IndexRangeMapBuilder.h"
+#include "render/LightPreview.h"
 #include "render/MaterialIndexArrayMapBuilder.h"
 #include "render/MaterialIndexArrayRenderer.h"
 #include "render/RenderBatch.h"
@@ -38,12 +39,8 @@
 #include "render/VertexArray.h"
 
 #include "kd/contracts.h"
-#include "kd/ranges/to.h"
-#include "kd/vector_utils.h"
 
 #include "vm/vec.h"
-
-#include <ranges>
 
 namespace tb::render
 {
@@ -131,11 +128,22 @@ void PatchRenderer::invalidatePatch(const mdl::PatchNode*)
   invalidate();
 }
 
+void PatchRenderer::ensureLightPreviewRevision(const RenderContext& renderContext)
+{
+  const auto revision = renderContext.lightPreviewRevision();
+  if (revision != m_lightPreviewRevision)
+  {
+    m_lightPreviewRevision = revision;
+    invalidate();
+  }
+}
+
 void PatchRenderer::render(RenderContext& renderContext, RenderBatch& renderBatch)
 {
+  ensureLightPreviewRevision(renderContext);
   if (!m_valid)
   {
-    validate();
+    validate(renderContext.lightPreview());
   }
 
   if (renderContext.showFaces())
@@ -155,7 +163,8 @@ void PatchRenderer::render(RenderContext& renderContext, RenderBatch& renderBatc
 
 static MaterialIndexArrayRenderer buildMeshRenderer(
   const std::vector<const mdl::PatchNode*>& patchNodes,
-  const mdl::EditorContext& editorContext)
+  const mdl::EditorContext& editorContext,
+  const LightPreview* lightPreview)
 {
   size_t vertexCount = 0u;
   auto indexArrayMapSize = MaterialIndexArrayMap::Size{};
@@ -173,7 +182,7 @@ static MaterialIndexArrayRenderer buildMeshRenderer(
     }
   }
 
-  using Vertex = GLVertexTypes::P3NT2::Vertex;
+  using Vertex = GLVertexTypes::P3NT2C4::Vertex;
   auto vertices = std::vector<Vertex>{};
   vertices.reserve(vertexCount);
 
@@ -187,13 +196,22 @@ static MaterialIndexArrayRenderer buildMeshRenderer(
       const auto vertexOffset = vertices.size();
 
       const auto& grid = patchNode->grid();
-      auto gridVertices =
-        grid.points | std::views::transform([](const auto& p) {
-          return Vertex{
-            vm::vec3f{p.position}, vm::vec3f{p.normal}, vm::vec2f{p.uvCoords}};
-        })
-        | kdl::ranges::to<std::vector>();
-      vertices = kdl::vec_concat(std::move(vertices), std::move(gridVertices));
+      for (const auto& point : grid.points)
+      {
+        const auto lightColor =
+          lightPreview
+            ? lightPreview->lightingAt(
+                vm::vec3f{point.position},
+                vm::vec3f{point.normal},
+                nullptr,
+                patchNode)
+            : vm::vec3f{1.0f, 1.0f, 1.0f};
+        vertices.emplace_back(
+          vm::vec3f{point.position},
+          vm::vec3f{point.normal},
+          vm::vec2f{point.uvCoords},
+          vm::vec4f{lightColor, 1.0f});
+      }
 
       const auto* material = patchNode->patch().material();
 
@@ -303,11 +321,12 @@ static DirectEdgeRenderer buildEdgeRenderer(
   return DirectEdgeRenderer{std::move(vertexArray), std::move(indexRangeMap)};
 }
 
-void PatchRenderer::validate()
+void PatchRenderer::validate(const LightPreview* lightPreview)
 {
   if (!m_valid)
   {
-    m_patchMeshRenderer = buildMeshRenderer(m_patchNodes.get_data(), m_editorContext);
+    m_patchMeshRenderer =
+      buildMeshRenderer(m_patchNodes.get_data(), m_editorContext, lightPreview);
     m_edgeRenderer = buildEdgeRenderer(m_patchNodes.get_data(), m_editorContext);
 
     m_valid = true;
@@ -396,6 +415,7 @@ void PatchRenderer::doRender(RenderContext& context)
   shader.set("CameraPosition", context.camera().position());
   shader.set("ShadeFaces", shadeFaces);
   shader.set("ShowFog", showFog);
+  shader.set("ApplyLightPreview", context.lightPreview() != nullptr);
   shader.set("Alpha", 1.0);
   shader.set("EnableMasked", false);
   shader.set("ShowSoftMapBounds", !context.softMapBounds().is_empty());

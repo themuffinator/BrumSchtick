@@ -31,7 +31,7 @@
 
 #include "kd/string_format.h"
 
-#include <fmt/format.h>
+#include <format>
 
 #include <string>
 #include <vector>
@@ -175,7 +175,7 @@ DefTokenizer::Token DefTokenizer::emitToken()
         return Token{DefToken::Word, c, e, offset(c), startLine, startColumn};
       }
       throw ParserException{
-        FileLocation{startLine, startColumn}, fmt::format("Unexpected character: {}", c)};
+        FileLocation{startLine, startColumn}, std::format("Unexpected character: {}", c)};
     }
   }
   return Token{DefToken::Eof, nullptr, nullptr, length(), line(), column()};
@@ -316,7 +316,7 @@ bool DefParser::parseProperty(ParserStatus& status, EntityDefinitionClassInfo& c
     {
       status.warn(
         location,
-        fmt::format(
+        std::format(
           "Skipping duplicate property definition: {}", propertyDefinition.key));
     }
   }

@@ -35,6 +35,7 @@
 #include "kd/overload.h"
 #include "kd/ranges/to.h"
 #include "kd/reflection_impl.h"
+#include "kd/vector_utils.h"
 
 #include <ranges>
 
@@ -103,7 +104,66 @@ std::vector<BrushNode*> computeAllBrushes(const Selection& selection)
       [&](PatchNode*) {}));
   }
 
-  return result;
+  return kdl::vec_sort_and_remove_duplicates(std::move(result));
+}
+
+std::vector<PatchNode*> computeAllPatches(const Selection& selection)
+{
+  auto result = std::vector<PatchNode*>{};
+
+  for (auto* node : selection.nodes)
+  {
+    node->accept(kdl::overload(
+      [](WorldNode*) {},
+      [](LayerNode*) {},
+      [](auto&& thisLambda, GroupNode* groupNode) {
+        groupNode->visitChildren(thisLambda);
+      },
+      [](auto&& thisLambda, EntityNode* entityNode) {
+        entityNode->visitChildren(thisLambda);
+      },
+      [](BrushNode*) {},
+      [&](PatchNode* patchNode) { result.push_back(patchNode); }));
+  }
+
+  return kdl::vec_sort_and_remove_duplicates(std::move(result));
+}
+
+struct ExpandedSelectionCounts
+{
+  size_t brushes = 0u;
+  size_t patches = 0u;
+  size_t others = 0u;
+};
+
+ExpandedSelectionCounts computeExpandedSelectionCounts(const std::vector<Node*>& nodes)
+{
+  auto counts = ExpandedSelectionCounts{};
+  auto visitor = kdl::overload(
+    [&](WorldNode*) { counts.others += 1u; },
+    [&](LayerNode*) { counts.others += 1u; },
+    [&](auto&& thisLambda, GroupNode* groupNode) {
+      groupNode->visitChildren(thisLambda);
+    },
+    [&](auto&& thisLambda, EntityNode* entityNode) {
+      if (entityNode->hasChildren())
+      {
+        entityNode->visitChildren(thisLambda);
+      }
+      else
+      {
+        counts.others += 1u;
+      }
+    },
+    [&](BrushNode*) { counts.brushes += 1u; },
+    [&](PatchNode*) { counts.patches += 1u; });
+
+  for (auto* node : nodes)
+  {
+    node->accept(visitor);
+  }
+
+  return counts;
 }
 
 std::vector<BrushFaceHandle> computeAllBrushFaces(
@@ -185,6 +245,7 @@ void Selection::invalidate()
 {
   m_cachedAllEntities = std::nullopt;
   m_cachedAllBrushes = std::nullopt;
+  m_cachedAllPatches = std::nullopt;
   m_cachedAllBrushFaces = std::nullopt;
 }
 
@@ -225,7 +286,13 @@ bool Selection::hasBrushes() const
 
 bool Selection::hasOnlyBrushes() const
 {
-  return hasNodes() && nodes.size() == brushes.size();
+  if (!hasNodes())
+  {
+    return false;
+  }
+
+  const auto counts = computeExpandedSelectionCounts(nodes);
+  return counts.brushes > 0u && counts.patches == 0u && counts.others == 0u;
 }
 
 bool Selection::hasPatches() const
@@ -235,7 +302,13 @@ bool Selection::hasPatches() const
 
 bool Selection::hasOnlyPatches() const
 {
-  return hasNodes() && nodes.size() == patches.size();
+  if (!hasNodes())
+  {
+    return false;
+  }
+
+  const auto counts = computeExpandedSelectionCounts(nodes);
+  return counts.patches > 0u && counts.brushes == 0u && counts.others == 0u;
 }
 
 bool Selection::hasBrushFaces() const
@@ -245,7 +318,7 @@ bool Selection::hasBrushFaces() const
 
 bool Selection::hasAnyBrushFaces() const
 {
-  return hasBrushFaces() || hasBrushes();
+  return hasBrushFaces() || !allBrushes().empty();
 }
 
 const std::vector<EntityNodeBase*>& Selection::allEntities() const
@@ -266,6 +339,16 @@ const std::vector<BrushNode*>& Selection::allBrushes() const
   }
 
   return *m_cachedAllBrushes;
+}
+
+const std::vector<PatchNode*>& Selection::allPatches() const
+{
+  if (!m_cachedAllPatches)
+  {
+    m_cachedAllPatches = computeAllPatches(*this);
+  }
+
+  return *m_cachedAllPatches;
 }
 
 const std::vector<BrushFaceHandle>& Selection::allBrushFaces() const

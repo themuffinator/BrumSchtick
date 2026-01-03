@@ -271,10 +271,10 @@ TEST_CASE("SelectionTool")
           tool.mouseDoubleClick(inputState);
           inputState.mouseUp(MouseButtons::Left);
 
-          THEN("All nodes are selected")
+          THEN("All brush faces are selected")
           {
-            CHECK(map.selection().brushFaces.empty());
-            CHECK(map.selection() == mdl::makeSelection(map, {brushNode, entityNode}));
+            CHECK(map.selection().brushFaces.size() == 6);
+            CHECK_FALSE(map.selection().hasNodes());
           }
         }
 

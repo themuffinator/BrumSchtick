@@ -26,6 +26,8 @@
 #include "fs/File.h"
 #include "fs/FileSystem.h"
 #include "fs/PathInfo.h"
+#include "fs/PathMatcher.h"
+#include "fs/TraversalMode.h"
 #include "fs/ReaderException.h"
 #include "io/MaterialUtils.h"
 #include "io/ReadFreeImageTexture.h"
@@ -50,8 +52,7 @@
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
 #include <assimp/types.h>
-#include <fmt/format.h>
-#include <fmt/std.h>
+#include <format>
 
 #include <optional>
 #include <ranges>
@@ -196,10 +197,107 @@ mdl::Texture loadFallbackOrDefaultTexture(const fs::FileSystem& fs, Logger& logg
   return loadDefaultTexture(fs, logger);
 }
 
-mdl::Texture loadTextureFromFileSystem(
-  const std::filesystem::path& path, const fs::FileSystem& fs, Logger& logger)
+bool isEmbeddedTextureReference(const std::filesystem::path& texturePath)
 {
-  return fs.openFile(path) | kdl::and_then([](auto file) {
+  const auto textureString = texturePath.generic_string();
+  return !textureString.empty() && textureString.front() == '*';
+}
+
+std::optional<std::filesystem::path> findTextureFileInDirectory(
+  const fs::FileSystem& fs,
+  const std::filesystem::path& directory,
+  const std::filesystem::path& texturePath)
+{
+  if (directory.empty() || fs.pathInfo(directory) != fs::PathInfo::Directory)
+  {
+    return std::nullopt;
+  }
+
+  const auto basename = texturePath.stem().string();
+  if (basename.empty())
+  {
+    return std::nullopt;
+  }
+
+  const auto candidates =
+    fs.find(
+      directory, fs::TraversalMode::Flat, fs::makeFilenamePathMatcher(basename + ".*"))
+    | kdl::value_or(std::vector<std::filesystem::path>{});
+
+  for (const auto& candidate : candidates)
+  {
+    if (isSupportedFreeImageExtension(candidate.extension()))
+    {
+      return candidate;
+    }
+  }
+
+  return std::nullopt;
+}
+
+std::optional<std::filesystem::path> resolveTextureFilePath(
+  const std::filesystem::path& texturePath,
+  const std::filesystem::path& modelPath,
+  const fs::FileSystem& fs)
+{
+  if (texturePath.empty())
+  {
+    return std::nullopt;
+  }
+
+  if (fs.pathInfo(texturePath) == fs::PathInfo::File)
+  {
+    return texturePath;
+  }
+
+  if (!texturePath.has_root_path())
+  {
+    const auto relativePath = modelPath.parent_path() / texturePath;
+    if (fs.pathInfo(relativePath) == fs::PathInfo::File)
+    {
+      return relativePath;
+    }
+  }
+
+  if (auto match = findTextureFileInDirectory(fs, texturePath.parent_path(), texturePath))
+  {
+    return match;
+  }
+
+  if (!texturePath.has_root_path())
+  {
+    const auto relativeDir = modelPath.parent_path() / texturePath.parent_path();
+    if (auto match = findTextureFileInDirectory(fs, relativeDir, texturePath))
+    {
+      return match;
+    }
+  }
+
+  if (auto match = findTextureFileInDirectory(fs, modelPath.parent_path(), texturePath))
+  {
+    return match;
+  }
+
+  return std::nullopt;
+}
+
+mdl::Texture loadTextureFromFileSystem(
+  const std::filesystem::path& texturePath,
+  const std::filesystem::path& modelPath,
+  const fs::FileSystem& fs,
+  Logger& logger)
+{
+  const auto resolvedPath = resolveTextureFilePath(texturePath, modelPath, fs);
+  if (!resolvedPath)
+  {
+    logger.error() << std::format(
+      "Could not resolve texture path '{}' for model '{}'",
+      texturePath.string(),
+      modelPath.string());
+    return loadFallbackOrDefaultTexture(fs, logger);
+  }
+
+  return fs.openFile(*resolvedPath) | kdl::and_then([](auto file) {
            auto reader = file->reader().buffer();
            return readFreeImageTexture(reader);
          })
@@ -223,11 +321,10 @@ mdl::Texture loadUncompressedEmbeddedTexture(
     std::move(buffer)};
 }
 
-mdl::Texture loadCompressedEmbeddedTexture(
-  const aiTexel& data, const size_t size, const fs::FileSystem& fs, Logger& logger)
+Result<mdl::Texture> loadCompressedEmbeddedTexture(
+  const aiTexel& data, const size_t size)
 {
-  return readFreeImageTextureFromMemory(reinterpret_cast<const uint8_t*>(&data), size)
-         | kdl::or_else(makeReadTextureErrorHandler(fs, logger)) | kdl::value();
+  return readFreeImageTextureFromMemory(reinterpret_cast<const uint8_t*>(&data), size);
 }
 
 mdl::Texture loadTexture(
@@ -240,8 +337,7 @@ mdl::Texture loadTexture(
   if (!texture)
   {
     // The texture is not embedded. Load it using the file system.
-    const auto filePath = modelPath.parent_path() / texturePath;
-    return loadTextureFromFileSystem(filePath, fs, logger);
+    return loadTextureFromFileSystem(texturePath, modelPath, fs, logger);
   }
 
   if (texture->mHeight != 0)
@@ -252,7 +348,24 @@ mdl::Texture loadTexture(
   }
 
   // The texture is embedded, but compressed. Let FreeImage load it from memory.
-  return loadCompressedEmbeddedTexture(*texture->pcData, texture->mWidth, fs, logger);
+  auto embeddedResult = loadCompressedEmbeddedTexture(*texture->pcData, texture->mWidth);
+  if (embeddedResult)
+  {
+    return std::move(embeddedResult).value();
+  }
+
+  logger.warn() << std::format(
+    "Failed to load embedded texture '{}' for model '{}': {}",
+    texturePath.string(),
+    modelPath.string(),
+    embeddedResult.error().msg);
+
+  if (isEmbeddedTextureReference(texturePath))
+  {
+    return loadFallbackOrDefaultTexture(fs, logger);
+  }
+
+  return loadTextureFromFileSystem(texturePath, modelPath, fs, logger);
 }
 
 std::vector<mdl::Texture> loadTexturesForMaterial(
@@ -282,10 +395,10 @@ std::vector<mdl::Texture> loadTexturesForMaterial(
   }
   else
   {
-    logger.error() << fmt::format(
+    logger.error() << std::format(
       "No diffuse textures found for material {} of model '{}', loading fallback texture",
       materialIndex,
-      modelPath);
+      modelPath.string());
 
     textures.push_back(loadFallbackOrDefaultTexture(fs, logger));
   }
@@ -563,7 +676,7 @@ Result<std::vector<mdl::EntityModelVertex>> computeMeshVertices(
         const auto vertexIndex = bone.mWeights[weightIndex].mVertexId;
         if (vertexIndex >= mesh.mNumVertices)
         {
-          return Error{fmt::format("Invalid vertex index {}", vertexIndex)};
+          return Error{std::format("Invalid vertex index {}", vertexIndex)};
         }
 
         weightsPerVertex[vertexIndex].push_back(
@@ -842,8 +955,10 @@ Result<mdl::EntityModelData> AssimpLoader::load(tb::Logger& logger)
     const auto* scene = importer.ReadFile(modelPath, assimpFlags);
     if (!scene)
     {
-      return Error{fmt::format(
-        "Assimp couldn't import model from '{}': {}", m_path, importer.GetErrorString())};
+      return Error{std::format(
+        "Assimp couldn't import model from '{}': {}",
+        m_path.string(),
+        importer.GetErrorString())};
     }
 
     // Create model data.

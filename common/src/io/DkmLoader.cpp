@@ -39,7 +39,7 @@
 
 #include "vm/vec.h"
 
-#include <fmt/format.h>
+#include <format>
 
 #include <string>
 
@@ -526,12 +526,12 @@ Result<mdl::EntityModelData> DkmLoader::load(Logger& logger)
 
     if (ident != DkmLayout::Ident)
     {
-      return Error{fmt::format("Unknown DKM model ident: {}", ident)};
+      return Error{std::format("Unknown DKM model ident: {}", ident)};
     }
 
     if (version != DkmLayout::Version1 && version != DkmLayout::Version2)
     {
-      return Error{fmt::format("Unknown DKM model version: {}", version)};
+      return Error{std::format("Unknown DKM model version: {}", version)};
     }
 
     /* const auto origin = */ reader.readVec<float, 3>();

@@ -27,7 +27,7 @@
 
 #include "kd/string_compare.h"
 
-#include <fmt/format.h>
+#include <format>
 
 #include <algorithm>
 #include <string>
@@ -101,7 +101,7 @@ LegacyModelDefinitionTokenizer::Token LegacyModelDefinitionTokenizer::emitToken(
       {
         return Token{MdlToken::Word, c, e, offset(c), startLine, startColumn};
       }
-      throw ParserException{startLocation, fmt::format("Unexpected character: {}", *c)};
+      throw ParserException{startLocation, std::format("Unexpected character: {}", *c)};
     }
     }
   }
@@ -283,7 +283,7 @@ el::ExpressionNode LegacyModelDefinitionParser::parseDynamicModelDefinition(
       else
       {
         const auto msg =
-          fmt::format("Expected 'skinKey' or 'frameKey', but found '{}'", token.data());
+          std::format("Expected 'skinKey' or 'frameKey', but found '{}'", token.data());
         status.error(token.location(), msg);
         throw ParserException{token.location(), msg};
       }
@@ -303,7 +303,7 @@ el::ExpressionNode LegacyModelDefinitionParser::parseNamedValue(const std::strin
   if (!kdl::ci::str_is_equal(name, token.data()))
   {
     throw ParserException{
-      location, fmt::format("Expected '{}', but got '{}'", name, token.data())};
+      location, std::format("Expected '{}', but got '{}'", name, token.data())};
   }
 
   token = m_tokenizer.nextToken(MdlToken::Equality);

@@ -44,6 +44,13 @@ struct LinkTarget
   kdl_reflect_decl_empty(LinkTarget);
 };
 
+struct TargetNameOrClass
+{
+  std::optional<std::string> defaultValue = std::nullopt;
+
+  kdl_reflect_decl(TargetNameOrClass, defaultValue);
+};
+
 struct String
 {
   std::optional<std::string> defaultValue = std::nullopt;
@@ -70,6 +77,13 @@ struct Float
   std::optional<float> defaultValue = std::nullopt;
 
   kdl_reflect_decl(Float, defaultValue);
+};
+
+struct Angle
+{
+  std::optional<float> defaultValue = std::nullopt;
+
+  kdl_reflect_decl(Angle, defaultValue);
 };
 
 struct ChoiceOption
@@ -106,6 +120,13 @@ struct Flags
   bool isDefault(int flagValue) const;
 
   kdl_reflect_decl(Flags, defaultValue, flags);
+};
+
+struct Vector
+{
+  std::optional<std::string> defaultValue = std::nullopt;
+
+  kdl_reflect_decl(Vector, defaultValue);
 };
 
 struct Origin
@@ -163,12 +184,15 @@ struct Unknown
 using PropertyValueType = std::variant<
   PropertyValueTypes::LinkTarget,
   PropertyValueTypes::LinkSource,
+  PropertyValueTypes::TargetNameOrClass,
   PropertyValueTypes::String,
   PropertyValueTypes::Boolean,
   PropertyValueTypes::Integer,
   PropertyValueTypes::Float,
+  PropertyValueTypes::Angle,
   PropertyValueTypes::Choice,
   PropertyValueTypes::Flags,
+  PropertyValueTypes::Vector,
   PropertyValueTypes::Origin,
   PropertyValueTypes::Input,
   PropertyValueTypes::Output,

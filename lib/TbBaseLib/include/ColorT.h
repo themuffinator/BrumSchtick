@@ -29,8 +29,7 @@
 
 #include "vm/vec.h"
 
-#include <fmt/format.h>
-#include <fmt/ranges.h>
+#include <format>
 
 #include <ranges>
 #include <string_view>
@@ -270,7 +269,7 @@ public:
       return ColorT{*componentValues};
     }
     return Error{
-      fmt::format("Failed to create color from values {}", fmt::join(values, ", "))};
+      std::format("Failed to create color from values {}", kdl::str_join(values, ", "))};
   }
 
   constexpr static auto fromNormalizedValues(const auto& values)
@@ -289,7 +288,7 @@ public:
     }
 
     return Error{
-      fmt::format("Failed to parse '{}' as color", fmt::join(components, " "))};
+      std::format("Failed to parse '{}' as color", kdl::str_join(components, " "))};
   }
 
   static Result<ColorT> parse(const std::string_view str)
@@ -345,7 +344,7 @@ public:
     }
   }
 
-  std::string toString() const { return fmt::format("{}", fmt::join(values(), " ")); }
+  std::string toString() const { return std::format("{}", kdl::str_join(values(), " ")); }
 
   kdl_reflect_inline(ColorT, m_components);
 };

@@ -29,6 +29,7 @@
 
 #include <algorithm>
 #include <filesystem>
+#include <format>
 #include <string>
 
 #include "catch/CatchConfig.h"
@@ -607,6 +608,51 @@ TEST_CASE("FgdParser")
       });
   }
 
+  SECTION("parseAngleVectorOriginTargetNameOrClassPropertyDefinition")
+  {
+    const auto file = R"(
+    @PointClass = info_notnull : "Wildcard entity"
+    [
+       angleprop(angle) : "Angle property" : "90" : "Angle description"
+       vectorprop(vector) : "Vector property" : "1 2 3" : "Vector description"
+       originprop(origin) : "Origin property" : "4 5 6" : "Origin description"
+       targetprop(target_name_or_class) : "Target property" : "targetname" : "Target description"
+    ]
+)";
+
+    auto parser = FgdParser{file, RgbaF{1.0f, 1.0f, 1.0f, 1.0f}};
+    auto status = TestParserStatus{};
+
+    CHECK(
+      parser.parseDefinitions(status)
+      == std::vector<mdl::EntityDefinition>{
+        {
+          "info_notnull",
+          RgbaF{1.0f, 1.0f, 1.0f, 1.0f},
+          "Wildcard entity",
+          {
+            {"angleprop",
+             mdl::PropertyValueTypes::Angle{90.0f},
+             "Angle property",
+             "Angle description"},
+            {"vectorprop",
+             mdl::PropertyValueTypes::Vector{"1 2 3"},
+             "Vector property",
+             "Vector description"},
+            {"originprop",
+             mdl::PropertyValueTypes::Origin{"4 5 6"},
+             "Origin property",
+             "Origin description"},
+            {"targetprop",
+             mdl::PropertyValueTypes::TargetNameOrClass{"targetname"},
+             "Target property",
+             "Target description"},
+          },
+          mdl::PointEntityDefinition{{{-8, -8, -8}, {8, 8, 8}}, {}, {}},
+        },
+      });
+  }
+
   SECTION("parseChoicePropertyDefinition")
   {
     const auto file = R"-(
@@ -795,7 +841,7 @@ TEST_CASE("FgdParser")
 
     CAPTURE(str);
 
-    const auto file = fmt::format(entityTemplate, str);
+    const auto file = std::format(entityTemplate, str);
 
     auto parser = FgdParser{file, RgbaF{1.0f, 1.0f, 1.0f, 1.0f}};
     auto status = TestParserStatus{};

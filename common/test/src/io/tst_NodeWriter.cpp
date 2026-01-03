@@ -36,7 +36,7 @@
 #include "kd/result.h"
 #include "kd/task_manager.h"
 
-#include <fmt/format.h>
+#include <format>
 
 #include <sstream>
 #include <vector>
@@ -324,7 +324,7 @@ TEST_CASE("NodeWriter")
     writer.writeMap(taskManager);
 
     const auto actual = str.str();
-    const auto expected = fmt::format(
+    const auto expected = std::format(
       R"(// entity 0
 {{
 "classname" "worldspawn"
@@ -370,7 +370,7 @@ TEST_CASE("NodeWriter")
     writer.writeMap(taskManager);
 
     const auto actual = str.str();
-    const auto expected = fmt::format(
+    const auto expected = std::format(
       R"(// entity 0
 {{
 "classname" "worldspawn"
@@ -410,7 +410,7 @@ TEST_CASE("NodeWriter")
     writer.writeMap(taskManager);
 
     const auto actual = str.str();
-    const auto expected = fmt::format(
+    const auto expected = std::format(
       R"(// entity 0
 {{
 "classname" "worldspawn"
@@ -459,7 +459,7 @@ TEST_CASE("NodeWriter")
     writer.writeMap(taskManager);
 
     const auto actual = str.str();
-    const auto expected = fmt::format(
+    const auto expected = std::format(
       R"(// entity 0
 {{
 "classname" "worldspawn"
@@ -521,7 +521,7 @@ TEST_CASE("NodeWriter")
     writer.writeMap(taskManager);
 
     const auto actual = str.str();
-    const auto expected = fmt::format(
+    const auto expected = std::format(
       R"(// entity 0
 {{
 "classname" "worldspawn"
@@ -707,14 +707,10 @@ TEST_CASE("NodeWriter")
       R"(// entity 0
 {
 "classname" "worldspawn"
-"_tb_layer_omit_from_export" "1"
 }
 // entity 1
 {
 "classname" "func_group"
-"_tb_type" "_tb_layer"
-"_tb_name" "Custom Layer 2"
-"_tb_id" "*"
 // brush 0
 {
 ( -32 -32 -32 ) ( -32 -31 -32 ) ( -32 -32 -31 ) layer2Material 0 0 0 1 1
@@ -728,10 +724,30 @@ TEST_CASE("NodeWriter")
 // entity 2
 {
 "classname" "layer2PointEntity"
-"_tb_layer" "*"
 }
 )";
     CHECK_THAT(actual, MatchesGlob(expected));
+  }
+
+  SECTION("exportFiltersTbProperties")
+  {
+    auto map = mdl::WorldNode{
+      {}, {{"message", "ok"}, {"_tb_textures", "too_long"}}, mdl::MapFormat::Standard};
+
+    auto str = std::stringstream{};
+    auto writer = NodeWriter{map, str};
+    writer.setExporting(true);
+    writer.writeMap(taskManager);
+
+    const auto actual = str.str();
+    const auto expected =
+      R"(// entity 0
+{
+"message" "ok"
+"classname" "worldspawn"
+}
+)";
+    CHECK(actual == expected);
   }
 
   SECTION("writeMapWithInheritedLock")
@@ -799,7 +815,7 @@ TEST_CASE("NodeWriter")
     writer.writeNodes({innerGroupNode, worldBrushNode}, taskManager);
 
     const auto actual = str.str();
-    const auto expected = fmt::format(
+    const auto expected = std::format(
       R"(// entity 0
 {{
 "classname" "worldspawn"
@@ -852,7 +868,7 @@ TEST_CASE("NodeWriter")
       writer.writeMap(taskManager);
 
       const auto actual = str.str();
-      const auto expected = fmt::format(
+      const auto expected = std::format(
         R"(// entity 0
 {{
 "classname" "worldspawn"
@@ -880,7 +896,7 @@ TEST_CASE("NodeWriter")
       writer.writeMap(taskManager);
 
       const auto actual = str.str();
-      const auto expected = fmt::format(
+      const auto expected = std::format(
         R"(// entity 0
 {{
 "classname" "worldspawn"
@@ -925,7 +941,7 @@ TEST_CASE("NodeWriter")
     writer.writeNodes({groupNode}, taskManager);
 
     const auto actual = str.str();
-    const auto expected = fmt::format(
+    const auto expected = std::format(
       R"(// entity 0
 {{
 "classname" "func_group"

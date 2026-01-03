@@ -42,8 +42,7 @@
 
 #include <cpptrace/basic.hpp>
 #include <cpptrace/from_current.hpp>
-#include <fmt/format.h>
-#include <fmt/std.h>
+#include <format>
 
 #include <csignal>
 #include <cstdlib>
@@ -73,8 +72,8 @@ std::string makeCrashReport(const auto& stacktrace, const auto& reason)
   ss << "GL_RENDERER:\t" << GLContextManager::GLRenderer << std::endl;
   ss << "GL_VERSION:\t" << GLContextManager::GLVersion << std::endl;
 
-  ss << "TrenchBroom Version:\t" << getBuildVersion().toStdString() << std::endl;
-  ss << "TrenchBroom Build:\t" << getBuildIdStr().toStdString() << std::endl;
+  ss << "BrümSchtick Version:\t" << getBuildVersion().toStdString() << std::endl;
+  ss << "BrümSchtick Build:\t" << getBuildIdStr().toStdString() << std::endl;
 
   ss << "Reason:\t" << reason << std::endl;
 
@@ -98,7 +97,7 @@ std::filesystem::path crashReportBasePath()
                               ? mapPath.parent_path() / mapPath.stem() += "-crash.txt"
                               : io::pathFromQString(QStandardPaths::writableLocation(
                                   QStandardPaths::DocumentsLocation))
-                                  / "trenchbroom-crash.txt";
+                                  / "brumschtick-crash.txt";
 
   // ensure it doesn't exist
   auto index = 0;
@@ -107,7 +106,7 @@ std::filesystem::path crashReportBasePath()
   {
     ++index;
 
-    const auto testCrashLogName = fmt::format("{}-{}.txt", crashLogPath.stem(), index);
+    const auto testCrashLogName = std::format("{}-{}.txt", crashLogPath.stem(), index);
     testCrashLogPath = crashLogPath.parent_path() / testCrashLogName;
   }
 

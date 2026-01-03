@@ -36,7 +36,7 @@
 #include "kd/result.h"
 #include "kd/string_format.h"
 
-#include <fmt/format.h>
+#include <format>
 
 #include <string>
 #include <vector>
@@ -278,7 +278,7 @@ void parseFrame(
     }
   }
 
-  auto frameName = fmt::format("frame_{}", frameIndex);
+  auto frameName = std::format("frame_{}", frameIndex);
   auto& frame = modelData.addFrame(std::move(frameName), bounds.bounds());
   surface.addMesh(frame, std::move(builder.vertices()), std::move(builder.indices()));
 }

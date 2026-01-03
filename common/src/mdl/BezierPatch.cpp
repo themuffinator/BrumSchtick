@@ -52,16 +52,27 @@ BezierPatch::BezierPatch(
   const size_t pointRowCount,
   const size_t pointColumnCount,
   std::vector<Point> controlPoints,
-  std::string materialName)
+  std::string materialName,
+  const int surfaceContents,
+  const int surfaceFlags,
+  const float surfaceValue,
+  std::vector<Normal> controlNormals)
   : m_pointRowCount{pointRowCount}
   , m_pointColumnCount{pointColumnCount}
   , m_controlPoints{std::move(controlPoints)}
+  , m_controlNormals{std::move(controlNormals)}
   , m_bounds(computeBounds(m_controlPoints))
   , m_materialName{std::move(materialName)}
+  , m_surfaceContents{surfaceContents}
+  , m_surfaceFlags{surfaceFlags}
+  , m_surfaceValue{surfaceValue}
 {
   contract_pre(m_pointRowCount > 2 && m_pointColumnCount > 2);
   contract_pre(m_pointRowCount % 2 == 1 && m_pointColumnCount % 2 == 1);
   contract_pre(m_controlPoints.size() == m_pointRowCount * m_pointColumnCount);
+  contract_pre(
+    m_controlNormals.empty()
+    || m_controlNormals.size() == m_pointRowCount * m_pointColumnCount);
 }
 
 BezierPatch::~BezierPatch() = default;
@@ -107,6 +118,16 @@ const std::vector<BezierPatch::Point>& BezierPatch::controlPoints() const
   return m_controlPoints;
 }
 
+const std::vector<BezierPatch::Normal>& BezierPatch::controlNormals() const
+{
+  return m_controlNormals;
+}
+
+bool BezierPatch::hasControlNormals() const
+{
+  return !m_controlNormals.empty();
+}
+
 BezierPatch::Point& BezierPatch::controlPoint(const size_t row, const size_t col)
 {
   return KDL_CONST_OVERLOAD(controlPoint(row, col));
@@ -119,6 +140,28 @@ const BezierPatch::Point& BezierPatch::controlPoint(
   contract_pre(col < m_pointColumnCount);
 
   return m_controlPoints[row * m_pointColumnCount + col];
+}
+
+BezierPatch::Normal& BezierPatch::controlNormal(const size_t row, const size_t col)
+{
+  return KDL_CONST_OVERLOAD(controlNormal(row, col));
+}
+
+const BezierPatch::Normal& BezierPatch::controlNormal(
+  const size_t row, const size_t col) const
+{
+  contract_pre(!m_controlNormals.empty());
+  contract_pre(row < m_pointRowCount);
+  contract_pre(col < m_pointColumnCount);
+
+  return m_controlNormals[row * m_pointColumnCount + col];
+}
+
+void BezierPatch::setControlNormals(std::vector<Normal> controlNormals)
+{
+  contract_pre(
+    controlNormals.empty() || controlNormals.size() == m_controlPoints.size());
+  m_controlNormals = std::move(controlNormals);
 }
 
 void BezierPatch::setControlPoint(const size_t row, const size_t col, Point controlPoint)
@@ -143,6 +186,29 @@ const std::string& BezierPatch::materialName() const
 void BezierPatch::setMaterialName(std::string materialName)
 {
   m_materialName = std::move(materialName);
+}
+
+int BezierPatch::surfaceContents() const
+{
+  return m_surfaceContents;
+}
+
+int BezierPatch::surfaceFlags() const
+{
+  return m_surfaceFlags;
+}
+
+float BezierPatch::surfaceValue() const
+{
+  return m_surfaceValue;
+}
+
+void BezierPatch::setSurfaceAttributes(
+  const int surfaceContents, const int surfaceFlags, const float surfaceValue)
+{
+  m_surfaceContents = surfaceContents;
+  m_surfaceFlags = surfaceFlags;
+  m_surfaceValue = surfaceValue;
 }
 
 const Material* BezierPatch::material() const
@@ -172,6 +238,23 @@ void BezierPatch::transform(const vm::mat4x4d& transformation)
   }
   m_bounds = builder.bounds();
 
+  if (!m_controlNormals.empty())
+  {
+    const auto linearTransform = vm::strip_translation(transformation);
+    const auto inverted = vm::invert(linearTransform);
+    const auto normalTransform =
+      inverted ? vm::transpose(*inverted) : linearTransform;
+    const auto epsilon = vm::constants<double>::almost_zero();
+
+    for (auto& controlNormal : m_controlNormals)
+    {
+      if (!vm::is_zero(controlNormal, epsilon))
+      {
+        controlNormal = vm::normalize(normalTransform * controlNormal);
+      }
+    }
+  }
+
   using std::swap;
 
   if (!vm::is_orientation_preserving_transform(transformation))
@@ -184,14 +267,21 @@ void BezierPatch::transform(const vm::mat4x4d& transformation)
       for (size_t r = 0; r < m_pointRowCount; ++r)
       {
         swap(controlPoint(r, c), controlPoint(r, d));
+        if (!m_controlNormals.empty())
+        {
+          swap(controlNormal(r, c), controlNormal(r, d));
+        }
       }
     }
   }
 }
 
-using SurfaceControlPoints = std::array<std::array<BezierPatch::Point, 3u>, 3u>;
-static SurfaceControlPoints collectSurfaceControlPoints(
-  const std::vector<BezierPatch::Point>& controlPoints,
+template <typename Vec>
+using SurfaceControlPoints = std::array<std::array<Vec, 3u>, 3u>;
+
+template <typename Vec>
+static SurfaceControlPoints<Vec> collectSurfaceControlPoints(
+  const std::vector<Vec>& controlPoints,
   const size_t pointColumnCount,
   const size_t surfaceRow,
   const size_t surfaceCol)
@@ -202,7 +292,7 @@ static SurfaceControlPoints collectSurfaceControlPoints(
   const size_t colOffset = 2u * surfaceCol;
 
   // collect 3*3 control points
-  auto result = SurfaceControlPoints{};
+  auto result = SurfaceControlPoints<Vec>{};
   for (size_t row = 0; row < 3u; ++row)
   {
     for (size_t col = 0; col < 3u; ++col)
@@ -214,8 +304,9 @@ static SurfaceControlPoints collectSurfaceControlPoints(
   return result;
 }
 
-static std::vector<SurfaceControlPoints> collectAllSurfaceControlPoints(
-  const std::vector<BezierPatch::Point>& controlPoints,
+template <typename Vec>
+static std::vector<SurfaceControlPoints<Vec>> collectAllSurfaceControlPoints(
+  const std::vector<Vec>& controlPoints,
   const size_t pointRowCount,
   const size_t pointColumnCount)
 {
@@ -224,7 +315,7 @@ static std::vector<SurfaceControlPoints> collectAllSurfaceControlPoints(
   const size_t surfaceColumnCount = (pointColumnCount - 1u) / 2u;
 
   // collect the control points for each surface
-  auto result = std::vector<SurfaceControlPoints>{};
+  auto result = std::vector<SurfaceControlPoints<Vec>>{};
   result.reserve(surfaceRowCount * surfaceColumnCount);
 
   for (size_t surfaceRow = 0u; surfaceRow < surfaceRowCount; ++surfaceRow)
@@ -238,43 +329,26 @@ static std::vector<SurfaceControlPoints> collectAllSurfaceControlPoints(
   return result;
 }
 
-template <typename O>
-void evaluateSurface(
-  const SurfaceControlPoints& surfaceControlPoints,
-  const size_t subdivisionsPerSurface,
-  const bool isLastCol,
-  const bool isLastRow,
-  O out)
-{
-  const auto maxRow = isLastRow ? subdivisionsPerSurface + 1u : subdivisionsPerSurface;
-  const auto maxCol = isLastCol ? subdivisionsPerSurface + 1u : subdivisionsPerSurface;
-
-  for (size_t row = 0u; row < maxRow; ++row)
-  {
-    const auto v = static_cast<double>(row) / static_cast<double>(subdivisionsPerSurface);
-    for (size_t col = 0u; col < maxCol; ++col)
-    {
-      const auto u =
-        static_cast<double>(col) / static_cast<double>(subdivisionsPerSurface);
-      out = vm::evaluate_quadratic_bezier_surface(surfaceControlPoints, u, v);
-    }
-  }
-}
-
-std::vector<BezierPatch::Point> BezierPatch::evaluate(
-  const size_t subdivisionsPerSurface) const
+template <typename Vec>
+std::vector<Vec> evaluatePatchGrid(
+  const std::vector<Vec>& controlPoints,
+  const size_t pointRowCount,
+  const size_t pointColumnCount,
+  const size_t subdivisionsPerSurface)
 {
   // collect the control points for each surface in this patch
   const auto allSurfaceControlPoints =
-    collectAllSurfaceControlPoints(m_controlPoints, m_pointRowCount, m_pointColumnCount);
+    collectAllSurfaceControlPoints(controlPoints, pointRowCount, pointColumnCount);
 
   const auto quadsPerSurfaceSide = (1u << subdivisionsPerSurface);
 
   // determine dimensions of the resulting point grid
-  const size_t gridPointRowCount = surfaceRowCount() * quadsPerSurfaceSide + 1u;
-  const size_t gridPointColumnCount = surfaceColumnCount() * quadsPerSurfaceSide + 1u;
+  const size_t surfaceRowCount = (pointRowCount - 1u) / 2u;
+  const size_t surfaceColumnCount = (pointColumnCount - 1u) / 2u;
+  const size_t gridPointRowCount = surfaceRowCount * quadsPerSurfaceSide + 1u;
+  const size_t gridPointColumnCount = surfaceColumnCount * quadsPerSurfaceSide + 1u;
 
-  auto grid = std::vector<BezierPatch::Point>{};
+  auto grid = std::vector<Vec>{};
   grid.reserve(gridPointRowCount * gridPointColumnCount);
 
   /*
@@ -340,13 +414,32 @@ std::vector<BezierPatch::Point> BezierPatch::evaluate(
                        / static_cast<double>(quadsPerSurfaceSide);
 
       const auto& surfaceControlPoints =
-        allSurfaceControlPoints[surfaceRow * surfaceColumnCount() + surfaceCol];
+        allSurfaceControlPoints[surfaceRow * surfaceColumnCount + surfaceCol];
       auto point = vm::evaluate_quadratic_bezier_surface(surfaceControlPoints, u, v);
       grid.push_back(std::move(point));
     }
   }
 
   return grid;
+}
+
+std::vector<BezierPatch::Point> BezierPatch::evaluate(
+  const size_t subdivisionsPerSurface) const
+{
+  return evaluatePatchGrid(
+    m_controlPoints, m_pointRowCount, m_pointColumnCount, subdivisionsPerSurface);
+}
+
+std::vector<BezierPatch::Normal> BezierPatch::evaluateNormals(
+  const size_t subdivisionsPerSurface) const
+{
+  if (m_controlNormals.empty())
+  {
+    return {};
+  }
+
+  return evaluatePatchGrid(
+    m_controlNormals, m_pointRowCount, m_pointColumnCount, subdivisionsPerSurface);
 }
 
 } // namespace tb::mdl

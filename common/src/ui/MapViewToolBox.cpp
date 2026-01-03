@@ -21,6 +21,7 @@
 
 #include "mdl/EditorContext.h"
 #include "ui/AssembleBrushTool.h"
+#include "ui/BrushBuilderTool.h"
 #include "ui/ClipTool.h"
 #include "ui/CreateEntityTool.h"
 #include "ui/DrawShapeTool.h"
@@ -56,6 +57,11 @@ ClipTool& MapViewToolBox::clipTool()
 AssembleBrushTool& MapViewToolBox::assembleBrushTool()
 {
   return *m_assembleBrushTool;
+}
+
+BrushBuilderTool& MapViewToolBox::brushBuilderTool()
+{
+  return *m_brushBuilderTool;
 }
 
 CreateEntityTool& MapViewToolBox::createEntityTool()
@@ -121,6 +127,16 @@ bool MapViewToolBox::assembleBrushToolActive() const
 void MapViewToolBox::performAssembleBrush()
 {
   m_assembleBrushTool->createBrushes();
+}
+
+void MapViewToolBox::toggleBrushBuilderTool()
+{
+  toggleTool(brushBuilderTool());
+}
+
+bool MapViewToolBox::brushBuilderToolActive() const
+{
+  return m_brushBuilderTool->active();
 }
 
 void MapViewToolBox::toggleClipTool()
@@ -244,7 +260,7 @@ bool MapViewToolBox::faceToolActive() const
 bool MapViewToolBox::anyModalToolActive() const
 {
   return rotateToolActive() || scaleToolActive() || shearToolActive()
-         || anyVertexToolActive();
+         || anyVertexToolActive() || brushBuilderToolActive();
 }
 
 void MapViewToolBox::moveVertices(const vm::vec3d& delta)
@@ -269,6 +285,7 @@ void MapViewToolBox::createTools(QStackedLayout* bookCtrl)
 {
   m_clipTool = std::make_unique<ClipTool>(m_document);
   m_assembleBrushTool = std::make_unique<AssembleBrushTool>(m_document);
+  m_brushBuilderTool = std::make_unique<BrushBuilderTool>(m_document);
   m_createEntityTool = std::make_unique<CreateEntityTool>(m_document);
   m_drawShapeTool = std::make_unique<DrawShapeTool>(m_document);
   m_moveObjectsTool = std::make_unique<MoveObjectsTool>(m_document);
@@ -282,6 +299,7 @@ void MapViewToolBox::createTools(QStackedLayout* bookCtrl)
 
   addExclusiveToolGroup(
     assembleBrushTool(),
+    brushBuilderTool(),
     rotateTool(),
     scaleTool(),
     shearTool(),
@@ -290,10 +308,17 @@ void MapViewToolBox::createTools(QStackedLayout* bookCtrl)
     clipTool());
 
   addExclusiveToolGroup(
-    assembleBrushTool(), vertexTool(), edgeTool(), faceTool(), clipTool());
+    assembleBrushTool(),
+    brushBuilderTool(),
+    vertexTool(),
+    edgeTool(),
+    faceTool(),
+    clipTool());
 
   suppressWhileActive(
     assembleBrushTool(), moveObjectsTool(), extrudeTool(), drawShapeTool());
+  suppressWhileActive(
+    brushBuilderTool(), moveObjectsTool(), extrudeTool(), drawShapeTool());
   suppressWhileActive(rotateTool(), moveObjectsTool(), extrudeTool(), drawShapeTool());
   suppressWhileActive(scaleTool(), moveObjectsTool(), extrudeTool(), drawShapeTool());
   suppressWhileActive(shearTool(), moveObjectsTool(), extrudeTool(), drawShapeTool());
@@ -308,6 +333,7 @@ void MapViewToolBox::createTools(QStackedLayout* bookCtrl)
   registerTool(shearTool(), bookCtrl);
   registerTool(extrudeTool(), bookCtrl);
   registerTool(assembleBrushTool(), bookCtrl);
+  registerTool(brushBuilderTool(), bookCtrl);
   registerTool(clipTool(), bookCtrl);
   registerTool(vertexTool(), bookCtrl);
   registerTool(edgeTool(), bookCtrl);
@@ -353,7 +379,7 @@ void MapViewToolBox::toolDeactivated(Tool&)
 void MapViewToolBox::updateEditorContext()
 {
   auto& editorContext = m_document.map().editorContext();
-  editorContext.setBlockSelection(assembleBrushToolActive());
+  editorContext.setBlockSelection(assembleBrushToolActive() || brushBuilderToolActive());
 }
 
 void MapViewToolBox::documentWasLoaded()
@@ -391,6 +417,10 @@ void MapViewToolBox::updateToolPage()
   else if (faceToolActive())
   {
     faceTool().showPage();
+  }
+  else if (brushBuilderToolActive())
+  {
+    brushBuilderTool().showPage();
   }
   else if (clipToolActive())
   {

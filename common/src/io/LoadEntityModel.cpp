@@ -37,8 +37,7 @@
 
 #include "kd/result.h"
 
-#include <fmt/format.h>
-#include <fmt/std.h>
+#include <format>
 
 namespace tb::io
 {
@@ -123,11 +122,11 @@ Result<mdl::EntityModelData> loadEntityModelData(
                auto loader = io::AssimpLoader{path, fs};
                return loader.load(logger);
              }
-             return Error{fmt::format("Unknown model format: {}", path)};
+             return Error{std::format("Unknown model format: {}", path.string())};
            })
          | kdl::or_else([&](const auto& e) {
              return Result<mdl::EntityModelData>{Error{
-               fmt::format("Failed to load entity model '{}': {}", modelName, e.msg)}};
+               std::format("Failed to load entity model '{}': {}", modelName, e.msg)}};
            });
 }
 

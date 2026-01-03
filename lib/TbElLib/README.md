@@ -1,3 +1,4 @@
-# TrenchBroom Expression Language Library
+# BrümSchtick Expression Language Library
 
-Contains TrenchBroom's expression language parser and runtime facilities.
+Contains BrümSchtick's expression language parser and runtime facilities.
+
