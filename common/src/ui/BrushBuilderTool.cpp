@@ -30,12 +30,16 @@
 #include "mdl/BrushNode.h"
 #include "mdl/GameConfig.h"
 #include "mdl/GameInfo.h"
+#include "mdl/Grid.h"
+#include "mdl/HitFilter.h"
+#include "mdl/PickResult.h"
 #include "mdl/Map.h"
 #include "mdl/Polyhedron3.h"
 #include "mdl/WorldNode.h"
 #include "render/Camera.h"
 #include "render/RenderService.h"
 #include "ui/BrushBuilderToolPage.h"
+#include "ui/MapDocument.h"
 
 #include "kd/result.h"
 #include "kd/vector_utils.h"
@@ -80,7 +84,7 @@ std::optional<ParsedExpressions> parseExpressions(
     if (result.is_error())
     {
       logger.error() << "Brush Builder expression (" << axis << ") error: "
-                     << result.error().msg;
+                     << std::get<Error>(result.error()).msg;
       return std::optional<el::ExpressionNode>{};
     }
     return std::optional<el::ExpressionNode>{std::move(result.value())};
@@ -121,7 +125,7 @@ vm::vec3d applyExpression(
   if (result.is_error())
   {
     logger.error() << "Brush Builder expression evaluation error: "
-                   << result.error().msg;
+                   << std::get<Error>(result.error()).msg;
     return point;
   }
 
@@ -492,7 +496,7 @@ void BrushBuilderTool::render(
     }
   }
 
-  const auto& hit = pickResult.first(type(VertexHitType));
+  const auto& hit = pickResult.first(mdl::HitFilters::type(VertexHitType));
   if (hit.isMatch())
   {
     const auto handle = hit.target<VertexHandle>();

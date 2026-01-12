@@ -50,6 +50,7 @@
 #include "kd/task_manager.h"
 
 #include "vm/polygon.h"
+#include "vm/vec_io.h"
 
 #include <format>
 

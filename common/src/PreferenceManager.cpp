@@ -419,23 +419,57 @@ QLockFile getLockFile(const std::filesystem::path& preferenceFilePath)
   const auto lockFilePath = kdl::path_add_extension(preferenceFilePath, ".lck");
   return QLockFile{io::pathAsQPath(lockFilePath)};
 }
+
+enum class PreferenceLockResult
+{
+  Locked,
+  FileAccessError,
+  LockFileError,
+};
+
+PreferenceLockResult lockPreferencesFile(QLockFile& lockFile)
+{
+  if (lockFile.lock())
+  {
+    return PreferenceLockResult::Locked;
+  }
+
+  const auto error = lockFile.error();
+  if (error == QLockFile::LockFailedError)
+  {
+    if (lockFile.removeStaleLockFile() && lockFile.lock())
+    {
+      return PreferenceLockResult::Locked;
+    }
+    return PreferenceLockResult::LockFileError;
+  }
+
+  return PreferenceLockResult::FileAccessError;
+}
 } // namespace
 
 ReadPreferencesResult readPreferencesFromFile(const std::filesystem::path& path)
 {
-  auto lockFile = getLockFile(path);
-  if (!lockFile.lock())
-  {
-    return PreferenceErrors::LockFileError{};
-  }
-
-  auto file = QFile{path};
+  auto file = QFile{io::pathAsQPath(path)};
   if (!file.exists())
   {
     return PreferenceErrors::NoFilePresent{};
   }
+
+  auto lockFile = getLockFile(path);
+  switch (lockPreferencesFile(lockFile))
+  {
+  case PreferenceLockResult::Locked:
+    break;
+  case PreferenceLockResult::FileAccessError:
+    return PreferenceErrors::FileAccessError{};
+  case PreferenceLockResult::LockFileError:
+    return PreferenceErrors::LockFileError{};
+  }
+
   if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
   {
+    lockFile.unlock();
     return PreferenceErrors::FileAccessError{};
   }
 
@@ -453,35 +487,44 @@ WritePreferencesResult writePreferencesToFile(
 {
   const auto serialized = writePreferencesToJson(prefs);
 
-  const auto dirPath = QFileInfo{path}.path();
+  const auto dirPath = QFileInfo{io::pathAsQPath(path)}.path();
   if (!QDir{}.mkpath(dirPath))
   {
     return PreferenceErrors::FileAccessError{};
   }
 
   auto lockFile = getLockFile(path);
-  if (!lockFile.lock())
+  switch (lockPreferencesFile(lockFile))
   {
+  case PreferenceLockResult::Locked:
+    break;
+  case PreferenceLockResult::FileAccessError:
+    return PreferenceErrors::FileAccessError{};
+  case PreferenceLockResult::LockFileError:
     return PreferenceErrors::LockFileError{};
   }
 
   auto saveFile = QSaveFile{io::pathAsQPath(path)};
   if (!saveFile.open(QIODevice::WriteOnly))
   {
+    lockFile.unlock();
     return PreferenceErrors::FileAccessError{};
   }
 
   const auto written = saveFile.write(serialized);
   if (written != static_cast<qint64>(serialized.size()))
   {
+    lockFile.unlock();
     return PreferenceErrors::FileAccessError{};
   }
 
   if (!saveFile.commit())
   {
+    lockFile.unlock();
     return PreferenceErrors::FileAccessError{};
   }
 
+  lockFile.unlock();
   return kdl::void_success;
 }
 

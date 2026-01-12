@@ -58,7 +58,8 @@ Result<mdl::Material> loadMaterial(
   const std::filesystem::path& materialPath,
   const mdl::CreateTextureResource& createResource,
   const std::vector<mdl::Quake3Shader>& shaders,
-  const std::optional<Result<mdl::Palette>>& paletteResult);
+  const std::optional<Result<mdl::Palette>>& paletteResult,
+  Logger& logger);
 
 Result<std::vector<mdl::MaterialCollection>> loadMaterialCollections(
   const fs::FileSystem& fs,

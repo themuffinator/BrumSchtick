@@ -25,6 +25,8 @@
 #include "kd/contracts.h"
 #include "kd/reflection_impl.h"
 
+#include "vm/vec_io.h"
+
 #include <ostream>
 
 namespace tb::mdl

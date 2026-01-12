@@ -66,6 +66,7 @@ namespace ui
 {
 class Action;
 class Console;
+class CompilationDialog;
 class FrameManager;
 class GLContextManager;
 class InfoPanel;
@@ -114,7 +115,7 @@ private:
   std::optional<std::string> m_quickLaunchProfileName;
   QLabel* m_statusBarLabel = nullptr;
 
-  QPointer<QDialog> m_compilationDialog;
+  QPointer<CompilationDialog> m_compilationDialog;
   QPointer<ObjExportDialog> m_objExportDialog;
 
   NotifierConnection m_notifierConnection;

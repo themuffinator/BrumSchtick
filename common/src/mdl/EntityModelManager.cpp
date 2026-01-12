@@ -186,7 +186,8 @@ Result<EntityModel> EntityModelManager::loadModel(
              materialPath,
              createResource,
              m_shaders,
-             std::nullopt)
+             std::nullopt,
+             m_logger)
            | kdl::or_else(io::makeReadMaterialErrorHandler(m_gameFileSystem, m_logger))
            | kdl::value();
   };

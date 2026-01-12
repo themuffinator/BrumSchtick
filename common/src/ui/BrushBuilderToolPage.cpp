@@ -424,11 +424,11 @@ void BrushBuilderToolPage::createGui()
 
 void BrushBuilderToolPage::connectObservers()
 {
-  m_notifierConnection += m_tool.shapeDidChangeNotifier.connect(this, [&]() {
+  m_notifierConnection += m_tool.shapeDidChangeNotifier.connect([this]() {
     updateShapeStatus();
     updateApplyState();
   });
-  m_notifierConnection += m_tool.stepsDidChangeNotifier.connect(this, [&]() {
+  m_notifierConnection += m_tool.stepsDidChangeNotifier.connect([this]() {
     updateStepsList();
     updateStepEditor();
     updateStepButtons();

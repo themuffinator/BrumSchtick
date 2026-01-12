@@ -358,7 +358,7 @@ mdl::Texture loadTexture(
     "Failed to load embedded texture '{}' for model '{}': {}",
     texturePath.string(),
     modelPath.string(),
-    embeddedResult.error().msg);
+    std::get<Error>(embeddedResult.error()).msg);
 
   if (isEmbeddedTextureReference(texturePath))
   {

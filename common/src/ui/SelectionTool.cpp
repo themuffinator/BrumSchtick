@@ -435,7 +435,7 @@ bool SelectionTool::mouseDoubleClick(const InputState& inputState)
 
             // Avoid selecting every object when double clicking a top-level brush.
             if (
-              topLevelContainer && brushNode != nullptr && faceHandle != nullptr
+              topLevelContainer && brushNode != nullptr && faceHandle.has_value()
               && faceHandle->node() == brushNode
               && editorContext.selectable(*brushNode, faceHandle->face()))
             {

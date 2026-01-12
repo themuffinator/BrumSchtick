@@ -111,7 +111,13 @@ public:
 
     m_file.setFileTemplate(
       QString{"%1/%2-XXXXXX.%3"}.arg(tempDirectory).arg(baseName).arg(extension));
-    m_file.open();
+    if (!m_file.open())
+    {
+      m_errorCallback(QString{"Failed to create temporary download file."});
+      m_reply->abort();
+      m_reply->deleteLater();
+      return;
+    }
 
     connect(m_reply, &QNetworkReply::finished, [this] {
       m_reply->deleteLater();

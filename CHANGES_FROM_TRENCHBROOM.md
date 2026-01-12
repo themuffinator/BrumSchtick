@@ -70,7 +70,11 @@ Rule: All significant changes must be recorded here.
 
 ## Developer tooling
 
+- Fixes Windows build breakages by reconciling missing includes, notifier wiring, optional handling, and material-loading signatures.
+
 - Adds VS Code build and debug tasks for configuring, building, cleaning, and launching BrümSchtick.
+
+- Fixes VS Code build/debug tasks to target the BrumSchtick executable name.
 
 ## Configuration parsing
 
@@ -85,6 +89,7 @@ Rule: All significant changes must be recorded here.
 
 - Preserve UNC path prefixes during normalization so WSL shared paths (for example, `\\wsl.localhost\...`) are resolved correctly for wad loading and texture discovery.
 - Portable mode uses the current working directory for user data/logs instead of the AppImage mount, preventing read-only failures.
+- Preference file locking retries stale locks and avoids lock failures when the preferences file is missing.
 
 ## Logging
 

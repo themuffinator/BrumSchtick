@@ -122,7 +122,7 @@ std::vector<mdl::HotspotRect> loadHotspotsForMaterial(
         | kdl::or_else([&](const auto& e) {
             logger.warn() << "Could not read hotspot rects from " << rectPath << ": "
                           << e.msg;
-            return HotspotRectMap{};
+            return Result<HotspotRectMap>{HotspotRectMap{}};
           });
     auto rects = rectsResult.value();
     auto result = findHotspotRectsForMaterial(rects, materialName);
@@ -141,7 +141,7 @@ std::vector<mdl::HotspotRect> loadHotspotsForMaterial(
         | kdl::or_else([&](const auto& e) {
             logger.warn() << "Could not read hotspot rects from " << sharedRectPath
                           << ": " << e.msg;
-            return HotspotRectMap{};
+            return Result<HotspotRectMap>{HotspotRectMap{}};
           });
     const auto rects = rectsResult.value();
     return findHotspotRectsForMaterial(rects, materialName);

@@ -24,6 +24,7 @@
 
 #include "PreferenceManager.h"
 #include "Preferences.h"
+#include "mdl/EditorContext.h"
 #include "mdl/Map.h"
 #include "mdl/Map_Assets.h"
 #include "mdl/Map_Selection.h"

@@ -25,6 +25,7 @@
 #include "Preferences.h"
 #include "el/VariableStore.h"
 #include "mdl/AssetUtils.h"
+#include "mdl/EditorContext.h"
 #include "mdl/EntityDefinition.h"
 #include "mdl/EntityDefinitionGroup.h"
 #include "mdl/EntityDefinitionManager.h"

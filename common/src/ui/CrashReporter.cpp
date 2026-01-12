@@ -106,7 +106,8 @@ std::filesystem::path crashReportBasePath()
   {
     ++index;
 
-    const auto testCrashLogName = std::format("{}-{}.txt", crashLogPath.stem(), index);
+    const auto testCrashLogName =
+      std::format("{}-{}.txt", crashLogPath.stem().string(), index);
     testCrashLogPath = crashLogPath.parent_path() / testCrashLogName;
   }
 

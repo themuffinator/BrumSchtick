@@ -1090,7 +1090,7 @@ void Map::loadEntityDefinitions()
     io::loadEntityDefinitions(path, defaultColor, status)
       | kdl::transform([&](auto entityDefinitions) {
           logger().info() << std::format(
-            "Loaded entity definition file {}", path.filename());
+            "Loaded entity definition file {}", path.filename().string());
 
           addOrSetDefaultEntityLinkProperties(entityDefinitions);
           addOrConvertOriginProperties(entityDefinitions);

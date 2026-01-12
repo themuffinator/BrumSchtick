@@ -156,7 +156,7 @@ std::optional<FaceUvMapping> computeFaceUvMapping(
 }
 
 Result<Brush> applyPatchUvToBrushFaces(
-  const Map& map,
+  Map& map,
   const PatchNode& patchNode,
   const Brush& brush,
   const std::string& patchMaterial,
@@ -274,7 +274,7 @@ vm::vec3d brushInteriorPoint(const Brush& brush)
   auto sum = vm::vec3d{0.0, 0.0, 0.0};
   for (const auto& vertex : vertices)
   {
-    sum += vertex;
+    sum = sum + vertex;
   }
 
   return sum / static_cast<double>(vertices.size());

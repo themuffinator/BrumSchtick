@@ -25,11 +25,24 @@
 
 #include "vm/mat.h"
 #include "vm/plane.h"
+#include "vm/ray.h"
 #include "vm/vec.h"
 
 #include <optional>
 #include <string>
 #include <vector>
+
+namespace tb::mdl
+{
+class PickResult;
+} // namespace tb::mdl
+
+namespace tb::render
+{
+class Camera;
+class RenderBatch;
+class RenderContext;
+} // namespace tb::render
 
 namespace tb::ui
 {

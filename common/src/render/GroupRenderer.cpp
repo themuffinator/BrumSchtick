@@ -24,6 +24,7 @@
 #include "mdl/EditorContext.h"
 #include "mdl/GroupNode.h"
 #include "mdl/ModelUtils.h"
+#include "mdl/WorldNode.h"
 #include "render/GLVertexType.h"
 #include "render/PrimType.h"
 #include "render/RenderBatch.h"

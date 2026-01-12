@@ -39,6 +39,7 @@
 #include "mdl/Texture.h"
 #include "mdl/UpdateBrushFaceAttributes.h"
 #include "mdl/WorldNode.h"
+#include "render/Camera.h"
 #include "ui/BorderLine.h"
 #include "ui/FlagsPopupEditor.h"
 #include "ui/MapDocument.h"
