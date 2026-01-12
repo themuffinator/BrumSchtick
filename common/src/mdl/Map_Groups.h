@@ -42,6 +42,9 @@ void renameSelectedGroups(Map& map, const std::string& name);
 bool canCreateLinkedDuplicate(const Map& map);
 GroupNode* createLinkedDuplicate(Map& map);
 
+void extractSelectedBrushesFromLinkedGroups(Map& map);
+bool canExtractSelectedBrushesFromLinkedGroups(const Map& map);
+
 /**
  * Unlinks the selected linked groups.
  *

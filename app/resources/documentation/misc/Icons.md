@@ -1,57 +1,67 @@
-All icons must be vector graphics and must be optimized for the given resolutions. Every icon except the application icons should also come in a hi-res version for high resolution displays such as the Retina display on Macs.
+# Icons Guide 🎨✨
 
-# Preference Dialog (32x32)
-The preference dialog is split into the following four preference panes, which are selectable with four large buttons in a toolbar at the top of the window:
-- Game Setup: This is where the user sets the options pertaining to particular games, such as the location of the game on the hard drive etc.
-- View Setup: Here, the user can set some options related to how objects are displayed in the main 3D view.
-- Mouse Setup: In this preference pane, the user can tune how the camera reacts to mouse input (e.g. sensitivity etc.)
-- Keyboard Setup: This is where the user can change the keyboard bindings of the various menu commands.
+All icons must be vector graphics and optimized for their target resolutions. Every icon except the application icons should also come in a hi-res version for high-resolution displays (like Retina). Keep things crisp. 🧼🖼️
 
-# Welcome Dialog (32x32)
-The welcome dialog is shown when the editor starts up. The user can select a recently opened document from a list or can click on a button to create a new map or on another button to open an existing map. Buttons need an icon.
+## Preference Dialog (32x32) 🧰
+The preference dialog is split into four panes, selectable with large toolbar buttons:
 
-# Generic Icons (16x16)
-These icons are to be used in several places all over the editor and therefore should be as generic as possible.
-- Add something to a list of things: Could be as simple as a plus sign.
-- Remove something from a list of things.
-- Move something up / down / left / right in a list of things.
-- Edit something
-- Delete something (this is different from removing because it will cause something to be erased permanently).
-- Select something from disk (open a browser window / open file dialog).
-- Refresh or reload something from disk (for example reload all textures).
-- Hide / show something
-- Lock / unlock something
+- 🎮 Game Setup: options for particular games, including game path configuration.
+- 👀 View Setup: options related to how objects are displayed in the main 3D view.
+- 🐭 Mouse Setup: options for camera interaction and sensitivity.
+- ⌨️ Keyboard Setup: keyboard bindings for menu commands.
 
-# Texture Icons (16x16)
-- Reset texture attributes
-- Flip horizontally
-- Flip vertically
-- Rotate left
-- Rotate right
-- Fit texture to face
-- Wrap texture around brush
+## Welcome Dialog (32x32) 👋
+The welcome dialog appears on startup. The user can:
 
-# Toolbar Icons (24x24)
-- Default icon for when no tool is active
-- Create new brush from convex hull tool
-- Clip tool
-- Vertex tool
-- Rotate tool
-- Duplicate objects
-- Flip horizontally
-- Flip vertically
-- Texture lock on / off
+- 📜 Pick a recently opened document.
+- 🧱 Create a new map.
+- 📂 Open an existing map.
 
-# Object Icons (16x16, 32x32)
-- Entity icon: Could be a humanoid figure.
-- Brush icon: Could be a cube.
-- Face icon: Could be a rectangle or square, maybe with a missing corner (as in, a cut off corner).
-- Patch icon (as in Quake 3 patch): A 3D curve something?
+Each of those buttons needs an icon.
 
-# Application Icon
-Currently, BrümSchtick has a Quake crate as its icon, which I like. However, this crate is recognizable only to Quake players, and since BrümSchtick is going to be available for other games as well, it is not a very good icon anymore. Maybe we can abstract from the look of the crate a bit. One element of the current icon I definitely like is that the crate has grid lines projected onto its faces. Since the grid projection is quite unique to BrümSchtick, I think it's a good idea that it shows up in the icon as well.
+## Generic Icons (16x16) 🧩
+These are used everywhere, so keep them simple and generic:
 
-In addition to the crate, I can imagine the icon featuring some sort of instrument that is being used by architects (e.g., pair of compasses, set square, steel square, etc.).
+- ➕ Add something to a list.
+- ➖ Remove something from a list.
+- ⬆️⬇️⬅️➡️ Move something up/down/left/right in a list.
+- ✏️ Edit something.
+- 🗑️ Delete something (permanent removal).
+- 📁 Select something from disk (open file dialog).
+- 🔄 Refresh or reload something from disk.
+- 👁️ Hide/show something.
+- 🔒 Unlock/lock something.
 
-# Document Icon
-The document icon is what the user sees when they associate a file type (such as .map) with BrümSchtick. It should be some combination of a generic document icon (a white sheet of paper) and the BrümSchtick logo, or an element of it.
+## Texture Icons (16x16) 🧱
+- 🧼 Reset texture attributes.
+- ↔️ Flip horizontally.
+- ↕️ Flip vertically.
+- ↩️ Rotate left.
+- ↪️ Rotate right.
+- 🧷 Fit texture to face.
+- 🎁 Wrap texture around brush.
+
+## Toolbar Icons (24x24) 🧰
+- 🧭 Default icon when no tool is active.
+- 🧱 Create new brush from convex hull tool.
+- ✂️ Clip tool.
+- 🧲 Vertex tool.
+- 🔄 Rotate tool.
+- 📄 Duplicate objects.
+- ↔️ Flip horizontally.
+- ↕️ Flip vertically.
+- 🔐 Texture lock on/off.
+
+## Object Icons (16x16, 32x32) 📦
+- 👤 Entity icon: could be a humanoid figure.
+- 🧱 Brush icon: could be a cube.
+- ⬜ Face icon: rectangle or square, maybe with a missing corner.
+- 🧵 Patch icon (Quake 3 patch): some 3D curve shape.
+
+## Application Icon 🎩🧱
+Currently, BrumSchtick uses a Quake crate icon. It is recognizable for Quake players, but since BrumSchtick targets other games too, the crate might be too specific. Consider abstracting the crate while keeping the projected grid lines, since that grid vibe is unique to BrumSchtick.
+
+In addition to the crate, the icon could feature an architect-style instrument (compass, set square, steel square, etc.).
+
+## Document Icon 📄✨
+The document icon appears when associating file types (like `.map`) with BrumSchtick. It should combine a generic document (white sheet) with the BrumSchtick logo or a recognizable element from it.

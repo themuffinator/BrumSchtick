@@ -79,17 +79,27 @@ extern const std::string LayerHiddenValue;
 extern const std::string LayerOmitFromExportValue;
 } // namespace EntityPropertyValues
 
+struct GlobalExpressionVariable
+{
+  std::string key;
+  bool overrideValue = false;
+
+  kdl_reflect_decl(GlobalExpressionVariable, key, overrideValue);
+};
+
 struct EntityPropertyConfig
 {
   std::optional<el::ExpressionNode> defaultModelScaleExpression;
   bool setDefaultProperties = false;
   bool updateAnglePropertyAfterTransform = true;
+  std::vector<GlobalExpressionVariable> globalExpressionVariables;
 
   kdl_reflect_decl(
     EntityPropertyConfig,
     defaultModelScaleExpression,
     setDefaultProperties,
-    updateAnglePropertyAfterTransform);
+    updateAnglePropertyAfterTransform,
+    globalExpressionVariables);
 };
 
 bool isNumberedProperty(std::string_view prefix, std::string_view key);

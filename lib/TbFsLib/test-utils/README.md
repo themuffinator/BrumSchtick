@@ -1,5 +1,3 @@
-# BrümSchtick Filesystem Test Utility Library
+# BrumSchtick Filesystem Test Utils 🧪🗂️
 
-Contains utilities for writing tests involving the system's filesystem (see
-`TestEnvironment.h`).
-
+Utilities for writing tests involving the system's filesystem (see `TestEnvironment.h`). Handy helpers with a flashlight. 🔦

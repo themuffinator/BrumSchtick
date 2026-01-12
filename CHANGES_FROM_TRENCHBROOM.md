@@ -1,13 +1,13 @@
-# Changes From TrenchBroom
+# Changes From TrenchBroom 🤪🧱✨
 
 
 
 This document tracks intentional differences between BrümSchtick and upstream TrenchBroom. Update it whenever BrümSchtick diverges.
 
-Rule: All significant changes must be recorded here.
+Rule: All significant changes must be recorded here. ✅
 
 
-## Branding and packaging
+## Branding and packaging 🧱📦
 
 - Application name, window titles, menu labels, and dialogs use BrümSchtick.
 - Update packages and installers use BrumSchtick naming (for example, BrumSchtick-Win64-AMD64-vYYYY.M-Release.zip).
@@ -16,14 +16,14 @@ Rule: All significant changes must be recorded here.
 - Replaced legacy TrenchBroom iconography with BrumSchtick splash and icon assets across app resources, platform icons, documentation, and the website.
 
 
-## Release and updates
+## Release and updates 🚀🔄
 
 - Adds `version.txt` as the canonical release tag for local builds and CI fallbacks.
 - GitHub Actions publishes tag builds as releases with platform zip assets, enabling the built-in updater to consume GitHub releases.
 - Update asset matching accepts calendar or semantic version tags and Windows x86_64/AMD64 asset variants.
 
 
-## Interaction changes
+## Interaction changes 🖱️✨
 - Double click selection is context-aware for top-level brushes: double click selects all faces on that brush instead of selecting every object in the layer, avoiding accidental map-wide selection on large maps.
 - Double click still selects siblings for brushes that belong to groups or brush entities; Shift+double click still selects all faces (and Ctrl adds to the current selection).
 - The map view bar includes a search field that filters visible map objects by entity properties or textures (supports key=value or key:value syntax).
@@ -38,37 +38,43 @@ Rule: All significant changes must be recorded here.
 - Mouse Move sensitivity now scales 2D view zooming (mouse wheel and alt-drag) to match 3D behavior.
 - Compilation output highlights map line numbers as links; clicking one selects the corresponding map objects.
 - Linked group bounds and labels use a distinct linked-group color and append "(linked)" so linked sets are visible without selection.
+- Adds a Groups menu action to extract selected brushes from linked groups into their parent containers, making the brushes unique.
 - Brush and patch tools treat selected groups (and brush entities) as selections of their contained components, allowing vertex/edge/face editing, CSG, clipping, and patch conversion without opening the group.
 - "Select Faces/Select Brushes" from the material browser now matches materials case-insensitively.
 - Adds an Edge Tool chamfer command that clips selected edges with a configurable distance and segment count.
+- Grid size selection persists when opening or reverting maps instead of resetting to 16.
 
 
-## Rendering
+## Rendering 🖼️🔥
 
 - Adds an optional real-time light preview in the 3D camera view that evaluates point and surface lights (including light styles) with occlusion and per-vertex lightmap-style shading.
 
-## Map format support
+## Map format support 🗺️🧩
 
 - Quake 3 patches support `patchDef3` with explicit control point normals; `patchDef3` is parsed, preserved, and emitted (GtkRadiant/Q3Map2 flavor: `x y z nx ny nz u v`).
 - Map parsing preserves duplicate entity keys instead of dropping later occurrences.
 
-## Model loading
+## Model loading 📦🧠
 
 - Assimp model textures resolve root-relative paths and fall back to same-name images with supported extensions when the referenced file is missing; embedded texture failures now fall back to filesystem textures (fixes RTCW/WolfET MDC models).
 
-## Export behavior
+## Export behavior 📤🧼
 
 - Map exports strip TrenchBroom `_tb_` entity properties (such as `_tb_textures`) to avoid long compiler-unfriendly strings.
 
 
-## Documentation and website
+## Documentation and website 📚🌐
 
 - README, build instructions, and the manual are rebranded to BrümSchtick with updated links.
+- README includes a direct link to the upstream TrenchBroom repository.
+- README now features a branded banner image sourced from the website image assets. ✨🧃
 - Refreshed README to highlight BrumSchtick purpose and feature highlights, and renamed Build.md to BUILDING.md with expanded Qt setup and build steps.
 - Website metadata and download links point to BrumSchtick releases.
 - Added release/versioning and auto-updater documentation (RELEASES.md, AUTO_UPDATER.md).
+- Rejigged core project documentation into a playful, emoji-rich vibe with modern Markdown formatting.
+- Added a localization doc section explaining language packs and listing bundled languages. 🌍📝
 
-## Developer tooling
+## Developer tooling 🧰🛠️
 
 - Fixes Windows build breakages by reconciling missing includes, notifier wiring, optional handling, and material-loading signatures.
 
@@ -76,26 +82,28 @@ Rule: All significant changes must be recorded here.
 
 - Fixes VS Code build/debug tasks to target the BrumSchtick executable name.
 
-## Configuration parsing
+## Configuration parsing 🧪🧾
 
 - Game configuration parsing rejects unexpected keys and validates optional fields like `modelformats`, rather than silently ignoring them.
+- Entity definition parsing uses last-definition-wins when duplicate classnames appear.
+- Game configs can declare global expression variables (such as worldspawn keys) for model/decal expressions, with optional worldspawn override priority.
 
 
-## Localization
+## Localization 🌍🗣️
 
 - Adds application localization support with a language preference, system auto-detect, and bundled translations for 20 languages (fallback to English when unsupported).
 
-## Filesystem handling
+## Filesystem handling 🗂️🧰
 
 - Preserve UNC path prefixes during normalization so WSL shared paths (for example, `\\wsl.localhost\...`) are resolved correctly for wad loading and texture discovery.
 - Portable mode uses the current working directory for user data/logs instead of the AppImage mount, preventing read-only failures.
 - Preference file locking retries stale locks and avoids lock failures when the preferences file is missing.
 
-## Logging
+## Logging 🧾🔍
 
 - GameManager and GameFileSystem now take a Logger at construction time and reuse it internally instead of requiring per-call logger parameters.
 
-## Dependencies
+## Dependencies 🧩📦
 
 - Replace fmt formatting with `std::format`, add tuple support to `kdl::str_join`, and drop the fmt build dependency.
 

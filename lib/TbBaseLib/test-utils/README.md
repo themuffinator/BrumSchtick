@@ -1,4 +1,3 @@
-# BrümSchtick Base Test Utility Library
+# BrumSchtick Base Test Utils 🧪🧰
 
-Contains a few generic helpers for writing tests such as Catch matchers and string makers.
-
+Generic helpers for writing tests (Catch matchers, string makers, and other tiny comforts). Keep tests cozy. 😄

@@ -182,10 +182,43 @@ const EntityModelFrame* Entity::modelFrame() const
          | kdl::value_or(nullptr);
 }
 
+const EntityModelFrame* Entity::modelFrame(
+  const EntityPropertyConfig& config, const Entity* worldEntity) const
+{
+  if (!m_model || !m_model->data())
+  {
+    return nullptr;
+  }
+
+  return modelSpecification(config, worldEntity)
+         | kdl::transform([&](const auto& modelSpecification) {
+             return m_model->data()->frame(modelSpecification.frameIndex);
+           })
+         | kdl::value_or(nullptr);
+}
+
 Result<ModelSpecification> Entity::modelSpecification() const
 {
   if (const auto* pointEntityDefinition = getPointEntityDefinition(definition()))
   {
+    const auto variableStore = EntityPropertiesVariableStore{*this};
+    return pointEntityDefinition->modelDefinition.modelSpecification(variableStore);
+  }
+  return ModelSpecification{};
+}
+
+Result<ModelSpecification> Entity::modelSpecification(
+  const EntityPropertyConfig& config, const Entity* worldEntity) const
+{
+  if (const auto* pointEntityDefinition = getPointEntityDefinition(definition()))
+  {
+    if (worldEntity && !config.globalExpressionVariables.empty())
+    {
+      const auto variableStore = EntityPropertiesVariableStore{
+        *this, worldEntity, config.globalExpressionVariables};
+      return pointEntityDefinition->modelDefinition.modelSpecification(variableStore);
+    }
+
     const auto variableStore = EntityPropertiesVariableStore{*this};
     return pointEntityDefinition->modelDefinition.modelSpecification(variableStore);
   }
@@ -213,10 +246,49 @@ const vm::mat4x4d& Entity::modelTransformation(
   return *m_cachedModelTransformation;
 }
 
+vm::mat4x4d Entity::modelTransformation(
+  const EntityPropertyConfig& config,
+  const Entity* worldEntity,
+  const std::optional<el::ExpressionNode>& defaultModelScaleExpression) const
+{
+  if (!worldEntity || config.globalExpressionVariables.empty())
+  {
+    return modelTransformation(defaultModelScaleExpression);
+  }
+
+  if (const auto* pointDefinition = getPointEntityDefinition(definition()))
+  {
+    const auto variableStore = EntityPropertiesVariableStore{
+      *this, worldEntity, config.globalExpressionVariables};
+    const auto scale = safeGetModelScale(
+      pointDefinition->modelDefinition, variableStore, defaultModelScaleExpression);
+    return vm::translation_matrix(origin()) * rotation() * vm::scaling_matrix(scale);
+  }
+  return vm::mat4x4d::identity();
+}
+
 Result<DecalSpecification> Entity::decalSpecification() const
 {
   if (const auto* pointDefinition = getPointEntityDefinition(definition()))
   {
+    const auto variableStore = EntityPropertiesVariableStore{*this};
+    return pointDefinition->decalDefinition.decalSpecification(variableStore);
+  }
+  return DecalSpecification{};
+}
+
+Result<DecalSpecification> Entity::decalSpecification(
+  const EntityPropertyConfig& config, const Entity* worldEntity) const
+{
+  if (const auto* pointDefinition = getPointEntityDefinition(definition()))
+  {
+    if (worldEntity && !config.globalExpressionVariables.empty())
+    {
+      const auto variableStore = EntityPropertiesVariableStore{
+        *this, worldEntity, config.globalExpressionVariables};
+      return pointDefinition->decalDefinition.decalSpecification(variableStore);
+    }
+
     const auto variableStore = EntityPropertiesVariableStore{*this};
     return pointDefinition->decalDefinition.decalSpecification(variableStore);
   }

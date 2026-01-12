@@ -1,33 +1,36 @@
-# Game
-## variable attributes
-- game path
-## constant attributes
-- palette (optional)
-- texture format
-Quake: wad
-Quake2: wal
-Hexen2: wad
+# Game Config Cheat Sheet 🎮✨
 
+## Attributes 🧩
+### Variable attributes
+- `game path`
 
-# Example
+### Constant attributes
+- `palette` (optional)
+- `texture format`
+  - Quake: `wad`
+  - Quake2: `wal`
+  - Hexen2: `wad`
 
+## Example 🧪
+```text
 {
-	name = "Quake",
+  name = "Quake",
   icon = "games/quake/Icon.png",
   fileformats = {"Quake1", "Valve"},
-	filesystem = {
-		searchpath = "id1",
-		packageformat = "pak"
-	},
-	textures = { 
-		type = "wad",
+  filesystem = {
+    searchpath = "id1",
+    packageformat = "pak"
+  },
+  textures = {
+    type = "wad",
     property = "wad",
-		palette = "games/quake/palette.lmp",
-		builtin = "textures"
-	},
+    palette = "games/quake/palette.lmp",
+    builtin = "textures"
+  },
   entities = {
-		definitions = "games/quake/Quake.fgd",
-    defaultcolor = "1.0 1.0 1.0 1.0"
-		modelformats = {"mdl", "bsp"}
+    definitions = "games/quake/Quake.fgd",
+    defaultcolor = "1.0 1.0 1.0 1.0",
+    modelformats = {"mdl", "bsp"}
   }
 }
+```

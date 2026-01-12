@@ -28,14 +28,21 @@
 namespace tb::mdl
 {
 class Entity;
+struct GlobalExpressionVariable;
 
 class EntityPropertiesVariableStore : public el::VariableStore
 {
 private:
   const Entity& m_entity;
+  const Entity* m_worldEntity = nullptr;
+  const std::vector<GlobalExpressionVariable>* m_globalExpressionVariables = nullptr;
 
 public:
   explicit EntityPropertiesVariableStore(const Entity& entity);
+  EntityPropertiesVariableStore(
+    const Entity& entity,
+    const Entity* worldEntity,
+    const std::vector<GlobalExpressionVariable>& globalExpressionVariables);
 
   VariableStore* clone() const override;
   size_t size() const override;

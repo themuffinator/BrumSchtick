@@ -453,6 +453,26 @@ mdl::FlagsConfig parseFlagsConfig(
   return mdl::FlagsConfig{flags};
 }
 
+std::vector<mdl::GlobalExpressionVariable> parseGlobalExpressionVariables(
+  const el::EvaluationContext& context, const el::Value& value)
+{
+  if (value == el::Value::Null)
+  {
+    return {};
+  }
+
+  return value.arrayValue(context) | std::views::transform([&](const auto& entry) {
+           checkUnexpectedKeys(
+             context, entry, "global expression variable", {"key", "override"});
+
+           const auto key = entry.at(context, "key").stringValue(context);
+           const auto overrideValue = entry.atOrDefault(context, "override").booleanValue(context);
+
+           return mdl::GlobalExpressionVariable{key, overrideValue};
+         })
+         | kdl::ranges::to<std::vector>();
+}
+
 mdl::FaceAttribsConfig parseFaceAttribsConfig(
   const el::EvaluationContext& context, const el::Value& value)
 {
@@ -486,7 +506,12 @@ mdl::EntityConfig parseEntityConfig(
     context,
     value,
     "entities",
-    {"definitions", "defaultcolor", "scale", "setDefaultProperties", "modelformats"});
+    {"definitions",
+     "defaultcolor",
+     "scale",
+     "setDefaultProperties",
+     "modelformats",
+     "globalExpressionVariables"});
 
   auto paths = value.at(context, "definitions").arrayValue(context)
                | std::views::transform([&](const auto& v) {
@@ -506,11 +531,15 @@ mdl::EntityConfig parseEntityConfig(
     modelFormatsValue.asStringList(context);
   }
 
+  auto globalExpressionVariables =
+    parseGlobalExpressionVariables(context, value.atOrDefault(context, "globalExpressionVariables"));
+
   return mdl::EntityConfig{
     std::move(paths),
     color,
     context.expression(value.atOrDefault(context, "scale")),
     value.atOrDefault(context, "setDefaultProperties").booleanValue(context),
+    std::move(globalExpressionVariables),
   };
 }
 

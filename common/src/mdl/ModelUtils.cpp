@@ -96,6 +96,25 @@ const GroupNode* findContainingGroup(const Node* node)
   return findContainingGroup(const_cast<Node*>(node));
 }
 
+WorldNode* findContainingWorld(Node* node)
+{
+  auto* current = node;
+  while (current)
+  {
+    if (auto* worldNode = dynamic_cast<WorldNode*>(current))
+    {
+      return worldNode;
+    }
+    current = current->parent();
+  }
+  return nullptr;
+}
+
+const WorldNode* findContainingWorld(const Node* node)
+{
+  return findContainingWorld(const_cast<Node*>(node));
+}
+
 GroupNode* findOutermostClosedGroup(Node* node)
 {
   return node

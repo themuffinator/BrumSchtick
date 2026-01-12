@@ -165,7 +165,7 @@ void inheritPropertyDefinitions(
 
 /**
  * Filter out redundant classes. A class is redundant if a class of the same name exists
- * at an earlier position in the given vector, unless the two classes each have one of the
+ * at a later position in the given vector, unless the two classes each have one of the
  * types point and brush each. That is, any duplicate is redundant with the exception of
  * overloaded point and brush classes.
  */
@@ -180,8 +180,9 @@ std::vector<EntityDefinitionClassInfo> filterRedundantClasses(
   const auto baseClassMask = getMask(EntityDefinitionClassType::BaseClass);
 
   auto seen = std::unordered_map<std::string, int>{};
-  for (const auto& classInfo : classInfos)
+  for (auto it = classInfos.rbegin(); it != classInfos.rend(); ++it)
   {
+    const auto& classInfo = *it;
     auto& seenMask = seen[classInfo.name];
     const auto classMask = getMask(classInfo.type);
 
@@ -200,6 +201,7 @@ std::vector<EntityDefinitionClassInfo> filterRedundantClasses(
     }
   }
 
+  std::ranges::reverse(result);
   return result;
 }
 

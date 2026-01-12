@@ -22,6 +22,7 @@
 #include "Logger.h"
 #include "Uuid.h"
 #include "mdl/ApplyAndSwap.h"
+#include "mdl/BrushNode.h"
 #include "mdl/CurrentGroupCommand.h"
 #include "mdl/EditorContext.h"
 #include "mdl/GroupNode.h"
@@ -44,7 +45,10 @@
 #include "kd/string_format.h"
 
 #include <algorithm>
+#include <optional>
 #include <ranges>
+#include <unordered_map>
+#include <unordered_set>
 
 namespace tb::mdl
 {
@@ -129,6 +133,108 @@ void unlinkGroups(Map& map, const std::vector<GroupNode*>& groupNodes)
 
   map.executeAndStore(
     std::make_unique<SetLinkIdsCommand>("Reset Link ID", std::move(linkIds)));
+}
+
+std::unordered_map<std::string, size_t> collectLinkedGroupCounts(const WorldNode& world)
+{
+  auto linkCounts = std::unordered_map<std::string, size_t>{};
+  const auto groups = collectGroups({const_cast<WorldNode*>(&world)});
+  for (const auto* group : groups)
+  {
+    ++linkCounts[group->linkId()];
+  }
+  return linkCounts;
+}
+
+bool isLinkedGroup(
+  const std::unordered_map<std::string, size_t>& linkIdCounts, const GroupNode* group)
+{
+  const auto it = linkIdCounts.find(group->linkId());
+  return it != linkIdCounts.end() && it->second > 1u;
+}
+
+struct ExtractLinkedBrushesContext
+{
+  std::vector<BrushNode*> selectedBrushes;
+  std::vector<BrushNode*> linkedBrushes;
+};
+
+std::optional<ExtractLinkedBrushesContext> collectExtractLinkedBrushesContext(
+  const Map& map)
+{
+  const auto& selection = map.selection();
+  if (
+    !selection.hasOnlyBrushes() || selection.brushes.empty()
+    || selection.hasBrushFaces())
+  {
+    return std::nullopt;
+  }
+
+  auto* worldNode = const_cast<WorldNode*>(&map.worldNode());
+  const auto linkIdCounts = collectLinkedGroupCounts(*worldNode);
+  if (linkIdCounts.empty())
+  {
+    return std::nullopt;
+  }
+
+  auto selectedBrushes = selection.brushes;
+  auto linkedBrushes = std::vector<BrushNode*>{};
+  auto sourceGroups = std::vector<GroupNode*>{};
+  auto parentGroups = std::vector<GroupNode*>{};
+  auto processedLinkIds = std::unordered_set<std::string>{};
+
+  for (auto* brush : selectedBrushes)
+  {
+    auto* containingGroup = brush->containingGroup();
+    if (!containingGroup || !isLinkedGroup(linkIdCounts, containingGroup))
+    {
+      return std::nullopt;
+    }
+
+    sourceGroups.push_back(containingGroup);
+
+    if (!processedLinkIds.insert(brush->linkId()).second)
+    {
+      continue;
+    }
+
+    const auto linkedNodes = collectLinkedNodes({worldNode}, *brush);
+    for (auto* linkedBrush : linkedNodes)
+    {
+      linkedBrushes.push_back(linkedBrush);
+
+      auto* linkedGroup = linkedBrush->containingGroup();
+      if (!linkedGroup || !isLinkedGroup(linkIdCounts, linkedGroup))
+      {
+        return std::nullopt;
+      }
+
+      if (auto* parentGroup = dynamic_cast<GroupNode*>(linkedGroup->parent()))
+      {
+        parentGroups.push_back(parentGroup);
+      }
+    }
+  }
+
+  if (linkedBrushes.empty())
+  {
+    return std::nullopt;
+  }
+
+  sourceGroups = kdl::vec_sort_and_remove_duplicates(std::move(sourceGroups));
+  parentGroups = kdl::vec_sort_and_remove_duplicates(std::move(parentGroups));
+
+  auto changedGroups = kdl::vec_sort_and_remove_duplicates(
+    kdl::vec_concat(std::move(sourceGroups), std::move(parentGroups)));
+  if (!checkLinkedGroupsToUpdate(changedGroups))
+  {
+    return std::nullopt;
+  }
+
+  return ExtractLinkedBrushesContext{
+    std::move(selectedBrushes),
+    std::move(linkedBrushes),
+  };
 }
 
 } // namespace
@@ -338,6 +444,63 @@ GroupNode* createLinkedDuplicate(Map& map)
   }
 
   return groupNodeClone;
+}
+
+void extractSelectedBrushesFromLinkedGroups(Map& map)
+{
+  const auto context = collectExtractLinkedBrushesContext(map);
+  if (!context)
+  {
+    return;
+  }
+
+  auto nodesToAdd = std::map<Node*, std::vector<Node*>>{};
+  auto nodesToSelect = std::vector<Node*>{};
+  nodesToSelect.reserve(context->linkedBrushes.size());
+
+  for (auto* linkedBrush : context->linkedBrushes)
+  {
+    auto* linkedGroup = linkedBrush->containingGroup();
+    if (!linkedGroup)
+    {
+      continue;
+    }
+
+    auto* parent = linkedGroup->parent();
+    if (!parent)
+    {
+      continue;
+    }
+
+    auto* clone = static_cast<BrushNode*>(linkedBrush->clone(map.worldBounds()));
+    clone->setLinkId(generateUuid());
+
+    nodesToAdd[parent].push_back(clone);
+    nodesToSelect.push_back(clone);
+  }
+
+  if (nodesToAdd.empty())
+  {
+    return;
+  }
+
+  auto transaction = Transaction{map, "Extract Brushes from Linked Groups"};
+  deselectAll(map);
+
+  if (addNodes(map, nodesToAdd).empty())
+  {
+    transaction.cancel();
+    return;
+  }
+
+  removeNodes(map, kdl::vec_static_cast<Node*>(context->selectedBrushes));
+  selectNodes(map, nodesToSelect);
+  transaction.commit();
+}
+
+bool canExtractSelectedBrushesFromLinkedGroups(const Map& map)
+{
+  return collectExtractLinkedBrushesContext(map).has_value();
 }
 
 void separateSelectedLinkedGroups(Map& map, const bool relinkGroups)

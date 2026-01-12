@@ -1,22 +1,20 @@
-# BrumSchtick Versioning, Packaging, and Releases
+# BrumSchtick Versioning, Packaging, and Releases 🚀📦🎛️
 
-This document describes how BrumSchtick versions are defined, how packages are built,
-and how GitHub releases are produced. It is intended for maintainers and release
-engineers.
+> [!NOTE]
+> This guide is for maintainers and release engineers. If you're just vibing, you can skip to the build docs. 😅
 
-## Versioning
+## Versioning 🔖🧪
+BrumSchtick uses tag-based versions.
 
-BrumSchtick uses tag-based versions. Valid tags follow one of these patterns:
+| 🔣 Pattern | ✅ Example | 🧠 Notes |
+| --- | --- | --- |
+| Calendar style | `v2026.1` | Preferred for calendar releases |
+| Semantic style | `v1.2.3` | Allowed when needed |
+| Release candidates | `v2026.1-RC1` | Pre-release tags |
 
-- Calendar style: `vYYYY.N` (example: `v2026.1`)
-- Semantic style: `vX.Y.Z` (example: `v1.2.3`)
-- Release candidates: append `-RCn` (example: `v2026.1-RC1`)
+The canonical version string lives in `version.txt`. Keep this file in sync with the release tag. It is used as a fallback when `git describe` cannot resolve a tag.
 
-The canonical version string lives in `version.txt`. Keep this file in sync with the
-release tag. It is used as a fallback when `git describe` cannot resolve a tag.
-
-### How versions propagate
-
+### How versions propagate 🧵✨
 Build configuration uses `cmake/Utils.cmake` to resolve a version string in this order:
 
 1. `git describe --dirty --tags`
@@ -30,8 +28,7 @@ The resolved string is stored in `GIT_DESCRIBE` and used to:
 - Set `VERSION_STR` and `BUILD_ID_STR` used by About dialogs and logs
 - Set `CPACK_PACKAGE_VERSION` and package filenames in `app/CMakeLists.txt`
 
-## Packaging Outputs
-
+## Packaging outputs 📦🧰
 Packaging is driven by CMake + CPack with per-platform behavior. Output filenames use:
 
 `BrumSchtick-<Platform>-<Arch>-<Tag>-<BuildType>.zip`
@@ -44,57 +41,65 @@ Examples:
 
 Checksums are generated alongside the archive as `.md5` files.
 
-### Windows
+### Platform details 🎯
+
+<details>
+<summary>Windows 🪟</summary>
 
 - Build script: `CI-windows.bat`
 - Packaging: `cpack.exe` produces a ZIP.
 - Checksums: `generate_checksum.bat`
 - The ZIP contains `BrumSchtick.exe`, resource folders, and the update script.
 
-### macOS
+</details>
+
+<details>
+<summary>macOS 🍎</summary>
 
 - Build script: `CI-macos.sh`
 - Packaging: `cpack` zips the `.app` bundle.
 - Signing/notarization (if configured): `app/sign_macos_archive.sh`
 - Checksums: `app/generate_checksum.sh`
 
-### Linux
+</details>
+
+<details>
+<summary>Linux 🐧</summary>
 
 - Build script: `CI-linux.sh`
 - AppImage creation: `linuxdeploy` via `app/cmake/AppImageGenerator.cmake.in`
 - Packaging: CPack wraps the AppImage into a ZIP.
 - Checksums: `app/generate_checksum.sh`
 
-## GitHub Actions Release Pipeline
+</details>
 
-The workflow in `.github/workflows/ci.yml` runs on tags and builds all supported
-platforms. For tag builds:
+## GitHub Actions Release Pipeline 🤖🚚
+The workflow in `.github/workflows/ci.yml` runs on tags and builds all supported platforms. For tag builds:
 
 - Each platform uploads `cmakebuild/*.zip` and `cmakebuild/*.md5` artifacts.
 - A dedicated `release` job downloads all artifacts and publishes a GitHub release.
 - Tags containing `-RC` are marked as pre-releases.
 - Release notes are generated automatically by GitHub.
 
-The same workflow also publishes the compiled manual from the Linux job when tags are
-built (see the `Upload compiled manual` step in the workflow).
+The same workflow also publishes the compiled manual from the Linux job when tags are built (see the `Upload compiled manual` step in the workflow).
 
-## Release Process (Maintainers)
-
+## Release process (maintainers) ✅🚀
 1. Update `version.txt` and commit the change.
 2. Tag the release using the version file:
 
-   `git tag -a "$(cat version.txt)" -m "BrumSchtick $(cat version.txt)"`
+   ```bash
+   git tag -a "$(cat version.txt)" -m "BrumSchtick $(cat version.txt)"
+   ```
 
 3. Push the tag:
 
-   `git push origin "$(cat version.txt)"`
+   ```bash
+   git push origin "$(cat version.txt)"
+   ```
 
-GitHub Actions will build, package, and publish the release automatically.
+GitHub Actions will build, package, and publish the release automatically. 🎉
 
-## Troubleshooting
-
-- If the build shows `unknown` as the version, ensure tags are available and that
-  `version.txt` matches a valid version format.
-- If the release assets are missing, verify that the tag build completed and that the
-  `release` job ran after all platform jobs.
-- The auto-updater expects asset names to follow the ZIP naming pattern above.
+## Troubleshooting 🧯😵
+- 🕵️ If the build shows `unknown` as the version, ensure tags are available and that `version.txt` matches a valid version format.
+- 📦 If the release assets are missing, verify that the tag build completed and that the `release` job ran after all platform jobs.
+- 🔍 The auto-updater expects asset names to follow the ZIP naming pattern above.

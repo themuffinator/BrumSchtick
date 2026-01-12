@@ -28,6 +28,7 @@
 #include "mdl/EntityModel.h"
 #include "mdl/EntityModelManager.h"
 #include "mdl/EntityNode.h"
+#include "mdl/ModelUtils.h"
 #include "render/ActiveShader.h"
 #include "render/Camera.h"
 #include "render/MaterialIndexRangeRenderer.h"
@@ -61,9 +62,12 @@ EntityModelRenderer::~EntityModelRenderer()
 
 void EntityModelRenderer::addEntity(const mdl::EntityNode* entityNode)
 {
+  const auto* worldNode = mdl::findContainingWorld(entityNode);
+  const auto* worldEntity = worldNode ? &worldNode->entity() : nullptr;
+  const auto& propertyConfig = entityNode->entityPropertyConfig();
   const auto modelSpec =
     mdl::safeGetModelSpecification(m_logger, entityNode->entity().classname(), [&]() {
-      return entityNode->entity().modelSpecification();
+      return entityNode->entity().modelSpecification(propertyConfig, worldEntity);
     });
 
   auto* renderer = m_entityModelManager.renderer(modelSpec);
@@ -80,9 +84,12 @@ void EntityModelRenderer::removeEntity(const mdl::EntityNode* entityNode)
 
 void EntityModelRenderer::updateEntity(const mdl::EntityNode* entityNode)
 {
+  const auto* worldNode = mdl::findContainingWorld(entityNode);
+  const auto* worldEntity = worldNode ? &worldNode->entity() : nullptr;
+  const auto& propertyConfig = entityNode->entityPropertyConfig();
   const auto modelSpec =
     mdl::safeGetModelSpecification(m_logger, entityNode->entity().classname(), [&]() {
-      return entityNode->entity().modelSpecification();
+      return entityNode->entity().modelSpecification(propertyConfig, worldEntity);
     });
 
   auto* renderer = m_entityModelManager.renderer(modelSpec);
@@ -183,9 +190,6 @@ void EntityModelRenderer::doRender(RenderContext& renderContext)
     shader.set("CameraUp", renderContext.camera().up());
     shader.set("ViewMatrix", renderContext.camera().viewMatrix());
 
-    const auto& propertyConfig = m_entities.begin()->first->entityPropertyConfig();
-    const auto& defaultModelScaleExpression = propertyConfig.defaultModelScaleExpression;
-
     for (const auto& [entityNode, renderer] : m_entities)
     {
       if (!m_showHiddenEntities && !m_editorContext.visible(*entityNode))
@@ -202,8 +206,13 @@ void EntityModelRenderer::doRender(RenderContext& renderContext)
 
       shader.set("Orientation", static_cast<int>(modelData->orientation()));
 
+      const auto* worldNode = mdl::findContainingWorld(entityNode);
+      const auto* worldEntity = worldNode ? &worldNode->entity() : nullptr;
+      const auto& propertyConfig = entityNode->entityPropertyConfig();
+      const auto& defaultModelScaleExpression = propertyConfig.defaultModelScaleExpression;
       const auto transformation = vm::mat4x4f{
-        entityNode->entity().modelTransformation(defaultModelScaleExpression)};
+        entityNode->entity().modelTransformation(
+          propertyConfig, worldEntity, defaultModelScaleExpression)};
       const auto multMatrix =
         MultiplyModelMatrix{renderContext.transformation(), transformation};
 

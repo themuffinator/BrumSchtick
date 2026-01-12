@@ -170,13 +170,17 @@ void EntityNode::doPick(
       }
     }
 
+    const auto& propertyConfig = entityPropertyConfig();
+    const auto& defaultModelScaleExpression = propertyConfig.defaultModelScaleExpression;
+    const auto* worldNode = findContainingWorld(this);
+    const auto* worldEntity = worldNode ? &worldNode->entity() : nullptr;
+
     // only if the bbox hit test failed do we hit test the model
-    if (const auto* modelFrame = m_entity.modelFrame())
+    if (const auto* modelFrame = m_entity.modelFrame(propertyConfig, worldEntity))
     {
       // we transform the ray into the model's space
-      const auto defaultModelScaleExpression =
-        entityPropertyConfig().defaultModelScaleExpression;
-      const auto transform = m_entity.modelTransformation(defaultModelScaleExpression);
+      const auto transform = m_entity.modelTransformation(
+        propertyConfig, worldEntity, defaultModelScaleExpression);
       if (const auto inverse = vm::invert(transform))
       {
         const auto transformedRay = vm::ray3f{ray.transform(*inverse)};
@@ -278,19 +282,22 @@ void EntityNode::validateBounds() const
 
   m_cachedBounds = CachedBounds{};
 
-  const auto hasModel = m_entity.modelFrame() != nullptr;
-  const auto& defaultModelScaleExpression =
-    entityPropertyConfig().defaultModelScaleExpression;
+  const auto* worldNode = findContainingWorld(this);
+  const auto* worldEntity = worldNode ? &worldNode->entity() : nullptr;
+  const auto& propertyConfig = entityPropertyConfig();
+  const auto& defaultModelScaleExpression = propertyConfig.defaultModelScaleExpression;
+  const auto* modelFrame = m_entity.modelFrame(propertyConfig, worldEntity);
+  const auto hasModel = modelFrame != nullptr;
+  const auto transformation =
+    m_entity.modelTransformation(propertyConfig, worldEntity, defaultModelScaleExpression);
   if (hasModel)
   {
     m_cachedBounds->modelBounds =
-      vm::bbox3d(m_entity.modelFrame()->bounds())
-        .transform(m_entity.modelTransformation(defaultModelScaleExpression));
+      vm::bbox3d(modelFrame->bounds()).transform(transformation);
   }
   else
   {
-    m_cachedBounds->modelBounds =
-      DefaultBounds.transform(m_entity.modelTransformation(defaultModelScaleExpression));
+    m_cachedBounds->modelBounds = DefaultBounds.transform(transformation);
   }
 
   if (hasChildren())

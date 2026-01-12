@@ -1,4 +1,3 @@
-# BrümSchtick Expression Language Library
+# BrumSchtick Expression Language Library 🧪🔮
 
-Contains BrümSchtick's expression language parser and runtime facilities.
-
+Contains BrumSchtick's expression language parser and runtime facilities. Mathy wizardry lives here. 🤓✨

@@ -51,7 +51,12 @@ namespace
 std::optional<mdl::DecalSpecification> getDecalSpecification(
   const mdl::EntityNode& entityNode)
 {
-  return entityNode.entity().decalSpecification() | kdl::transform([](auto decalSpec) {
+  const auto* worldNode = mdl::findContainingWorld(&entityNode);
+  const auto* worldEntity = worldNode ? &worldNode->entity() : nullptr;
+  const auto& propertyConfig = entityNode.entityPropertyConfig();
+
+  return entityNode.entity().decalSpecification(propertyConfig, worldEntity)
+         | kdl::transform([](auto decalSpec) {
            return !decalSpec.materialName.empty()
                     ? std::make_optional(std::move(decalSpec))
                     : std::nullopt;

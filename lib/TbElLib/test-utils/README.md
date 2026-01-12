@@ -1,4 +1,3 @@
-# BrümSchtick Expression Language Test Utility Library
+# BrumSchtick Expression Language Test Utils 🧪🔮
 
-Contains utilities for writing tests that involve BrümSchtick's expression language.
-
+Utilities for writing tests that involve BrumSchtick's expression language. Tiny spells for big confidence. 🤓✨

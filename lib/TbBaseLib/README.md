@@ -1,4 +1,3 @@
-# BrümSchtick Base Library
+# BrumSchtick Base Library 🧱✨
 
-Contains generic utilities used by all components in BrümSchtick.
-
+Generic utilities used by all BrumSchtick components. Small, sturdy, and oddly charming. 😄🧰

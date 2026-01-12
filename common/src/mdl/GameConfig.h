@@ -22,6 +22,7 @@
 #include "Color.h"
 #include "el/Expression.h"
 #include "mdl/BrushFaceAttributes.h"
+#include "mdl/EntityProperties.h"
 #include "mdl/Tag.h"
 
 #include "kd/reflection_decl.h"
@@ -80,9 +81,15 @@ struct EntityConfig
   Color defaultColor;
   std::optional<el::ExpressionNode> scaleExpression;
   bool setDefaultProperties = false;
+  std::vector<GlobalExpressionVariable> globalExpressionVariables;
 
   kdl_reflect_decl(
-    EntityConfig, defFilePaths, defaultColor, scaleExpression, setDefaultProperties);
+    EntityConfig,
+    defFilePaths,
+    defaultColor,
+    scaleExpression,
+    setDefaultProperties,
+    globalExpressionVariables);
 };
 
 struct FlagConfig

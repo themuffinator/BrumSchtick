@@ -1,54 +1,56 @@
-% BrümSchtick  \_\_TB_VERSION\_\_ Reference Manual
+% BrümSchtick  \_\_TB_VERSION\_\_ Reference Manual 🤪📘✨
 % Kristian Duske
 % 11-13-2015
 
-# Introduction {#introduction}
+# Introduction 🤪🧱✨ {#introduction}
 
-BrümSchtick is a level editing program for brush-based game engines such as Quake, Quake 2, and Hexen 2. BrümSchtick is easy to use and provides many simple and advanced tools to create complex and interesting levels with ease. This document contains the manual for BrümSchtick. Reading this document will teach you how to use BrümSchtick and how to use its advanced features.
+> Vibe Note 🤪💫: This manual is intentionally playful and emoji-rich. The instructions are still precise; the vibes are just louder.
 
-## Features {#features}
+BrümSchtick is a level editor for brush-based game engines like Quake, Quake 2, and Hexen 2. It's friendly, fast, and stacked with power-user toys. This manual is your spellbook for the editor itself—how it works, why it works, and how to wrangle its advanced features. Read on, build something weird, and have fun. 🧱✨
 
-* **General**
-  - Full support for editing in 3D and in up to three 2D views
-  - High performance renderer with support for huge maps
-  - Unlimited Undo and Redo
-  - Macro-like command repetition
-  - Linked groups
-  - Issue browser with automatic quick fixes
-  - Run external compilers and launch game engines
-  - Point file support
-  - Portal file support
-  - Automatic backups
-  - Free and cross platform
-* **Brush Editing**
-  - Robust vertex editing with edge and face splitting and manipulating multiple vertices together
-  - Clipping tool with two and three points
-  - Scale and shear tools
-  - CSG operations: merge, subtract, hollow
-  - UV view for easy texturing manipulations
-  - Precise alignment lock for all brush editing operations
-  - Multiple material collections
-* **Entity Editing**
-  - Entity browser with drag and drop support
-  - Support for FGD, ENT and DEF files for entity definitions
-  - Mod support
-  - Entity link visualization
-  - Displays 3D models in the editor (supports mdl, md2, md3, bsp, dkm)
-  - Smart entity property editors
+## Features 🎛️✨ {#features}
 
-## About this Document
+* **General** 🎛️
+  - Full support for editing in 3D and in up to three 2D views 🧭
+  - High performance renderer with support for huge maps 🚀
+  - Unlimited Undo and Redo ↩️
+  - Macro-like command repetition 🪄
+  - Linked groups 🔗
+  - Issue browser with automatic quick fixes 🧰
+  - Run external compilers and launch game engines 🎮
+  - Point file support 📍
+  - Portal file support 🌀
+  - Automatic backups 🛟
+  - Free and cross platform 🌍
+* **Brush Editing** 🧱
+  - Robust vertex editing with edge and face splitting and manipulating multiple vertices together 🧱
+  - Clipping tool with two and three points ✂️
+  - Scale and shear tools 📏
+  - CSG operations: merge, subtract, hollow 🧩
+  - UV view for easy texturing manipulations 🧵
+  - Precise alignment lock for all brush editing operations 🧲
+  - Multiple material collections 🎨
+* **Entity Editing** 🧬
+  - Entity browser with drag and drop support 🧲
+  - Support for FGD, ENT and DEF files for entity definitions 📚
+  - Mod support 🧩
+  - Entity link visualization 🔗
+  - Displays 3D models in the editor (supports mdl, md2, md3, bsp, dkm) 🧊
+  - Smart entity property editors 🧠
 
-This document is intended to help you learn to use the BrümSchtick editor. It is not intended to teach you how to map, and it isn't a tutorial either. If you are having technical problems with your maps, or need information on how to create particular effects or setups for the particular game you are mapping for, you should ask other mappers for help (see [References and Links](#references_and_links) to find mapping communities and such). This document will only teach you how to use this editor.
+## About this Document 🎛️✨
 
-# Getting Started {#getting_started}
+This document is here to teach you how to use the BrümSchtick editor itself. It is not a mapping tutorial, and it won't solve game-specific pipeline issues. If you need mapping wizardry or game-specific setups, ask other mappers for help (see [References and Links](#references_and_links)). This document focuses on the editor's tools, workflows, and behaviors. 🧠✨
 
-This section starts off with a small introduction to the most important technical terms related to mapping for brush-based engines. Additionally, we introduce some concepts on which BrümSchtick is built. Afterwards, we introduce the welcome window, the game selection dialog, we give an overview of the main window and explain the camera navigation in the 3D and 2D views.
+# Getting Started 🤪🧱✨ {#getting_started}
 
-## Preliminaries {#preliminaries}
+This section starts with a quick intro to the most important technical terms related to mapping for brush-based engines. We also introduce concepts BrümSchtick is built on, then tour the welcome window, the game selection dialog, the main window, and camera navigation in the 3D and 2D views. 🧭✨
+
+## Preliminaries 🎛️✨ {#preliminaries}
 
 In this section we introduce some technical terms related to mapping in Quake-engine based games. It is not important that you understand every detail of all of these terms, but in order to understand how BrümSchtick works, you should have a general idea how maps are structured and how BrümSchtick views and manages that structure. In particular, this section introduces some concepts that we added to the map structures (without changing the file format, of course). Knowing and understanding these concepts will help you to get a grip on several important aspects of editing levels in BrümSchtick.
 
-### Map Definitions
+### Map Definitions 🧩✨
 
 In Quake-engine based games, levels are usually called maps. The following simple specification of the structure of a map is written in extended Backus-Naur-Form (EBNF), a simple syntax to define hierarchical structures that is widely used in computer science to define the syntax of computer languages. Don't worry, you don't have to understand EBNF as we will explain the definitions line by line.
 
@@ -64,7 +66,7 @@ Line four defines a **Brush** as a possibly empty sequence of faces (but usually
 
 In this document, we use the term _object_ to refer to entities and brushes.
 
-### BrümSchtick's View of Maps
+### BrümSchtick's View of Maps 🧩✨
 
 BrümSchtick organizes the objects of a map a bit differently than how they are organized in the map files. Firstly, BrümSchtick introduces two additional concepts: [Layers](#layers) and [Groups](#groups). Secondly, the worldspawn entity is hidden from you and its properties are associated with the map. To differentiate BrümSchtick's view from the view that other tools and compilers have, we use the term "world" instead of "map" here. In the remainder of this document, we will use the term "map" again.
 
@@ -77,7 +79,7 @@ The first line defines the structure of a map as BrümSchtick sees it. To BrümS
 
 To summarize, BrümSchtick sees a map as a hierarchy (a tree). The root of the hierarchy is called world and represents the entire map. The world consists first of layers, then groups, entities, and brushes, whereby groups can contain more groups, entities, and brushes, and entities can again contain brushes. Because groups can contain other groups, the hierarchy can be arbitrarily deep, although in practice groups will rarely contain more than one additional level of sub groups.
 
-### Brush Geometry {#brush_geometry}
+### Brush Geometry 🧩✨ {#brush_geometry}
 
 In standard map files, the geometry of a brush is defined by a set of faces. Apart from the attributes defining the UV mapping, a face also specifies a plane using three plane points. The plane is oriented by the order in which the three points are written in the face specification in the map file. Here is an example:
 
@@ -94,23 +96,23 @@ The plane points are given as three groups of three numbers. Each group is made 
 
 The normal of the plane is in the direction of the cross product of v1 and v2. In the diagram above, the plane normal points towards you. Together with its normal, the plane divides three dimensional space into two half spaces: The upper half space above the plane, and the lower half space below the plane. In this interpretation, the volume of the brush is the intersection of the lower half spaces defined by the face planes. This way of defining brushes has the advantage that all brushes are automatically convex. However, this representation of brushes does not directly contain any other geometric information of the brush, particularly its vertices, edges, and facets, which must be computed from the plane representation. In BrümSchtick, the vertices, edges, and facets are called the **brush geometry**. BrümSchtick uses the same method as the BSP compilers to compute the brush geometry. Having the brush geometry is necessary mainly for two things: Rendering and vertex editing.
 
-### Entity Definitions {#entity_definitions}
+### Entity Definitions 🧩✨ {#entity_definitions}
 
 To BrümSchtick, entities are just a sequence of properties (key value pairs), most of which are without any special meaning. In particular, the entity properties do not specify which model BrümSchtick should display for the entity in its viewports. Additionally, some property values have specific types, such as color, angle, or position. But these types cannot be hardcoded into the editor, because depending on the game, mod, or entity, a property called "angle" may have a different meaning. To give BrümSchtick more information on how to interpret a particular entity and its properties, an entity definition is necessary. Entity definitions specify the spawnflags of an entity, the names and types of its properties, the model to display in the editor, and other things. They are usually specified in a separate file that you can [load into the editor](#entity_definition_setup).
 
-### Mods {#mods}
+### Mods 🧩✨ {#mods}
 
 A mod (short for game modification) is a way of extending a Quake-engine based game with custom gameplay and assets. Custom assets include models, sounds, and materials. From the perspective of the game, a mod is a subdirectory in the game directory where the additional assets reside in the form of loose files or archives such as pak files. As far as BrümSchtick is concerned, a mod just provides assets, some of which replace existing assets from the game and some of which are new. For example, a mod might provide a new model for an entity, or it provides an entirely new entity. In order to make these new entities usable in BrümSchtick, two things are required: First, BrümSchtick needs an entity definition for these entities, and BrümSchtick needs to know where it should look for the models to display in the viewports. The first issue can be addressed by pointing BrümSchtick to an alternate [entity definition file](#entity_definitions), and the second issue can be addressed by [adding a mod directory](#mod_setup) for the current map.
 
 Every game has a default mod which is always loaded by BrümSchtick. As an example, the default mod for Quake is _id1_, which is the directory that contains all game content. BrümSchtick supports multiple mods, and in the case of multiple mods, there has to be a policy for resolving name conflicts between resources. For example, a mod might provide an entity model for an entity defined in the default mod in order to replace the default model with a more detailed one. To do this, the mod provides an entity model with the same name as the one it wants to replace. To resolve such name conflicts, BrümSchtick assigns priorities for mods, and if a name conflict occurs between different mods, the mod with the highest priority wins. Note that the default mod always has the lowest priority.
 
-### Materials and Material Collections {#materials}
+### Materials and Material Collections 🧩✨ {#materials}
 
 A material defines how a surface is rendered and how it interacts with light. In BrümSchtick, materials are usually closely related to textures. When BrümSchtick finds a texture on the filesystem, it automatically creates a default material for it. For Quake 3, additional material properties are read from shader files. Materials are usually not provided individually, but as material collections. A material collection can be a directory containing loose image files, or it can be an archive such as a wad file. Some games such as Quake 2 come with textures that are readily loadable by BrümSchtick. Such textures are called _internal_. _External_ textures on the other hand are textures that you provide by loading a wad file. Since some games such as Quake don't come with their own textures readily available, you have to obtain the textures you wish to use and add them to BrümSchtick manually by [loading a wad file](#material_management).
 
 Multiple material collections may contain a material with the same name, resulting in a name conflict. Such a conflict is resolved by observing the order in which the material collections were loaded - the material that was loaded most recently wins the conflict. You cannot control the load order unless you are using wad files.
 
-## Startup {#startup}
+## Startup 🎛️✨ {#startup}
 
 The first thing you will see when BrümSchtick starts is the welcome window. This window allows you to open one of your most recently edited maps, to create a new map or to browse your computer for an existing map you wish to open in BrümSchtick.
 
@@ -126,7 +128,7 @@ The list of supported games is shown on the right side of the dialog. Below the 
 
 Once you have selected a game and a map format, BrümSchtick will open the main editing window with a new map. The following section gives an overview of this window and its main elements. If you want to find out how to [work with mods](#mods) and how to [add materials](#material_management), you can skip ahead to the respective sections.
 
-## Main Window {#main_window}
+## Main Window 🎛️✨ {#main_window}
 
 The main window consists of a menu bar, a toolbar, the editing area, an inspector on the right and an info panel at the bottom. In the screenshot below, there are three editing areas: one 3D viewport and two orthographic 2D editing areas.
 
@@ -134,7 +136,7 @@ The main window consists of a menu bar, a toolbar, the editing area, an inspecto
 
 The sizes of the editing area, the inspector and the info bar can be changed by dragging the dividers with the mouse. This applies to some of the dividers in the inspector as well. If a divider is 2 pixels thick, it can be dragged with the mouse. The positions of the dividers and the size of the editing window are saved when you close a window. The following subsections introduce the most important parts of the main window: the editing area, the inspector, and the info bar. The toolbar and the menu will be explained in more detail in later sections.
 
-### The Editing Area
+### The Editing Area 🧩✨
 
 The editing area is divided in two sections: The context sensitive info bar at the top and the viewports below. The info bar contains different controls depending on which tool is currently activated. You can switch between tools such as the rotate tool and the vertex tool using the toolbar buttons, the menu or with the respective keyboard shortcuts. The context sensitive controls allow you to perform certain actions that are relevant to the current tool such as setting the rotation center when in the rotate tool or moving objects by a given delta when in the default move tool. The info bar also includes a search field that filters visible map objects by entity property values or texture/material names; use key=value or key:value to target a specific property. Additionally, there is a button labeled "View Options" on the right of the info bar. Clicking on this button unfolds a dropdown containing controls to [filter out](#filtering_rendering_options) certain objects in the viewports or to change how the viewport [renders its contents](#filtering_rendering_options).
 
@@ -163,7 +165,7 @@ The normal axis is the axis that would be protruding from the screen when lookin
 
 At most one of the viewports can have focus, that is, only one of them can receive mouse and keyboard events. Focus is indicated by a highlight rectangle at the border of the viewport. If no viewport is focused, you have to click on one of them to give it focus. Once a viewport has focus, the focus follows the mouse pointer, that is, to move focus from one viewport to another, simply move the mouse to the other viewport. The focused viewport can also be maximized by choosing #menu(Menu/View/Maximize Current View) from the menu. Hit the same keyboard shortcut again to restore the previous view layout.
 
-### Map Bounds {#map_bounds}
+### Map Bounds 🧩✨ {#map_bounds}
 
 ![McKinley Base and Quake map bounds](images/CTF1Bounds.png)
 
@@ -175,7 +177,7 @@ In Quake-engine games, these bounds represent a limit on the volume that can con
 
 In any case, keep in mind that the displayed bounds are just a guide that you should use to help yourself stay within the limits of your target game engine. Changing the bounds in BrümSchtick will not change the behavior in the game!
 
-### The Inspector
+### The Inspector 🧩✨
 
 The inspector is located at the right of the main window and contains various controls, distributed to several pages, to change certain properties of the currently selected objects. You can show or hide the inspector by choosing #menu(Menu/View/Toggle Inspector). To switch directly to a particular inspector page, choose #menu(Menu/View/Switch to Map Inspector) for the map inspector, #menu(Menu/View/Switch to Entity Inspector) for the entity inspector, and #menu(Menu/View/Switch to Face Inspector) for the face inspector.
 
@@ -183,15 +185,15 @@ The inspector is located at the right of the main window and contains various co
 
 The **Map Inspector** allows you to edit [layers](#layers), configure displayed [map bounds](#map_bounds), and set up which game modifications ([mods](#mods)) you are working with. The **Entity Inspector** is the tool of choice to change the [properties](#entity_properties) of entities. It also contains an entity browser that allows you to [create new entities](#creating_entities) by dragging them from the browser to a viewport and it allows you to [set up entity definitions](#entity_definitions). Additionally, you can manage entity definition files in the entity inspector. The face inspector is used to edit the attributes of the currently selected faces. At the top, it has a graphical [UV editor](#uv_editor). Below that, you can edit the face attributes directly by editing their values. To select a material for the currently selected faces, you can use the [material browser](#material_browser).
 
-### The Info Bar
+### The Info Bar 🧩✨
 
 You can show or hide the info bar by choosing #menu(Menu/View/Toggle Info Panel). It contains the console where BrümSchtick prints out messages, warnings and errors, and the live [issue browser](#issue_browser) where you can view, filter and resolve issues with your map.
 
-## Camera Navigation {#camera_navigation}
+## Camera Navigation 🎛️✨ {#camera_navigation}
 
 Navigation in BrümSchtick is quite simple and straightforward. You will mostly use the mouse to move and pan the camera and to look around. There are also some keyboard shortcuts to help you position the camera with more precision. Just like in Quake, the camera cannot be rolled - in other words, up is always in the positive Z direction and down is always in the negative Z direction. The behavior of the camera can be controlled in the [preferences](#mouse_input).
 
-### Looking and Moving Around
+### Looking and Moving Around 🧩✨
 
 In the 3D viewport, you can look around by holding the right mouse button and dragging the mouse around. There are several ways to move the camera around. First and foremost, you can move the camera forward and backward in the viewing direction by spinning the scroll wheel. If you prefer to have the scroll wheel move the camera in the direction where the mouse cursor is pointing, you can check the "Move camera towards cursor" option in the preferences. To move the camera sideways and up / down, hold the middle mouse button and drag the mouse in any direction. For tablet users, there is an option in the preferences that will enable you to move the camera horizontally by holding #key(Alt). Additionally, you can use the following keyboard shortcuts:
 
@@ -206,31 +208,31 @@ Down         #action(Controls/Camera/Move down)
 
 To adjust the movement speed of the these keyboard shortcuts, you can either go the [preferences](#mouse_input) and adjust the corresponding slider, or you can turn the mouse wheel while holding the right mouse button in the 3D view.
 
-### Orbiting
+### Orbiting 🧩✨
 
 The camera orbit mode allows you to rotate the camera about a selectable point. To get an idea as to what this means, imagine that you define a point in the map by clicking on a brush. The point where you clicked will be the center of your camera orbit. Now image a sphere whose center is the point where you just clicked and whose radius is the distance between the camera and the point. Orbiting will move the camera on the surface of that sphere while adjusting the camera's direction so that you keep looking at the same point. Visually, this is the same as rotating the entire map about the orbit center. Of course, you are not actually rotating anything - only the camera's position and direction are modified. Note that, since up and down are always fixed, you cannot cross the north and south poles of the orbit sphere.
 
 Camera orbit mode is very useful if you are editing a brush because it allows you to view this brush from all sides quickly. Its best to try it and see for yourself how useful it is. To invoke the orbit mode, click and drag with the right mouse button while holding #key(Alt). The orbit center is the point in the map which you initially clicked. Dragging sideways will orbit the camera horizontally and dragging up and down will orbit the camera vertically. You can change the orbit radius during the orbit with the scroll wheel.
 
-### Automatic Navigation
+### Automatic Navigation 🧩✨
 
 You can center the camera on the current selection by choosing #menu(Menu/View/Camera/Focus on Selection) from the menu. This will position the camera so that all selected objects become visible. The camera will not be rotated at all; only its position will be changed. Note that this action will also adjust the 2D viewports so that the selection becomes visible there as well.
 
 Finally, you can move the camera to a particular position. To do this, choose #menu(Menu/View/Camera/Move Camera to...) and enter the position into the dialog that pops up. This does not affect the 2D views.
 
-## Navigating the 2D Viewports
+## Navigating the 2D Viewports 🎛️✨
 
 ![Linked YZ and XZ viewports](images/Linked2DViewports.gif)
 
 Navigating the 2D viewports is naturally a lot simpler than navigating the 3D viewport. You can pan the viewport by holding and dragging either the middle or the right mouse button, and you can use the scroll wheel to adjust the zoom. Note that if you have set your viewport layout to show more than one 2D viewport, then the 2D viewports are linked. Specifically, the zoom factor is linked so that you always have a consistent zoom level across all 2D viewports, and the viewports are panned simultaneously along the same axes. This means that if you pan the XY viewport along the X axis, the XZ viewport gets panned along the X axis, too, so that you don't have to pan both viewports manually. Also note that zooming always keeps the coordinates under the mouse pointer invariant, that is, you can focus on a particular object or area by hovering the mouse over it and zooming in or out.
 
-## FOV and Zoom
+## FOV and Zoom 🎛️✨
 
 For the 3D view, the camera FOV (field of vision) can be adjusted in the [view preferences](#view_layout_and_rendering) by dragging the slider. This is a permanent setting.
 
 To temporarily adjust the camera's zoom, hold #key(Shift) and scroll the mouse wheel. To reset the zoom factor, hit #action(Controls/Map view/Reset camera zoom).
 
-# Selection {#selection}
+# Selection 🤪🧱✨ {#selection}
 
 There are two different kinds of things that can be selected in BrümSchtick: objects and brush faces. Most of the time, you will select objects such as entities and brushes. Selecting individual brush faces is only useful for changing their attributes, e.g. the materials. You can only select objects or brush faces, but not both at the same time. However, a selection of brushes (and nothing else) is treated as if all of their brush faces were selected individually.
 
@@ -238,7 +240,7 @@ There are two different kinds of things that can be selected in BrümSchtick: ob
 
 In the 3D viewport, selected objects are rendered with red edges and slightly tinted faces to distinguish them visually. The bounding box of the selected objects is rendered in red, with spikes extending from every corner when the mouse hovers over one of the selected objects. These spikes are useful to precisely position objects in relation to other objects. Additionally, the dimensions of the bounding box are displayed in the 3D viewport. In a 2D viewport, selected objects are just rendered with red edges. No spikes or bounding boxes are displayed there since the 2D viewports have a continuous grid anyway.
 
-## Selecting Objects
+## Selecting Objects 🎛️✨
 
 To select a single object, simply left click it in a viewport. Left clicking anywhere in a viewport deselects all other selected objects, so if you wish to select multiple objects, hold #key(Ctrl) while left clicking the objects to be selected. If you click an already selected object while holding #key(Ctrl), it will be deselected. You can also _paint select_ multiple objects. First, select an object, then hold #key(Ctrl) while dragging over unselected objects. Take care not to begin your dragging over a selected object, as this will [duplicate the selected objects](#duplicating_objects). Note that this even applies to occluded objects, so when you start your paint selection, you must ensure that no object under the mouse is selected.
 
@@ -262,21 +264,21 @@ Choose #menu(Menu/Edit/Select Inverse) from the menu to invert the selection, i.
 
 Finally, you can deselect everything by left clicking in the void, or by choosing #menu(Menu/Edit/Select None).
 
-## Selecting Brush Faces
+## Selecting Brush Faces 🎛️✨
 
 ![Selected brush face](images/BrushFaceSelection.png)
 
 To select a brush face, you need to hold #key(Shift) and left click it in the 3D viewport. You can select multiple brush faces by additionally holding #key(Ctrl). To select all faces of a brush, you can left double click that brush while holding #key(Shift). If you additionally hold #key(Ctrl), the faces are added to the current selection. To paint select brush faces, first select one brush face, then left drag while holding #key(Ctrl) and #key(Shift). To deselect all brush faces, simply click in the void or choose #menu(Menu/Edit/Select None).
 
-# Editing
+# Editing 🤪🧱✨
 
 In this section, we will cover all topics related to the actual editing of a map. We begin by explaining how to set up the map itself, that is, how to set up mods, entity definitions, and material collection. Afterwards, we show you how to create new objects such as entities or brushes, how to edit and transform them, and how to delete them. After that, we explain how you can work with materials in BrümSchtick. The following section introduces the various tools at your disposal to shape brushes while the section after that focuses on entities and how to edit their properties. The goal of the final section is to help you keep an overview in your map by using layers, groups, and by various other means.
 
-## Map Setup
+## Map Setup 🎛️✨
 
 The first step when creating a new map is the setup of mods, entity definitions, and material collections.
 
-### Setting Up Mods {#mod_setup}
+### Setting Up Mods 🧩✨ {#mod_setup}
 
 ![Mod editor](images/ModEditor.png) We explained [previously](#mods) that a mod is just a sub directory in the game directory itself. Every game has a default mod that is always active and that cannot be deactivated - in Quake, this is _id1_, the directory that contains all game resources. BrümSchtick supports an unlimited number of additional mods. Mods can be added, removed, and reordered by using the mod editor, which you can find at the bottom of the map inspector.
 
@@ -286,7 +288,7 @@ The order of the enabled mods is important because it defines the [priorities fo
 
 Mods are stored in a worldspawn property called "_tb_mod".
 
-### Loading Entity Definitions {#entity_definition_setup}
+### Loading Entity Definitions 🧩✨ {#entity_definition_setup}
 
 ![Entity definition editor](images/EntityDefinitionEditor.png) Entity definitions are text files containing information about [the meaning of entities and their properties](#entity_definitions). Depending on the game and mod you are mapping for, you might want to load different entity definitions into the editor. To load an entity definition file into BrümSchtick, switch to the entity inspector and click on the entity browser title bar where it says "Settings". The entity definition browser is horizontally divided into two areas. The upper area contains a list of _builtin_ entity definition files. These are the entity definition files that came with BrümSchtick for the game you are currently working on. You can select one of these builtin files by clicking on it. BrümSchtick will load the file and update its resources accordingly. Alternatively, you may want to load an external entity definition file of your own. To do this, click the button labeled "Browse" in the lower area of the entity definition browser and choose the file you wish to load. Currently, BrümSchtick supports Radiant DEF files and ENT files as well as [Valve FGD][FGD File Format] files. To reload the entity definitions (as well as the referenced models) from the currently loaded external file, you can click the button labeled "Reload" at the bottom or use #menu(Menu/File/Reload Entity Definitions). This may be useful if you're editing an entity definition file for a mod you're working on.
 
@@ -296,9 +298,9 @@ Note that FGD and ENT files contain much more information than DEF files and are
 
 The path of an external entity definition file is stored in a worldspawn property called "_tb_def".
 
-### Managing Materials {#material_management}
+### Managing Materials 🧩✨ {#material_management}
 
-#### Wad Files
+#### Wad Files 🔧✨
 
 Wad files are managed via the `wad` worldspawn property. The property contains a semicolon separated list of paths where BrümSchtick will load a wad file from. Map compilers also use this property to find wad files.
 
@@ -306,7 +308,7 @@ Wad files are managed via the `wad` worldspawn property. The property contains a
 
 Alternatively, you can drag wad files onto the editor window from a file browser such as the Windows explorer. If the map uses wad files, these files will be loaded and their paths will get appended to the `wad` worldspawn property.
 
-#### Materials from directories
+#### Materials from directories 🔧✨
 
 Unless you are using wad files, you don't need to do anything to manage your materials - BrümSchtick will automatically load all available material collections.
 
@@ -314,11 +316,11 @@ If you want to provide your own custom textures, you need to put them in a subdi
 
 You need to place your textures in a subdirectory exactly one level deep in the `textures` folder. Any loose images in `textures` will not be detected, nor will any nested in subdirectories of your collection.
 
-## Interacting with the Editor
+## Interacting with the Editor 🎛️✨
 
 Before we delve into specific editing operations such as creating new objects, you should learn some basics about how to interact with the editor itself. In particular, it is important to understand the concept of tools in BrümSchtick and how mouse input is mapped to 3D coordinates.
 
-### Working with Tools
+### Working with Tools 🧩✨
 
 All editing functionality in BrümSchtick is provided by tools. There are two types of tools in BrümSchtick: Permanently active tools and modal tools. Modal tools are tools which have to be activated or deactivated manually by the user. Permanently active tools are tools which are always available, unless they are deactivated by a modal tool. The following table lists all tools with a short description:
 
@@ -352,7 +354,7 @@ Vertex Tool           #menu(Menu/Edit/Tools/Vertex Tool)
 
 You can learn more about these tools in later sections. But before you can learn about the tools in detail, you should understand how BrümSchtick processes mouse input, which is what the following two sections will explain.
 
-### Canceling Operations and Tools {#canceling}
+### Canceling Operations and Tools 🧩✨ {#canceling}
 
 To cancel a mouse drag, hit #action(Controls/Map view/Cancel). The operation will be undone immediately. The same keyboard shortcut can be used to cancel all kinds of things in the editor. The following table lists the effects of canceling depending on the current state of the editor.
 
@@ -367,17 +369,17 @@ For those tools where a second effect is listed (separated by a semicolon), the 
 
 In addition, you can hit #action(Controls/Map view/Deactivate current tool) to directly deactivate the current tool regardless of what state the tool is in.
 
-### Mouse Input in 3D
+### Mouse Input in 3D 🧩✨
 
 It is very important that you understand how mouse input is mapped to 3D coordinates when editing objects in BrümSchtick's 3D viewport. Since the mouse is a 2D input device, you cannot directly control all three dimensions when you edit objects with the mouse. For example, if you want to move a brush around, you can only move it in two directions by dragging it. Because of this, BrümSchtick maps mouse input to the horizontal XY plane. This means that you can only move things around horizontally by default. To move an object vertically, you need to hold #key(Alt) during editing. This applies to moving objects and vertices, for the most part.
 
 But this is not always true, since some editing operations are spatially restricted. For example, when resizing a brush, you drag one of its faces along its normal, so the editing operation is restricted to that normal vector. In fact, the mouse pointer's position must be mapped to a one-dimensional value that represents the distance by which the brush face has been dragged. Whenever mouse input has to be mapped to one or two dimensions, BrümSchtick does this mapping automatically and no additional thought is required. But if mouse input must be mapped to three dimensions, BrümSchtick does so by employing the editing plane metaphor explained before.
 
-### Mouse Input in 2D
+### Mouse Input in 2D 🧩✨
 
 Mapping mouse input to 3D coordinates is much simpler in the 2D viewports, because the first and second dimension is given by the fixed viewport axes, and the third dimension (the depth) is usually taken from the context of the editing operation. For example, if you move an object by left dragging it in the XY viewport, then the mouse input is mapped to the X and Y axes, and the object's Z coordinates remain unchanged. When creating new objects, the depth is usually computed from the bounds of the most recently selected objects. So if you create a new brush by left dragging in the XY view, its distance and its height is determined by the most recently selected objects, while its X/Y extents are determined by the mouse drag.
 
-### Axis Restriction {#axis_restriction}
+### Axis Restriction 🧩✨ {#axis_restriction}
 
 To avoid imprecise movements when moving objects in two dimensions, you can limit movement to a single axis when using the mouse. By default, objects are moved on the XY plane in the 3D viewport or on the view plane in the 2D viewports. To move objects vertically in the 3D viewport, you have to hold #key(Alt). This works either when you start moving the objects and also during a drag. Furthermore, when moving objects on the XY plane in the 3D viewport or on the view plane in the 2D viewports, you can restrict the movement to one axis by holding #key(Shift). BrümSchtick will then restrict movement to the axis on which the objects have moved the farthest. So if you are moving objects in the 3D viewport and you want to restrict movement to the X axis, move the objects some distance along the X axis and press #key(Shift) to lock all movement to that axis. When you release #key(Shift), the restriction is lifted again and the objects will move to the position under the mouse. This applies not only to moving objects, but also moving vertices in the vertex tool and moving clip points in the clip tool. In the clip tool, the axis restriction only works in the 2D viewports however.
 
@@ -385,13 +387,13 @@ To avoid imprecise movements when moving objects in two dimensions, you can limi
 
 Note that BrümSchtick draws a trace line for you when you move objects with the mouse. The trace line helps to move objects in straight lines and as a visual feedback for your move. When an axis restriction is active, the trace line is rendered thicker.
 
-### The Grid
+### The Grid 🧩✨
 
 BrümSchtick provides you with a static grid to align your objects to each other. The grid size can be 1, 2, 4, 8, 16, etc. up to 256. It is also possible to set the grid size to a value smaller than 1, more precisely to 0.5, 0.25 or 0.125. If grid snapping is enabled, then most editing operations will be snapped to the grid. For example, you can only move objects by the current grid size if grid snapping is enabled. In the 3D viewport, the grid is projected onto the brush faces. Therefore the grid may appear distorted if a brush face is not axis aligned. In the 2D viewports, the grid is just drawn in the background. You can change the brightness of the grid lines in the preferences.
 
 The grid size can be set via the menu, or by scrolling the mouse wheel while holding both #key(Alt) and #key(Ctrl).
 
-### Map View Context Menu {#map_view_context_menu}
+### Map View Context Menu 🧩✨ {#map_view_context_menu}
 
 Right clicking in a map view gives the following context menu:
 
@@ -434,11 +436,11 @@ Create Point Entity
 Create Brush Entity
 :   Create a [Brush Entity](#brush_entities) with the selected brushes.
 
-## Creating Objects
+## Creating Objects 🎛️✨
 
 BrümSchtick gives you various options on how to create new objects. In the following sections, we will introduce these options one by one.
 
-### Creating Simple Shapes
+### Creating Simple Shapes 🧩✨
 
 The easiest way to create a new brush is to just draw it out with the mouse using the Simple Shape Tool. The tool is enabled by default when nothing else is selected or any other tool active. Left drag in the 3D viewport or any of the 2D viewports.
 
@@ -481,7 +483,7 @@ This hollow cylinder is scalable because its vertices are all aligned on the gri
 
 If you create an asymmetric scalable shape, it will not be scaled to fit the bounding box drawn with the mouse like the other shapes. Rather, only the middle portion of it will be elongated so that the vertices remain on the grid. This even applies to cones and UV spheres so that the different shapes still fit together.
 
-### Creating Complex Shapes
+### Creating Complex Shapes 🧩✨
 
 ![Drawing a rectangle and duplicating it](images/CreateBrushByDuplicatingPolygon.gif) If you want to create a brush that is not a simple, axis-aligned cuboid, you can use the brush tool. The brush tool allows you to define a set of points and create the convex hull of these points. A convex hull is the smallest convex volume that contains all the points. The points become the vertices of the new brush, unless they are placed within the brush, in which case they are discarded. Accordingly, the brush tool gives you several ways to place points, but there are two limitations: First, you can only place points in the 3D viewport, and second, you can only place points by using other brushes as reference.
 
@@ -489,11 +491,11 @@ To use the brush tool, you first have to activate it by choosing #menu(Menu/Edit
 
 It is not possible to modify or remove points after they have been placed, except discarding all of them by hitting the #action(Controls/Map view/Cancel) key.
 
-### Creating Entities {#creating_entities}
+### Creating Entities 🧩✨ {#creating_entities}
 
 There are two types of entities: point entities and brush entities, and it depends on the type how an entity is created. In the following sections, we present three ways of creating point entities and two ways to create brush entities.
 
-#### Point Entities {#point_entities}
+#### Point Entities 🔧✨ {#point_entities}
 
 There are three ways of creating new point entities. Firstly, you can drop new entities in the 3D and 2D viewports by using the [map view context menu](#map_view_context_menu). To open the context menu, right click into the viewport. To create a point entity such as a pickup weapon or a monster, open the "Create Point Entity" sub menu and select the correct entity definition from the sub menus.
 
@@ -509,7 +511,7 @@ To create a new entity, simply drag it out of the browser and onto the 3D or a 2
 
 Finally, you can create specific entities by assigning a keyboard shortcut in the [preferences](#keyboard_shortcuts). This is useful for entities that are used very often such as lights. The entity will be created under the mouse cursor; its position will be computed in the same way as if the context menu was used.
 
-#### Brush Entities {#brush_entities}
+#### Brush Entities 🔧✨ {#brush_entities}
 
 ![Moving brushes to brush entities](images/MoveBrushesToEntity.png) Creating brush entities is also done using the context menu. Select a couple of brushes and right click on them, then select the desired brush entity from the menu. To move brushes from one brush entity to another, select the brushes you wish to move and right click on a brush belonging to the brush entity to which you want to move the brushes, and select "Move brushes to Entity ENTITY", where "ENTITY" is the name of the target brush entity, for example "func_door" in the picture on the left. If the brush entity containing the brushes to be moved becomes empty, it will be automatically deleted. To move brushes from a brush entity back into the world and clear content flags, select the brushes, right click and select "Make Structural".
 
@@ -517,7 +519,7 @@ Additionally, you can also assign a keyboard shortcut to create a specific brush
 
 Often, it is much quicker to create new objects by duplicating existing ones. Objects can be duplicated using dedicated functions in BrümSchtick, or just by copying and pasting them.
 
-### Duplicating Objects {#duplicating_objects}
+### Duplicating Objects 🧩✨ {#duplicating_objects}
 
 The currently selected objects can be duplicated by choosing #menu(Menu/Edit/Duplicate). This will duplicate the objects in place, that is, the duplicates retain the exact position of the original objects. To give visual feedback, the duplicated objects are flashed in white really quickly. In the following short clip, you can see that the selected brush gets duplicated. After that, the duplicated brush is moved upwards.
 
@@ -540,7 +542,7 @@ Essentially, these are the same keyboard shortcuts that you use to [move objects
 
 Note that in the image above, the selected brush flashes while it is moved to the right. This indicates that in this case, the duplication and the translation happened at the same time instead of one after the other as in the previous example.
 
-### Copy and Paste
+### Copy and Paste 🧩✨
 
 You can copy objects by selecting them and choosing #menu(Menu/Edit/Copy). BrümSchtick will create text representations of the selected objects as if they were saved to a map, and put that text representation on the clipboard. This allows you to paste them into map files, and also to directly copy objects from map files and paste them into BrümSchtick. Note that you can also copy brush faces, which will also put a text representation of that brush face on the clipboard. Having copied a brush face, you can paste the attributes of that face (material, offset, scale, etc.) into other selected brush faces.
 
@@ -550,11 +552,11 @@ There are two menu commands to paste objects from the clipboard into the map. Th
 
 Positioning of objects pasted into a 2D viewport attempts to achieve a similar effect by positioning the pasted objects such that they line up with the far end of the bounds of the most recently selected objects while keeping them under the mouse, with their center snapped to the grid.
 
-## Editing Objects
+## Editing Objects 🎛️✨
 
 The following section is divided into several sub sections: First, we introduce editing operations that can be applied to all objects, such as moving, rotating, or deleting them. Then we proceed with the tools to shape brushes, such as the clip tool, the vertex tool, and the CSG operations. Afterwards we explain how you work with materials in BrümSchtick, and then we move on to editing entities and their properties. The final subsection deals with BrümSchtick's undo and redo capabilities.
 
-### Moving Objects {#moving_objects}
+### Moving Objects 🧩✨ {#moving_objects}
 
 You can move objects around by using either the mouse or keyboard shortcuts. Left click and drag on a selected object to move it (and all other selected objects) around. In the 3D viewport, the objects are moved on the XY plane by default. Hold #key(Alt) to move the objects vertically along the Z axis. In a 2D viewport, the objects are moved on the viewport's view plane. There is no way to change an object's distance from the camera using the mouse in a 2D viewport. If grid snapping is enabled, the distances by which you move them are snapped to the grid component-wise, that is, if the grid is set to 16 units, you can move objects by 16 units in either direction.
 
@@ -575,7 +577,7 @@ Note that the meaning of the keyboard shortcuts depends on the viewport in which
 
 To move objects by a specified offset, select #menu(Menu/Edit/Move objects) to bring up a window where you can enter a vector. Click "OK" and the currently selected objects will be moved by that vector.
 
-### Rotating Objects {#rotating_objects}
+### Rotating Objects 🧩✨ {#rotating_objects}
 
 The easiest way to rotate objects in BrümSchtick is to use the following keyboard shortcuts:
 
@@ -615,7 +617,7 @@ Finally, if BrümSchtick has found a property that contains the rotation angle o
 
 This behavior can be disabled temporarily by toggling the checkbox to the right of the "Apply" button when the rotate tool is active. If the checkmark is removed, BrümSchtick will not update any entity properties except for the origin when an entity is rotated either by the rotate tool or by a shortcut.
 
-### Flipping Objects {#flipping_objects}
+### Flipping Objects 🧩✨ {#flipping_objects}
 
 Flipping has the effect of mirroring the selected objects, the mirror being a plane which is defined by the center of the bounding box of the selected objects, snapped to the grid, and by a normal vector. The normal vector of the plane depends on the actual flipping command and the viewing direction of the camera in the 3D viewport or the view plane of the focused 2D viewport. The following table explains how the normal vector is derived from this information.
 
@@ -626,7 +628,7 @@ Shortcut                                                  Direction     Normal (
 
 In the case of the 3D viewport, the normal of the mirror plane is the coordinate system axis that is closest to the right axis of the camera. This means that if the camera is pointing in the general direction of the Y axis, and therefore its right axis points in the general direction of the X axis, the normal of the mirror plane will be the X axis. Sometimes, you will not be able to determine which of the coordinate system axes is closest to the right axis of the camera because the right axis is close to two coordinate system axes. To avoid such confusion, it is best to perform flipping in the 2D viewports.
 
-### Scaling Objects {#scaling_objects}
+### Scaling Objects 🧩✨ {#scaling_objects}
 
 Hit #menu(Menu/Edit/Tools/Scale Tool) to activate the scale tool. If you know the exact X/Y/Z scale factors you want, you can enter them in the toolbar and click "Apply". The selected objects will be scaled relative to the center of their bounding box.
 
@@ -662,7 +664,7 @@ Two modifiers can be used in both the 2D and 3D views:
     ![Dragging a side of the bounding box](images/Scale3DSideCenter.gif)
 
 
-### Shearing Objects {#shearing_objects}
+### Shearing Objects 🧩✨ {#shearing_objects}
 
 Hit #menu(Menu/Edit/Tools/Shear Tool) to activate the shear tool. Dragging a side of the bounding box shears along that plane. You can add the #key(Alt) key to drag vertically if you're not shearing the top or bottom of the bounding box.
 
@@ -670,15 +672,15 @@ Alignment lock in the Shear tool only works in Valve 220 format maps.
 
 ![Vertical shearing in the 3D viewport](images/Shear3DVertical.gif)
 
-### Deleting Objects
+### Deleting Objects 🧩✨
 
 Deleting objects is as simple as selecting them and choosing #menu(Menu/Edit/Delete). Note that if you delete all remaining brushes of a brush entity, that entity gets deleted automatically. Likewise, if you delete all remaining objects of a group, that group also gets deleted.
 
-## Shaping Brushes
+## Shaping Brushes 🎛️✨
 
 BrümSchtick offers several tools to change the shapes of brushes. The most powerful of these tools, and also the one that requires the most care, is the vertex tool. Before we discuss this tool, we will introduce the clip tool with which you can chop parts off of brushes. But first, we introduce the extrude tool which, as the name suggests, allows you to quickly change the size of brushes. Finally, we explain how you can shape brushes using BrümSchtick's CSG operations.
 
-### Extrusion
+### Extrusion 🧩✨
 
 Brushes can be extruded using the extrude tool by moving their faces along their respective normal vectors with the mouse. To extrude a selected brush, hold #key(Shift) and move your mouse pointer onto or near the face you wish to move. You will notice that one of the brush's faces is highlighted with a yellow outline. Drag with your left mouse button while still holding #key(Shift) to move the highlighted face along its normal. Note that you can also move brush faces which are behind the brush as long as these faces have an edge that is visible from the camera.
 
@@ -705,7 +707,7 @@ The extrude tool also works in the 2D viewports, of course, but the ability to m
 
 Both snap modes are used simultaneously. There may be situations when you have to move the camera closer to a face in order to have sufficient precision when dragging the face.
 
-#### Moving Faces Instead of Extruding {#moving_faces}
+#### Moving Faces Instead of Extruding 🔧✨ {#moving_faces}
 
 The brush extrude tool offers a quick way to move an individual face of a brush in 2D views. Hold #key(Alt) in addition to #key(Shift) when starting to drag a face in a 2D view to enable this mode. You will notice that a face is highlighted as usual, but when you start dragging the mouse, the face will just be moved in the direction you are dragging. The move is not restricted by the face normal, and other faces will be affected as well.
 
@@ -713,7 +715,7 @@ The brush extrude tool offers a quick way to move an individual face of a brush 
 
 The distance is snapped to the current grid size. Moving multiple faces is possible if the faces lie on the same plane. The [UV Lock](#uv_lock) setting controls whether alignment lock is used when dragging faces using this mode.
 
-### Clipping
+### Clipping 🧩✨
 
 Clipping is the most basic operation for Quake maps due to how brushes are [constructed from planes](#brush_geometry). In essence, all that clipping does is adding a new plane to a brush and, depending on the brush's shape, removing other planes from it if they become superfluous. In BrümSchtick, clipping is done using the clip tool, which you can activate by choosing #menu(Menu/Edit/Tools/Clip Tool). The clip tool lets you define a clip plane in various ways, and the lets you apply that plane to the selected brushes.
 
@@ -723,27 +725,27 @@ There are three different outcomes of applying a clip plane: Drop all parts of t
 
 In all three images, there is a clip plane defined by two points. This clip plane slices the single brush in the image into two parts whereby the left part is below the plane and the right part is above it. In the first image, the clip mode is set to retain the part of the brush that is below the clip plane and to discard the part that is above the clip plane. The resulting brush will be shaped like the red part of the brush in the image. In the second image, the clip mode is set to retain both parts of the brush, and the result of this clipping operation will be two brushes. In the third image, the clip mode is set to retain the part of the brush that is above the clip plane and to discard the other part. This is the opposite of the first case. In the clip tool, you can cycle through these three modes by hitting #action(Controls/Map view/Toggle clip side). There are two ways of defining a clip plane: The more common way is to place at least two and and most three points (in this context, these points are called clip points) in either the 3D or a 2D viewport. The other way is to define the clip plane by using an existing brush face.
 
-#### Clip Points
+#### Clip Points 🔧✨
 
 To place clip points, you simply left click into a viewport when the clip tool is active. Alternatively, you can add two clip points at once by dragging with the left mouse. In that case, the first clip point is placed at the start point of the drag, and the second clip point is placed at the end point of the drag. In the 3D viewport, you can only place clip points on already existing brushes, whereas in the 2D viewports, you can place them anywhere. Clip points are snapped to the grid, however, in the 3D viewport, there is a caveat which we will explain below. When the clip tool is active, it gives you some feedback in the form of an orange sphere that appears close to your mouse pointer. This sphere indicates where a clip point would be placed after being snapped to the grid. This feedback sphere is only shown if a clip point can actually be placed at or close to the point under the mouse.
 
 Once two clip points have been placed, BrümSchtick will attempt to guess a clip plane even though it is underspecified: You cannot define a plane with only two points. If you are happy with the clip plane that BrümSchtick has determined, then you can apply the clipping operation by hitting #action(Controls/Map view/Perform clip). Otherwise, you can place the third point to fully define the clip plane, or you can change the clip points you have already placed. To change a clip point, you can just left click and drag it with the mouse. To remove the most recently place clip point, you can choose #menu(Menu/Edit/Delete).
 
-#### Clip Point Snapping
+#### Clip Point Snapping 🔧✨
 
 In the 3D viewport, clip points can only be placed on the faces of already existing brushes. Such a clip point is snapped to the grid that has been projected onto the brush face on which you placed that point. So it appears to be snapped to the projected grid, but it is also kept glued onto the brush face. If the point were snapped in all dimensions, then it would either sink into or move away from the brush face it was placed on. BrümSchtick avoids this by glueing clip points to the brush faces on which they were placed by the user. This means that if you attempt to move an already placed clip point around using the 3D viewport, that point will be moved to the closest snapped point on the brush face under the mouse.
 
 In the 2D viewport, clip points are just snapped to the visible grid, so they are not restricted to being glued to brush faces. You can place clip points in any viewport you wish, and you can move clip points that have been placed in one viewport using any other viewport, but the grid snapping will be that of the viewport that you are using to move the clip point. That means if you use a 2D viewport to move a clip point that was placed in the 3D viewport, then that point can be dragged off of the brush face on which it was placed and into the void. Conversely, if you use the 3D viewport to move a clip point that was placed in a 2D viewport, that clip point will snap onto  the brush face under the mouse, or it will not move at all if there is no brush face under the mouse.
 
-#### Matching Clip Plane
+#### Matching Clip Plane 🔧✨
 
 ![Matching a clip plane](images/MatchingClipPlane.gif) The clip plane can also be defined by matching it to an existing brush face. To match a clip plane to an existing brush face, you have to double click that face in the 3D viewport. As a result, the brush face gets an orange outline, and a clip plane is defined to match the face's plane exactly. This can be quite useful when shaping geometry to other geometry. Note that the plane points of the clip plane are the plane points of the brush face to which the clip plane was matched, so there should be no trouble with microleaks when using this particular function.
 
-### Vertex Editing {#vertex_editing}
+### Vertex Editing 🧩✨ {#vertex_editing}
 
 BrümSchtick includes three separate tools to edit a brush's vertices: the [vertex tool](#vertex_tool) for editing individual vertices, the [edge tool](#edge_tool) for editing individual edges, and the [face tool](#face_tool) for editing individual faces. The vertex tool is the most powerful of the three because in addition to moving vertices around, you can also add and remove vertices from the brush(es). Conversely, the edge and face tools only allow you to move faces around.
 
-#### Vertex Tool {#vertex_tool}
+#### Vertex Tool 🔧✨ {#vertex_tool}
 
 Using the vertex tool, you can move individual vertices around in 3D space. Additionally, you can add vertices to a brush, and you can remove vertices from a brush. To activate the vertex tool, choose Choose #menu(Menu/Edit/Tools/Vertex Tool). When the vertex tool is active, yellow handles appear at the vertices of the selected brushes to allow manipulation.
 
@@ -789,7 +791,7 @@ In addition to moving vertices, the vertex tool can also rotate, scale and shear
 This concludes the functionality of the vertex tool. While it is very powerful, it should also be used with care, as vertex editing can sometimes create invalid brushes and microleaks in the map. To help you avoid such problems, the following section contains a few best practices you should keep in mind when you use the vertex tool.
 
 
-#### Edge Tool {#edge_tool}
+#### Edge Tool 🔧✨ {#edge_tool}
 
 Using the edge tool, you can move individual edge around in 3D space. To activate the edge tool, choose Choose #menu(Menu/Edit/Tools/Edge Tool). When the edge tool is active, the edges of the selected brushes are rendered yellow to indicate that they allow manipulation. Furthermore, a handle appears at the center of each edge.
 
@@ -801,7 +803,7 @@ When you have selected some edge handles, you can move them around by dragging t
 
 Finally, the edge tool also supports the same keyboard commands as the vertex tool.
 
-#### Face Tool {#face_tool}
+#### Face Tool 🔧✨ {#face_tool}
 
 Using the face tool, you can move individual face around in 3D space. To activate the face tool, choose Choose #menu(Menu/Edit/Tools/Face Tool). When the face tool is active, the faces of the selected brushes are rendered yellow to indicate that they allow manipulation. Additionally, the tool shows point handles at the centers of the faces; these handles allow selection and manipulation of the faces. Note that the handles allow you to select and manipulate faces which face away from the camera, too.
 
@@ -813,7 +815,7 @@ When you have selected some face handles, you can move them around by dragging t
 
 Finally, the face tool also supports the same keyboard commands as the vertex tool.
 
-#### Vertex Editing Best Practices
+#### Vertex Editing Best Practices 🔧✨
 
 - Don't use it too much on sealing brushes, better to use it on detail.
 - Don't do too much in one go, compile and test often.
@@ -821,7 +823,7 @@ Finally, the face tool also supports the same keyboard commands as the vertex to
 - Be careful with detail brushes, they might open vis portals.
 - Detail might also result in PVS leaves too much information, better to turn some detail into actual brushes to force vis to break a room into several PVS leaves. Or use hint brushes to force vis to add more leaves.
 
-#### UV Lock {#uv_lock}
+#### UV Lock 🔧✨ {#uv_lock}
 
 The regular Alignment Lock preference doesn't apply to vertex editing - instead, there is a separate preference called UV Lock toggled with #menu(Menu/Edit/UV Lock) or the UV Lock toolbar button:
 
@@ -829,11 +831,11 @@ The regular Alignment Lock preference doesn't apply to vertex editing - instead,
 
 When this setting is enabled, BrümSchtick will attempt to keep vertex UV coordinates the same when using the vertex editing tools or [face moving](#moving_faces).
 
-### CSG Operations
+### CSG Operations 🧩✨
 
 CSG stands for Constructive Solid Geometry. CSG is a technique used in professional modeling tools to create complex shape by combining simple shapes using set operators such as union (sometimes called addition), subtraction, and intersection. However, CSG union and subtraction cannot be directly applied to brushes since they may create concave shapes which cannot be represented directly using brushes (remember that brushes are always convex). But some of these operators can be emulated with brushes. BrümSchtick supports the operations _convex merge_ (in place of union), _subtraction_ (emulated by creating new brushes to represent the resulting concave shape), and _intersection_ (supported directly).
 
-#### CSG Convex Merge
+#### CSG Convex Merge 🔧✨
 
 Convex merge takes a set of brushes as its input, computes the _convex hull_ of all vertices of those brushes, and creates a new brush with the shape of the convex hull. The convex hull of a set of points is the smallest convex volume that contains all of the points. In the following animation, two brushes are being merged into one. The operation takes the vertices of both brushes and computes its convex hull. Some of the original brushes' vertices end up as vertices of the convex hull, and some of them are discarded, such as the vertices at the bottom right corner of the top left brush in the 2D viewport. The discarded vertices are those which end up inside the convex hull.
 
@@ -841,7 +843,7 @@ Convex merge takes a set of brushes as its input, computes the _convex hull_ of 
 
 As you can see, the newly created brush covers some areas which were not covered by the original brushes. This follows the restriction that the resulting brush must be convex. Whether the resulting brush covers such previously void areas depends on how the input brushes are aligned with each other. To perform a convex merge, select the brushes to be merged and choose #menu(Menu/Edit/CSG/Convex Merge).
 
-#### CSG Subtraction
+#### CSG Subtraction 🔧✨
 
 CSG subtraction takes the selected brushes (the subtrahend) and subtracts them the rest of the selectable, visible brushes in the map (the minuend). Since the result of a CSG subtraction is potentially concave, BrümSchtick creates brushes that represent the concave shape by cutting up the minuend brushes using the faces of the subtrahend brushes.
 
@@ -851,7 +853,7 @@ The image above shows an example where an arch is created by subtraction. The re
 
 To exclude brushes from the subtraction, you can hide them first with #menu(Menu/View/Hide).
 
-#### CSG Hollow
+#### CSG Hollow 🔧✨
 
 
 CSG hollow is a shortcut for subtracting a smaller version of a brush from itself. This can be useful to quickly block out rooms. Just select a brush and choose #menu(Menu/Edit/CSG/Hollow) to hollow out the selected brush. The resulting walls will have a thickness of the current grid size.
@@ -860,7 +862,7 @@ CSG hollow is a shortcut for subtracting a smaller version of a brush from itsel
 
 In this example, a cube is hollowed out, leaving six brushes which form the walls, floor, and ceiling of the resulting room. Note that the wall thickness is determined by the grid size.
 
-#### CSG Intersection
+#### CSG Intersection 🔧✨
 
 CSG intersection takes a set of brushes and computes their intersection, that is, it computes the largest brush that is contained in each of the input brushes. Another way to think of this is that intersection takes that part of the input brushes where they all overlap, and creates a new brush that represents that part. If there is no such part, then the input brushes are disjoint, and their intersection is empty. The input brushes are then removed from the map.
 
@@ -868,7 +870,7 @@ CSG intersection takes a set of brushes and computes their intersection, that is
 
 You can perform a CSG intersection by selecting the brushes you wish to intersect, and then choosing #menu(Menu/Edit/CSG/Intersect).
 
-#### Materials and CSG Operations {#materials_and_csg_operations}
+#### Materials and CSG Operations 🔧✨ {#materials_and_csg_operations}
 
 In each of the CSG operations, new brushes are created, and BrümSchtick has to assign materials to their faces. To determine which material to assign to a new brush face, BrümSchtick will attempt to find a face in the input brushes that has the same plane as the newly created face. If such a face was found, BrümSchtick assigns the material and attributes of that brush face to the newly created brush face. Otherwise, it will assign the [current material](#working_with_materials).
 
@@ -876,7 +878,7 @@ In each of the CSG operations, new brushes are created, and BrümSchtick has to 
 
 In the example above, a brush is subtracted from another brush to form an archway. The subtrahend has a blue brick material and the minuend has a dark metal material. After the subtraction, those faces of the result that line up with the faces of the subtrahend have also been assigned the blue brick material, while those faces that line up with the faces of the minuend brush have been assigned the dark metal material. Some of the faces of the result brushes are invisible because they are shared by other brushes - these faces have been assigned the current material because no face of the subtrahend or the minuend lines up with them.
 
-## Special Brush and Face Types {#special_brush_face_types}
+## Special Brush and Face Types 🎛️✨ {#special_brush_face_types}
 
 Most Quake based games have certain special types of brushes and faces. An example for a special brush type is a *trigger brush* that activates some game logic. A special face type may be a face with a special _clip_ material that is invisible, but blocks the player from passing it. In Quake 3, _caulk_ faces are often used to tell the bsp compiler to skip certain faces because they are invisible.
 
@@ -902,11 +904,11 @@ BrümSchtick allows you to filter for special brush and face types in the [filte
 
 Finally, every special brush or face type that supports unsetting can be cleared using the *Make Structural* command #action(Controls/Map view/Make structural).
 
-## Working with Materials {#working_with_materials}
+## Working with Materials 🎛️✨ {#working_with_materials}
 
 There are two aspects to working with materials in a level editor. [Material management](#material_management) and material application. This section deals with the latter, so you will learn different ways to apply material to brush faces and to manipulate their alignment to the faces. But before we dive into that, we have to cover three general topics: First, we present the material browser, then we explain how BrümSchtick assigns material to newly created brush faces, and finally we discuss different material projection modes in BrümSchtick.
 
-### The Material Browser {#material_browser}
+### The Material Browser 🧩✨ {#material_browser}
 
 ![The material browser](images/TextureBrowser.png) The material browser is part of the face inspector and is used for two purposes: Changing the material for the currently selected faces and selecting the _current material_. In the material browser, materials are displayed with a maximum width of 64 pixels - wider materials are proportionally scaled down. The name of every material is displayed below the image. materials that are currently in use have a yellow border, while the current material has a red border. If you hover over a material image with the mouse, you will see a tooltip with the name and the dimensions of the corresponding texture.
 
@@ -916,13 +918,13 @@ To select all faces having a certain material, right click that material in the 
 
 To select all brushes having a face with certain material, right click that material in the material browser and click "Select Brushes" from the popup menu.
 
-### Filtering Material Collections
+### Filtering Material Collections 🧩✨
 
 ![Filtering material collections](images/TextureCollectionEditor.png) To filter out material collections, click on the "Settings" button in the material browser's title bar. This reveals a UI to enable or disable individual material collections. Select one or more material collections from the "Available" section and click on the "+" icon to enable them. To disable material collections, select them in the "Enabled" section and click on the "-" icon. Click on the circular arrow icon to reload all material collections.
 
 Click on the "Browser" button in the material browser's title bar to return to the material browser.
 
-### Material Projection Modes {#material_projection_modes}
+### Material Projection Modes 🧩✨ {#material_projection_modes}
 
 In the original Quake engine, materials are projected onto brush faces along the axes of the coordinate system. In practice, the engine (the compiler, to be precise), uses the normal of a brush face to determine the projection axis - the chose axis is the one that has the smallest angle with the face's normal. Then, the material is projected onto the brush face along that axis. This leads to some distortion (shearing) that is particularly apparent for slanted brush faces where the face's normal is linearly dependent on all three coordinate system axes. However, this type of projection, which we call _paraxial projection_ in BrümSchtick, also has an advantage: If the face's normal is linearly dependent on only two or less coordinate system axes (that is, it lies in the plane defined by two of the axes, e.g., the XY plane), then the paraxial projection ensures that the material still fits the brush faces without having to change the scaling factors.
 
@@ -930,11 +932,11 @@ The main disadvantage of paraxial projection is that it is impossible to do perf
 
 This is (probably) one of the reasons why the Valve 220 map format was introduced for Half Life. This map format extends the brush faces with additional information about the UV axes for each brush faces. In principle, this makes it possible to have arbitrary linear transformations for the UV coordinates due to their projection, but in practice, most editors keep the UV axes perpendicular to the face normals. In that case, the material is projected onto the face along the normal of the face (and not a coordinate system axis). In BrümSchtick, this mode of projection is called _parallel projection_, and it is only available in maps that have the Valve 220 map format.
 
-### How BrümSchtick Assigns Materials to New Brushes
+### How BrümSchtick Assigns Materials to New Brushes 🧩✨
 
 In BrümSchtick, there is the notion of a current material, which we have already mentioned previous sections. Initially, the current material is unset, and it is changed by two actions: selecting a brush face and selecting the current material by clicking on a material in the material browser. When BrümSchtick creates a new brush or a new brush face, it may consult the current material to determine which material to apply to the newly created brush faces. This is not always the case: Sometimes, BrümSchtick can determine materials for newly created brush faces from the context of the operations. We have discussed this earlier for [CSG operations](#materials_and_csg_operations). In other cases, such as when you create a new brush with the mouse, BrümSchtick will always apply the current material.
 
-### Assigning Materials Manually
+### Assigning Materials Manually 🧩✨
 
 To change the material of the currently selected faces, left click on a material in the material browser. This also works if you have selected brushes (and nothing else) - in this case, the new material is applied to all faces of the currently selected brushes.
 
@@ -963,7 +965,7 @@ Finally, you can use copy and paste to copy the material and attributes of a sel
 1. Select the face that you wish to copy from and choose #menu(Menu/Edit/Copy)
 2. Select the faces that you wish to copy to, and choose #menu(Menu/Edit/Paste)
 
-### Replacing Materials
+### Replacing Materials 🧩✨
 
 If you want to replace a particular material with another one, you can choose #menu(Menu/Edit/Replace Material...). This opens a window where you can select the material to be replaced and the replacement material using two material browser. This window is depicted in the following screenshot.
 
@@ -971,11 +973,11 @@ If you want to replace a particular material with another one, you can choose #m
 
 Select the material you wish to replace in the left material browser. This browser by default only shows you the materials which are currently in use in the map. In the screenshot, the material "b_pv_v1a1" has been selected for replacement and therefore has a red border. Then select the replacement material in the right material browser ("b_sr_20c" in the screenshot). Finally, hit the "Replace" button. The replacement is applied to all brush faces in the map if nothing is currently selected. Otherwise, it is applied to the selected brush faces only. If the replacement succeeded, the faces which have been replaced are subsequently selected. Otherwise, the selection remains unchanged.
 
-### Setting Face Attributes
+### Setting Face Attributes 🧩✨
 
 Face attributes control how materials are mapped onto brush faces. At the very least, every face has the attributes offset, scale, and angle. The offset allows you to shift a material on a face, the scale factors stretch the material, and by changing the angle you can rotate the material. Additionally, some engines have further attributes. Quake 2 adds surface flags and a surface value, and additional content flags. All of these values can be changed in different ways: There is a face attribute editor that allows you to enter the values directly, you can use keyboard shortcuts in the 3D viewport, or you can use the UV editor.
 
-#### The Face Attribute Editor {#face_attribute_editor}
+#### The Face Attribute Editor 🔧✨ {#face_attribute_editor}
 
 The face attribute editor is located in the face inspector, right between the UV editor and the material browser. It contains several controls to edit the face attributes of one or several selected brush faces.
 
@@ -1001,7 +1003,7 @@ The text field for content flags will display "multi" if the currently selected 
 
 The surface flags text field will also display "multi" if the selected faces have different sets of surface flags, but this is not necessarily a situation that needs to be corrected. It is often valid to have different surface flags on different faces of a brush.
 
-#### Material Alignment Keyboard Shortcuts
+#### Material Alignment Keyboard Shortcuts 🔧✨
 
 The following shortcuts work in the 3D viewport, and affect all selected brushes or brush faces:
 
@@ -1019,7 +1021,7 @@ Reset alignment to world aligned          #action(Controls/Map view/Reset textur
 
 These are interpreted relative to the 3D camera (except "Reset"). This means that pressing #key(Up) will move a material roughly in that direction visually, possibly increasing or decreasing the X or Y offset depending on the camera and face orientation. The angle is treated similarly: Pressing #key(PgUp) will rotate the material counterclockwise visually, and pressing #key(PgDown) will rotate it clockwise.
 
-#### The UV Editor {#uv_editor}
+#### The UV Editor 🔧✨ {#uv_editor}
 
 The UV editor is located at the top of the face inspector. Using the UV editor, you can adjust the offset, the scale and the angle of the material of the currently selected brush face. Note that the UV editor is only usable if one brush face is selected. If multiple brush faces are selected, the UV editor is empty.
 
@@ -1055,7 +1057,7 @@ Below the face attribute editors there is a texture alignment row:
 
 Edge selection starts with the edge that best matches the current alignment; ties are broken by preferring the edge most parallel to the world XY plane and, when ambiguous, the lower edge. For horizontal faces, the current camera orientation determines which edge is considered "down."
 
-## Entity Properties {#entity_properties}
+## Entity Properties 🎛️✨ {#entity_properties}
 
 An entity is, essentially, a collection of properties, and a property is a key value pair where both the key and the value is a string. Some values have a special format, such as colors, points, or angles. But in general, if you are editing an entity, you will be working with strings. In BrümSchtick, you can add, remove, and edit entity properties using the entity property editor, which is located at the top of the entity inspector.
 
@@ -1063,7 +1065,7 @@ An entity is, essentially, a collection of properties, and a property is a key v
 
 The entity property editor is split into two separate areas. At the top, there is a tabular representation of the properties of the currently selected entities and, if applicable, the defaults for those properties which are not present in the selected entities.
 
-### Default Entity Properties {#entity_properties_defaults}
+### Default Entity Properties 🧩✨ {#entity_properties_defaults}
 
 The default properties are shown in _italics_ below the actual properties of the selected entities. To hide the default properties, you can uncheck the checkbox at the bottom of the table. Default entity properties are defined in an entity definition file such as an FGD file, and their meaning depends on the game. Some games, like Quake, have builtin default values for entity properties, and the default entity properties reflect these defaults (if set up correctly in the entity definition file).
 
@@ -1077,7 +1079,7 @@ Below the entity property editor, there is a small button which pops up a menu w
 - **Set missing default properties**: This adds all default entity properties that aren't set. Only adds new entity properties. No entity property is removed and no existing entity property is changed.
 - **Set all default properties**: This is a combination of the above. Every entity property having a default value is set to its default, regardless of its current value. Missing default properties are added. No entity properties are removed, and only default entity properties are changed.
 
-### Editing Properties
+### Editing Properties 🧩✨
 
 To select an entity property, just click in the row that represents that property in the table. The clicked field will be highlighted, indicating that it has focus. The highlight indicates that you can change the field by entering text. In the screenshot above, the "mangle" property has been selected, and its value has focus, indicating that it is ready to be changed.
 
@@ -1089,13 +1091,13 @@ There are several ways to add a property to an entity. First, you can click on t
 
 To remove entity properties, you should click the rows in the table that represent them and hit the button labeled "-" at the bottom of the table.
 
-### Multiple Entity Selections
+### Multiple Entity Selections 🧩✨
 
 ![Multiple Entity Selections](images/EntityPropertyEditorMultiSelection.png) If multiple entities are selected, the table will show the union of all their properties and not just those properties which all of the selected entities have in common. Properties which are not present in all of the selected entities have their names grayed out, and properties which have different values in those entities that actually have those properties are displayed with an empty value. In the screenshot, there are three light entities selected. Consequentially, the "classname" property is present in all of them and has the same value everywhere. Likewise, the "origin" property is present in all of these entities, but it has different values in each of them, so it is shown without a value. The "light", "wait", "angle", and "mangle" properties on the other hand are only present in some of the selected entities, but they do have the same values in each of the entities that have them.
 
 If you change an entity property when multiple entities are selected, the change gets applied to all of the selected entities, even if that requires adding that property. So if you were to change the value of the "light" property in the example above to 200, each of the selected entities will subsequently have a "light" property with the value 200, even if only a subset of the selected entities had that property before.
 
-### Smart Entity Property Editors
+### Smart Entity Property Editors 🧩✨
 
 BrümSchtick provides special editors for the following entity properties: spawnflags, colors, and choices. These special editors are called _smart property editors_ and are displayed below the entity property table if you select an entity property for which such an editor exists.
 
@@ -1105,11 +1107,11 @@ Spawnflags       ![Smart Spawnflags Editor](images/SmartSpawnflagsEditor.png)   
 Color            ![Smart Spawnflags Editor](images/SmartColorEditor.png)        A color chooser control that allows you to convert between byte and float color values, and provides a list of all colors found in the map.
 Choice           ![Smart Spawnflags Editor](images/SmartChoiceEditor.png)       A dropdown list of values. You can also enter any text into the text box.
 
-### Linking Entities
+### Linking Entities 🧩✨
 
 Entities can be linked using special link properties. Each link has a source and a target entity. The target entity has a property called "targetname", and the value of that property is some arbitrary string. The source entity has a "target" or a "killtarget" property, and the value of that property is the value of the target entity's "targetname" property. To create an entity link, you have to manually set these properties to the proper values. Currently, the names of the link properties are hardcoded into BrümSchtick, but in the future they will be read from the FGD file if appropriate. The following section explains how entity links are visualized in the editor.
 
-### Entity Link Visualization
+### Entity Link Visualization 🧩✨
 
 Entity Links are rendered as lines in the 3D and 2D viewports. BrümSchtick provides you with four modes for entity link visualization. You can switch between these modes in the dropdown menu that is displayed when you click on the "View" button at the right of the info bar. The following table explains the four different modes.
 
@@ -1126,21 +1128,21 @@ An entity link that is connected to a currently selected entity is rendered as a
 
 In the screenshot above, the link between the two info_null entities is rendered in green because neither of the entities is selected.
 
-## Undo and Redo {#undo_redo}
+## Undo and Redo 🎛️✨ {#undo_redo}
 
 Almost everything that you do in BrümSchtick can be undone by choosing #menu(Menu/Edit/Undo). This applies to every action that somehow modifies the map file (such as moving objects), but it also applies to some actions that do not change the map file, such as selection, hiding, and locking. There is no limit to how many actions you can undo, and once an action is undone, you can redo it by choosing #menu(Menu/Edit/Redo).
 
-### Undo Collation and Transactions
+### Undo Collation and Transactions 🧩✨
 
 Note that BrümSchtick groups certain sequences of actions into transactions which can be undone and redone as one. For example, if you select a few objects and then hide them, the objects are automatically deselected. Both the action of deselecting the objects to be hidden and hiding them are grouped together into a transaction, so when you undo, the objects will be unhidden and reselected at the same time.
 
 On top of that, BrümSchtick will merge sequences of the same action if they happen within one mouse drag or within a certain time. So if you move a brush around, all steps of the move will be merged into one action, or if you move a brush around by pressing the appropriate keyboard shortcuts within a certain time, all these actions will also be merged into one. In practice, this saves memory and it allows you to undo such sequences in one fell swoop.
 
-# Keeping an Overview
+# Keeping an Overview 🤪🧱✨
 
 If you are working on large maps, it can become cumbersome to manage the objects in the map and to keep an overview over them. Some areas may be crowded with a lot of brushes and entities so that it becomes difficult to edit a particular object that is occluded by other things. BrümSchtick provides you with a number of tools to easily keep an overview over your map and to remove clutter in crowded areas.
 
-## Filtering {#filtering_rendering_options}
+## Filtering 🎛️✨ {#filtering_rendering_options}
 
 To filter out certain types of objects, you can open the view dropdown window by clicking on the "View" button at the right of the info bar above the editing area.
 
@@ -1156,11 +1158,11 @@ The right half of the view dropdown has several options, partitioned into three 
 
 Note that it is possible to add keyboard shortcuts to toggle every option in the view dropdown in the [preferences](#keyboard_shortcuts).
 
-## Hiding and Isolation
+## Hiding and Isolation 🎛️✨
 
 If you are working on a crowded area, it can be useful to hide certain objects, or to hide everything but the objects of interest. To hide the selected objects, choose #menu(Menu/View/Hide), and to isolate the selected objects, choose #menu(Menu/View/Isolate). To show all hidden objects, choose #menu(Menu/View/Show All). All of these actions can be undone.
 
-## Locking
+## Locking 🎛️✨
 
 Locking prevents objects from being selected or edited in anyway. Locked objects are rendered with blue edges and their faces are tinted in blue, as shown in the following screenshot.
 
@@ -1168,7 +1170,7 @@ Locking prevents objects from being selected or edited in anyway. Locked objects
 
 Objects can be locked either if you are editing an open group or if you set a layer to locked (see below). You cannot lock objects individually.
 
-## Groups {#groups}
+## Groups 🎛️✨ {#groups}
 
 Groups allow you to treat several objects as one and to give them a name. A group can contain the following types of objects: entities, brushes, and more groups. The fact that a group can contain groups induces a hierarchy - but in practice, you will rarely create such nested groups. In the viewports, groups have their bounding box rendered in blue, and their name is displayed above them.
 
@@ -1176,7 +1178,7 @@ To create a group, make sure that no tool is currently active and select some ob
 
 To add objects to an existing group, select the objects you wish to add to the group, then right click on an object already existing to that group and select "Add Objects to GROUPNAME", where GROUPNAME is the name of the group. Likewise, you can remove objects from a group by opening that group, selecting the objects you wish to remove from the group, and selecting "Remove Objects from GROUPNAME" from the [map view context menu](#map_view_context_menu). The removed objects are added to the current layer. If you remove all objects from a group, the group is deleted automatically.
 
-## Linked Groups {#linked_groups}
+## Linked Groups 🎛️✨ {#linked_groups}
 
 Groups can also be linked together to allow a form of instancing. Linked groups contain the same objects, but can be transformed into different positions and shapes as a whole. Changing one of the linked groups will update all the other linked groups. Linked groups are useful to build reusable structures such as doorways that you want to keep in sync. The workflow for linked groups is always the same:
 
@@ -1233,7 +1235,7 @@ Group B (translated by 128 0 0)
 
 There are some situations in which you might not want all of your changes to be reflected in all linked groups. For example, when building a door, you will usually hook the door brushes to a trigger brush using `target` and `targetname` properties. But of course, you want to use different names for different doors so that all doors don't open at once when one of them opens in the game. To allow these properties to have different values in different linked groups, you can protect entity properties against changes from their counterparts in a linked group.
 
-### Protected Entity Properties {#protected_entity_properties}
+### Protected Entity Properties 🧩✨ {#protected_entity_properties}
 
 Marking an entity property as protected blocks any changes to this property from the corresponding entity in a linked group. Furthermore, any changes to a protected entity property are not reflected in the corresponding entities in linked groups. Let's consider an example again.
 
@@ -1306,19 +1308,19 @@ Suppose you want to set an angle for all of the `monster_army` entities except f
 
 ![Protected Deleted Entity Properties (macOS)](images/ProtectedProperties.png)
 
-### Unlinking and Separating Linked Groups {#separating_linked_groups}
+### Unlinking and Separating Linked Groups 🧩✨ {#separating_linked_groups}
 
 To unlink a linked group, select the group and choose #menu(Menu/Edit/Separate Linked Groups). This will turn the linked group into a regular group again. If you select multiple linked groups from a set of mutually linked groups, the selected groups will not be turned into regular groups, but rather they will become a separate set of linked groups. This separate set of linked groups is still mutually linked to each other, but they are no longer linked to the other, unselected members of the set.
 
 Note that if you remove all members of a set of linked groups, either by separation or by deleting them, the single remaining member of the set will become a regular group.
 
-### Visualization {#linked_group_visualization}
+### Visualization 🧩✨ {#linked_group_visualization}
 
 ![Linked Groups in 3D view (macOS)](images/LinkedGroups.png)
 
 Linked groups are rendered with a different color than regular groups. If you select a linked group, the editor will render arrows emanating from the selected group and ending in the other linked groups to indicate which groups will be updated when the selected group changes. These arrows are still shown if you open a linked group.
 
-### Linked Groups in the Map File {#linked_groups_map_file}
+### Linked Groups in the Map File 🧩✨ {#linked_groups_map_file}
 
 Like regular groups, linked groups are stored in the map file using `func_group` entities with additional, BrümSchtick specific properties. If you edit a map file with linked groups in another editor than BrümSchtick and you change objects belonging to a linked group, then that linked group is out of sync with its linked counterparts. BrümSchtick will load such groups without issue and you can keep editing them as usual. However, if you change one of the linked groups, then this group will overwrite the contents of all other linked groups, so afterwards they will be in sync again. So if you purposefully changed one of the linked groups in an external editor, and want to replicate these changes into the linked groups, just open this specific group in the editor, make change to it, and close the group again. This will update all of the linked groups and they will be in sync again.
 
@@ -1394,7 +1396,7 @@ In the map file, these groups would be stored as follows. Refer to the comments 
 }
 ```
 
-## Layers {#layers}
+## Layers 🎛️✨ {#layers}
 
 Layers decompose your map into several parts. For example, you might create a layer for separate rooms or areas. Layers can contain groups, entities, or brushes, and each of these objects can belong to one layer only. Each layer has a name and can be set to hidden or locked, or omitted from exported maps. Every map contains a "Default Layer" that cannot be removed.
 
@@ -1430,11 +1432,11 @@ Right click on a layer in the layer editor for the layer context menu:
 
 The [map view context menu](#map_view_context_menu) also has some layer related shortcuts.
 
-# Preferences
+# Preferences 🤪🧱✨
 
 The preferences dialog allows you to set the game configurations, to change the view layout and control the rendering, and to customize the mouse and the keyboard shortcuts. You can open the preferences dialog by choosing #menu(Menu/File/Preferences...). The dialog is split into four panes, each of which we will review in the following sections. Note that on Windows and Linux, the changes are only applied if you click the "OK" or "Apply" button at the bottom of the dialog, whereas on Mac OS X, the changes are applied immediately.
 
-## Game Configuration {#game_configuration}
+## Game Configuration 🎛️✨ {#game_configuration}
 
 ![Game Configuration Dialog (Mac OS X)](images/GamePreferences.png)
 
@@ -1461,9 +1463,47 @@ So in the example above, if you wanted to try a later version of ericw-tools tha
 
 You can also add [custom game configurations](#game_configuration_files) to suit a particular setup (such as an engine supporting formats that BrümSchtick supports, but does not expect with that game).
 
-## View Layout and Rendering {#view_layout_and_rendering}
+## View Layout and Rendering 🎛️✨ {#view_layout_and_rendering}
 
 ![View Preferences (macOS)](images/ViewPreferences.png)
+
+### Localization and Language Packs {#localization}
+
+BrumSchtick ships with language packs so the UI can speak your map-brain dialect. 🌍🗺️🗣️✨
+
+> **Note:** Switching languages requires a restart. 🔁
+
+How the packs are picked (aka the translation treasure hunt):
+
+- The **Language** selector lives in the View preferences under **User Interface**. 🎛️
+- `System (Auto)` asks your OS for UI languages (in order) and picks the first supported match. 🧭
+- BrumSchtick looks for `brumschtick_<id>.qm` in its `translations` resource folders. It tries the language id, the full locale (like `pt_BR`), then the base language (`pt`). The first hit wins. 🧪
+- If nothing matches, the UI falls back to English, and Qt's own widgets use their Qt translation packs when available. 🛟
+
+Supported language packs (bundled) 🤹:
+
+ID      Language
+--      --------
+en      English
+fr      French
+pl      Polish
+de      German
+es      Spanish
+it      Italian
+pt_BR   Portuguese (Brazil)
+ru      Russian
+ja      Japanese
+ko      Korean
+zh_CN   Chinese (Simplified)
+zh_TW   Chinese (Traditional)
+cs      Czech
+nl      Dutch
+sv      Swedish
+nb      Norwegian Bokmal
+da      Danish
+fi      Finnish
+tr      Turkish
+uk      Ukrainian
 
 In this preference pane, you can choose the layout of the editing area. There are four layouts available:
 
@@ -1488,7 +1528,7 @@ Enable multisampling        Whether rendering is antialiased
 Material Browser Icon Size  The size of the material icons in the material browser
 Renderer Font Size          Text size in the map viewports (e.g. entity classnames)
 
-## Mouse Input {#mouse_input}
+## Mouse Input 🎛️✨ {#mouse_input}
 
 ![Mouse Configuration Dialog (Ubuntu Linux)](images/MousePreferences.png)
 
@@ -1501,7 +1541,7 @@ Mouse Pan   Sensitivity and axis inversion for mouse panning (middle click and d
 Mouse Move  Sensitivity and settings for moving the camera with the mouse. If you use a tablet, the setting "Alt+MMB drag to move camera" might make navigation easier for you.
 Move Keys   Keyboard shortcuts for moving around in the map, with a separate slider to control the speed.
 
-## Keyboard Shortcuts {#keyboard_shortcuts}
+## Keyboard Shortcuts 🎛️✨ {#keyboard_shortcuts}
 
 ![Keyboard Configuration Dialog (Ubuntu Linux)](images/KeyboardPreferences.png)
 
@@ -1519,9 +1559,9 @@ If you open the preference dialog when a map is currently opened, the list of sh
 
 Note that if you assign a keyboard shortcut to different actions in the same context, the shortcut creates a conflict and you cannot exit the preference pane or close the dialog until you resolve the conflict. Conflicting shortcuts are highlighted in red.
 
-# Advanced Topics
+# Advanced Topics 🤪🧱✨
 
-## Automatic Updates
+## Automatic Updates 🎛️✨
 
 BrümSchtick can check for updates. If an update is available, it can be downloaded and installed from within BrümSchtick. If "Check for updates on startup" is enabled in the preferences, BrümSchtick will perform an update check when it starts.
 
@@ -1548,7 +1588,7 @@ They may contain new features or bug fixes that are not yet part of a stable rel
 
 Note that BrümSchtick doesn't send any private information about your or your computer when it performs an update check. We don't collect any data about you. To perform the update check, BrümSchtick sends one request to GitHub via HTTPS, and to download an update, it sends another HTTPS requests to wherever the update file ist hosted (currently these files are all hosted on GitHub, too).
 
-## Command Repetition
+## Command Repetition 🎛️✨
 
 Editing brushwork often consists of repeating the same steps over and over. As an example, consider building a spiral stair case. You start by cutting out a brush that represents one step of the stair case. Then you duplicate that brush, move it upward and rotate it about the center axis of the stair case. And the you repeat these actions for every step of the stairset. BrümSchtick has a feature called *command repetition* that is designed to automate some part of this process for you.
 
@@ -1558,7 +1598,7 @@ So in the case of the spiral stairwell, you would first create the brush that re
 
 In summary, you can think of command repetition as a very simple macro system that allows you to have one macro that consists only of the most recently performed actions. Even though it is quite limited, it can make your life a lot easier if you get used to it.
 
-## Issue Browser {#issue_browser}
+## Issue Browser 🎛️✨ {#issue_browser}
 
 The issue browser is located at the bottom of the window. It contains a live list of issues that BrümSchtick has detected in your map. The list is live in the sense that the editor updates it automatically whenever the map changes. Be aware that BrümSchtick cannot detect all issues that may lead to compilation errors or warnings, or strange behavior in game. But it can detect some of these issues, and keeping the map free of such issues can protect you from having to spend a lot of time fixing bugs later on when your map becomes more complex. To see which types of issues BrümSchtick can detect and fix for you, click on the "Filter" button at the top right of the issue browser. This opens a dropdown list where you can toggle which types of issues BrümSchtick should check in your map. By default, all issues are enabled.
 
@@ -1570,7 +1610,7 @@ Every entry in the issue list provides you with to pieces of information: the li
 
 In addition to making you aware of issues, BrümSchtick can also fix them for you. To fix an issue, right click it and choose the appropriate fix from the "Fix" context menu. If you wish to ignore a particular issue, you can also tell BrümSchtick to hide it by choosing "Hide" in the context menu. If you wish to see all hidden issues, you can check the respective checkbox above the issue list. To make a hidden issue visible again, first show all hidden issues, then right click the issue and choose "Show" from the context menu.
 
-## Compiling Maps {#compiling_maps}
+## Compiling Maps 🎛️✨ {#compiling_maps}
 
 BrümSchtick supports compiling your maps from inside the editor. This means that you can create compilation profiles and configure those profiles to run external compilation tools for you. Note however that BrümSchtick does not come with prepackaged compilation tools - you'll have to download and install those yourself. The following screenshot shows the compilation dialog that comes up when choosing #menu(Menu/Run/Compile...).
 
@@ -1663,7 +1703,7 @@ If you want to test your compilation profile without actually running it, click 
 
 Once the compilation is done, you can launch a game engine and check out your map in the game. The following section explains how you can configure game engines and launch them from within the editor.
 
-## Launching Game Engines {#launching_game_engines}
+## Launching Game Engines 🎛️✨ {#launching_game_engines}
 
 Before you can launch a game engine in BrümSchtick, you have to make your engine(s) known to BrümSchtick. You can do this by bringing up the game engine profile dialog either from the launch dialog (see below) or from the [game configuration](#game_configuration).
 
@@ -1683,11 +1723,11 @@ The `MODS` variable is useful to pass a parameter to the engine to choose a mod.
 
 Note that the parameters are stored with the game engine profile.
 
-## Expression Language {#expression_language}
+## Expression Language 🎛️✨ {#expression_language}
 
 BrümSchtick contains a simple expression language that can be used to easily embed variables and more complex expressions into strings. Currently, the language is mainly used in the Compilation dialog and the Launch Engine dialog. In the following, we will introduce the syntax and the semantics of the expression language.
 
-### Evaluation
+### Evaluation 🧩✨
 
 Every expression can be evaluated to a value. For example, the string `"This is a string."` is a valid expression that will be evaluated to a value of type `String` containing the string `This is a string.`. The expression language defines the following types.
 
@@ -1702,7 +1742,7 @@ Range      The range type is only used internally.
 Null       The type of `null` values.
 Undefined  The type of undefined values.
 
-#### Type Conversion {#el_type_conversion}
+#### Type Conversion 🔧✨ {#el_type_conversion}
 
 The following matrix describes the possible type conversions between these types. The first column contains the source type, while the following columns describe how a type conversion takes place, or if the result is an error. Note that the columns for types `Range`, `Null`, and `Undefined` are omitted because not type can be converted to these types (except for the trivial conversions). Converting a value of a some type `X` to the same type is called _trivial_.
 
@@ -1731,7 +1771,7 @@ The following matrix describes the possible type conversions between these types
 
 A string value can be converted to a number value if and only if the string is a number literal (see below). Conversely, any number can always be converted to a string value, and the number is formatted as follows. If the number is integer, then only the decimal part and no fractional part will be added to the string. If the number is not integer, the fractional part will be formatted with a precision of 17 places.
 
-### Expressions and Terms
+### Expressions and Terms 🧩✨
 
 Every expression is made of one single term. A term is something that can be evaluated, such as an addition (`7.0 + 3.0`) or a variable (which is then evaluated to its value).
 
@@ -1748,7 +1788,7 @@ Every expression is made of one single term. A term is something that can be eva
     BinaryTerm     = BinaryAnd | BinaryXor | BinaryOr | BinaryLeftShift | BinaryRightShift
     ComparisonTerm = Less | LessOrEqual | Equal | Inequal | GreaterOrEqual | Greater
 
-### Names and Literals
+### Names and Literals 🧩✨
 
 A name is a string that begins with an alphabetic character or an underscore, possibly followed by more alphanumeric characters and underscores.
 
@@ -1803,7 +1843,7 @@ An example of a valid map expression looks as follows:
 
 This expression evaluates to a map containing the value `"a string"` under the key `some key`, the value `3.0` under the key `other_key`, and an array containing the values `1.0`, `2.0`, and `3.0` under the key `another_key`.
 
-### Subscript
+### Subscript 🧩✨
 
 Certain values such as strings, arrays, or maps can be subscripted to access some of their elements.
 
@@ -1813,7 +1853,7 @@ Certain values such as strings, arrays, or maps can be subscripted to access som
 
 A subscript expression comprises of two parts: The expression that is being indexed and the indexing expression. The former can be any expression that evaluates to a value of type `String`, `Array` or `Map`, while the latter is a list of expressions or ranges. Depending of the type of the expression being subscripted, only certain values are allows as indices. The following sections explain which types of indexing values are permissible for the three subscriptable types.
 
-#### Subscripting Strings
+#### Subscripting Strings 🔧✨
 
 The following table explains the permissible indexing types and their effects.
 
@@ -1852,7 +1892,7 @@ Auto ranges are special constructs that are only permissible in subscript expres
     "This is a test."[..0] // .tset a si sihT
     "This is a test."[5..] // "is a test."
 
-#### Subscripting Arrays
+#### Subscripting Arrays 🔧✨
 
 The following table explains the permissible indexing types and their effects.
 
@@ -1901,7 +1941,7 @@ Since arrays can contain other subscriptable values such as strings, arrays, and
     arr[3][2..3] // "st"
     arr[4][1]    // 11
 
-#### Subscripting Maps
+#### Subscripting Maps 🔧✨
 
 The following table explains the permissible indexing types and their effects.
 
@@ -1936,7 +1976,7 @@ Like arrays, maps can contain other subscriptable values such as strings, arrays
     map["some map"]["key2"]       // "asdf"
     map["some map"]["key2"][1..3] // "ey2"
 
-### Unary Operator Terms
+### Unary Operator Terms 🧩✨
 
 A unary operator is an operator that applies to a single operand. In BrümSchtick's expression language, there are four unary operators: unary plus, unary minus, logical negation, and binary negation.
 
@@ -1975,11 +2015,11 @@ Some examples of using unary operators follow.
     ~-2    // 1
     ~'-2'  // 1
 
-### Binary Operator Terms
+### Binary Operator Terms 🧩✨
 
 A binary operator is an operator that takes two operands. Binary operators are specified in infix notation, that is, the first operator is specified first, then the operator symbol, and finally the second operator. Note that in the following EBNF notation for binary operators, the second operator is always an expression.
 
-#### Algebraic Terms
+#### Algebraic Terms 🔧✨
 
 Algebraic terms are terms that use the binary operators `+`, `-`, `*`, `/`, or `%`.
 
@@ -2008,7 +2048,7 @@ In the previous two examples, the operands are simply concatenated. If both oper
 
 Note that the value under key `'k3'` is `4` and not `3`!
 
-#### Logical Terms
+#### Logical Terms 🔧✨
 
 Logical terms can be applied to if both operands are of type `Boolean`. If one of the operands is not of type `Boolean`, an error is thrown.
 
@@ -2024,7 +2064,7 @@ Left     Right   &&      ||
 `false`  `true`  `false` `true`
 `false`  `false` `false` `false`
 
-#### Binary Terms
+#### Binary Terms 🔧✨
 
 Binary terms manipulate the bit representation of operands of type `Number`. Note that, since manipulating the bit representation of a floating point number does not make much sense, the operands are converted to an integer representation first by omitting their fractional portion. If either of the operands is not of type `Number`, the operand is converted to type `Number` according to the [type conversion rules](#el_type_conversion).
 
@@ -2046,7 +2086,7 @@ Here are some examples of the operators in use:
     1 << 1 // 2
     2 >> 1 // 1
 
-#### Comparison Terms
+#### Comparison Terms 🔧✨
 
 Comparison operators always return a boolean value depending on the result of the comparison.
 
@@ -2140,7 +2180,7 @@ The following examples show the comparison operators in action with different op
     [ 1, 2, 3 ] <  [ 2, 2, 3 ]
     [ 1, 2 ]    <  [ 1, 2, 3 ]
 
-#### Case Term
+#### Case Term 🔧✨
 
 The case operator allows for conditional evaluation of expressions. This is usually most useful in combination with the switch operator, which is explained in the next subsection.
 
@@ -2163,7 +2203,7 @@ The following examples demonstrate the semantics of the case operator:
     "true" -> ""     // "", because "true" converts to true
     ""     -> ""     // undefined, because "" converts to false
 
-#### Switch Term
+#### Switch Term 🔧✨
 
 The switch operator comprises of zero or more sub expressions and its evaluation returns the result of the first expression that does not evaluate to `undefined`. In combination with the case operator, it implements a piecewise defined function.
 
@@ -2196,7 +2236,7 @@ However, due to how the sub expressions of the switch expression are evaluated, 
 
 Remember that the switch expression will return the value of the first expression that does not evaluate to `undefined`. Since the first two sub expressions do evaluate to `undefined`, and the string `'otherwise'` is not `undefined`, the switch expression will return `'otherwise'` as its result.
 
-#### Binary Operator Precedence
+#### Binary Operator Precedence 🔧✨
 
 Since an expression can be another instance of a binary operator, you can simply chain binary operators and write `1 + 2 + 3`. In that case, operators of the same precedence are evaluated from left to right. The following table explains the precedence of the available binary operators. In the table, higher numbers indicate higher precedence.
 
@@ -2233,7 +2273,7 @@ If the builtin precedence does not reflect your intention, you can use parenthes
 
     2 * (3 + 4) // 14
 
-### Terminals
+### Terminals 🧩✨
 
 In EBNF, terminal rules are those which only contain terminal symbols on the right hand side. A symbol is terminal if it is enclosed in double quotes. Note that for the `Char` rule, we have chosen to not enumerate all actual ASCII characters and have used a placeholder string instead.
 
@@ -2243,21 +2283,21 @@ In EBNF, terminal rules are those which only contain terminal symbols on the rig
 
 This concludes the manual for BrümSchtick's expression language.
 
-## Solving Problems
+## Solving Problems 🎛️✨
 
 This section contains some information about what you can do if you run into problems when using BrümSchtick.
 
-### Automatic Backups
+### Automatic Backups 🧩✨
 
 BrümSchtick automatically creates backups of your work. As a prerequisite, you have to work on a saved file, that is, a file that exists somewhere on your computer. So when you create a new file, you should save it as soon as you decide that you want to keep it. At that point, BrümSchtick will create its automatic backups. These backups are stored in a folder called "autosave" within the folder where your map file is located. It will create a new backup every ten minutes after the last backup, unless the map file has not been changed since then. To prevent the autosaving from interrupting your workflow, BrümSchtick will only create an autosave you are not interacting with it, however. In total, BrümSchtick will create up to 50 backups. After that, it will delete the oldest backup when it creates a new one so that the total number of backups does not exceed 50. The backups have the same name as the map file you are editing, but with the backup number added to the name just before the extension.
 
 You can use these backups to go back to previous versions of your map if problems arise. This may help you when you are fixing bugs or if your map file gets corrupted somehow.
 
-## Display Models for Entities
+## Display Models for Entities 🎛️✨
 
 BrümSchtick can show models for point entities in the 3D and 2D viewports. For this to work, the display models have to be set up in the [entity definition](#entity_definitions) file, and the game path has to be set up correctly in the [game configuration](#game_configuration). For most of the included entity definition files, the models have already been set up for you, but if you wish to create an entity definition file for a mod that works well in BrümSchtick, you have to add these model definitions yourself. You will learn how to do this for FGD and DEF files in this section.
 
-### General Model Syntax
+### General Model Syntax 🧩✨
 
 The syntax for adding display models is identical in all entity definition files, only the place where the model definitions have to be inserted into the entity definitions varies. We will first explain the general syntax here. Every model definition in a DEF or an FGD takes the following form:
 
@@ -2295,7 +2335,7 @@ instead of having to write
 
 If the model expression has a scale expression, then its result is used as the scale value for the model. If the expression cannot be evaluated, or if no such expression is given, then the default scale expression from the game configuration is evaluated instead. Refer to [this section](#game_configuration_files_entities) for more information about `SCALE_EXPRESSION` and the default scale expression.
 
-#### Basic Examples
+#### Basic Examples 🔧✨
 
 So a valid model definitions might look like this:
 
@@ -2352,7 +2392,7 @@ Accordingly, the nested case expressions inspect the value of the `spawnflags` p
 
 In the previous example, note that if both `ROTTEN` and `MEGAHEALTH` were checked, it would display the megahealth model. Remember that the switch operator returns the value of the first expression that does not evaluate to undefined. For this reason, you must put model definitions with no condition as the last one in the switch because that will override everything else!
 
-#### Advanced Examples
+#### Advanced Examples 🔧✨
 
 The basic expressions you have seen so far allow you to customize which model, skin and frame BrümSchtick shows depending on the values of an entity's properties with great flexibility, but the actual paths, skin indices and frame indices are hardcoded in the entity definition file. However, sometimes even this flexibility is not enough, in particular with entities that allow you to place arbitrary models into the map. In such cases, the entity definition file cannot contain the actual model paths and so on. Rather, the model path, skin index and frame index are specified by the mapper using entity properties. Since BrümSchtick provides the values of the entity properties to the model expressions as variables, you can easily cover such cases as well.
 
@@ -2403,7 +2443,7 @@ Then, if you create an entity with the appropriate classname and specifies three
 
 BrümSchtick will display the second frame of the `progs/armor.mdl` model using its third skin. If you change these values, the model will be updated in the 3D and 2D viewports accordingly.
 
-#### Differences Between DEF, FGD and ENT Files
+#### Differences Between DEF, FGD and ENT Files 🔧✨
 
 In both files, the model definitions are just specified alongside with other entity property definitions (note the semicolon after the model definition -- this is only necessary in DEF files). An example from a DEF file might look as follows.
 
@@ -2443,13 +2483,13 @@ In an ENT file, the same model specification might look like this.
            model="{{ perch == '1' -> 'progs/gaunt.mdl', { 'path': 'progs/gaunt.mdl', 'skin': 0, 'frame': 24 } }}"
     />
 
-## Point Files and Portal Files
+## Point Files and Portal Files 🎛️✨
 
 BrümSchtick can load point files (PTS) generated by QBSP, which help locate leaks. After you open a point file with #menu(Menu/File/Load Point File...), it's rendered as a sequence of green line segments which will connect the map interior to the void. Hit #menu(Menu/View/Camera/Move to Next Point) to move the camera to the first point, and continue hitting #menu(Menu/View/Camera/Move to Next Point) to fly along the path, which should show you where the leak is.
 
 Portal files (PRT), also generated by QBSP, let you visualize the portals between BSP leafs. They can be loaded with #menu(Menu/File/Load Portal File...) and are rendered as translucent red polygons.
 
-## Game Configuration Files {#game_configuration_files}
+## Game Configuration Files 🎛️✨ {#game_configuration_files}
 
 BrümSchtick uses game configuration files to provide support for different games. Some game configuration files come with the editor. They are installed at `<ResourcePath>/games`, where the value of `<ResourcePath>` depends on the platform according to the following table.
 
@@ -2479,7 +2519,7 @@ To override a builtin game configuration file, copy the folder containing the bu
 
 As an example, consider the case where you want to override the builtin Quake game configuration and the builtin entity definition file for Quake. Copy the file `<ResourcePath>/games/Quake/GameConfig.cfg` to `<UserDataPath>/games/Quake` and modify it as needed. Then copy the file `<ResourcePath>/games/Quake/Quake.fgd` to `<UserDataPath>/games/Quake` and modify it, too. When you load the game configuration in BrümSchtick, the editor will pick up the modified files instead of the builtin ones.
 
-### Game Configuration File Syntax
+### Game Configuration File Syntax 🧩✨
 
 Game configuration files need to specify the following information.
 
@@ -2597,7 +2637,7 @@ The game configuration is an [expression language](#expression_language) map wit
       ]
     }
 
-#### Versions
+#### Versions 🔧✨
 
 The game configuration files are versioned. Whenever a breaking change to the game configuration format is introduced, the version number will increase and BrümSchtick will reject the old format with an error message.
 
@@ -2635,7 +2675,7 @@ surfaceflag  Match against face surface flags (used by Quake 2)
 surfaceparm  Match against shader surface parameters (used by Quake 3)
 classname    Match against a brush entity class name
 
-#### File Formats
+#### File Formats 🔧✨
 
 The file format is specified by an array of maps under the key `fileformats`. The following formats are supported.
 
@@ -2660,7 +2700,7 @@ Each entry of the array must have the following structure:
 
 Thereby, the `format` key is mandatory but the `initialmap` key is optional. The `initialmap` key refers to a map file in the game's configuration sub folder which should be loaded if a new document is created. If no initial map is specified, or if the file cannot be found, BrümSchtick will create a map containing a single brush at the origin.
 
-#### File System
+#### File System 🔧✨
 
 The file system is used in the editor to load game assets, and it is specified by a map under the key `filesystem`. The map contains two keys, `searchpath` and `packageformat`.
 
@@ -2677,7 +2717,7 @@ idpak        Id pak file
 dkpak        Daikatana pak file
 zip          Zip file, often uses other extensions such as pk3
 
-#### Material Configurations
+#### Material Configurations 🔧✨
 
 Every material configuration consists of a root search directory, and optionally a list of included file extensions, a palette path, an attribute for wad file lists and a list of exclusion patterns.
 
@@ -2707,7 +2747,7 @@ The optional `excludes` key specifies a list of patterns matched against materia
       "excludes": [ "*_norm", "*_gloss" ]
     },
 
-#### Entity Configuration {#game_configuration_files_entities}
+#### Entity Configuration 🔧✨ {#game_configuration_files_entities}
 
 In the entity configuration section, you can specify which entity definition files come with your game configuration, a default color for entities and an expression that yields a default scale when evaluated against an entities' properties.
 
@@ -2733,7 +2773,7 @@ Of course, you could use the switch and case operators for more complicated case
 
 The optional `setDefaultProperties` key controls whether [default entity properties](#entity_properties_defaults) are instantiated automatically when BrümSchtick creates a new entity. Defaults to `false` if not set.
 
-#### Tags {#game_configuration_files_tags}
+#### Tags 🔧✨ {#game_configuration_files_tags}
 
 BrümSchtick can recognize certain special brush or face types. An example would be clip faces or trigger brushes. But since the details can be game dependent, these special types are defined in the game configuration. For greater flexibility and future enhancements, a general "smart tags" system is used to realize this functionality.
 
@@ -2784,7 +2824,7 @@ Additional keys will be required to configure the matcher, depending on the valu
 * For the `contentflag` and `surfaceflag` matchers, the key `flags` contains a list of content or surface flag names to match against (see below for more info on content and surface flags).
 * For the `surfaceparm` matcher, the key `pattern` contains a name that is matched against the surface parameters of a face's shader. No wildcards allowed; the parameter name must match exactly. In version 4 of the game config format, you may alternately specify a *list* of surfaceparm names for this value, which will match against a shader if it has any of those surfaceparms.
 
-#### Face Attributes
+#### Face Attributes 🔧✨
 
 The main part of the `faceattribs` object is the set of definitions of available surface flags (generally affecting the appearance/behavior of an individual face) and content flags (generally affecting the behavior of the brush containing the face). These definitions are specified through the `surfaceflags` and `contentflags` keys.
 
@@ -2852,13 +2892,13 @@ The flag names specified for `surfaceFlags` or `surfaceContents` must correspond
 
 The `color` value must be a string of the form "R G B" or "R G B A". R G B and A are each a floating-point number from 0.0 to 1.0. If A is omitted it is assumed to be 1.0.
 
-#### Map Bounds
+#### Map Bounds 🔧✨
 
 The optional `softMapBounds` key defines the default [map bounds](#map_bounds) to draw in the 2D viewports. Its value is a string that contains the coordinates of two opposite points that define the volume enclosed by the bounds. The example here defines a cube from the point (-4096, -4096, -4096) to the point (4096, 4096, 4096):
 
     "softMapBounds":"-4096 -4096 -4096 4096 4096 4096",
 
-#### Compilation Tools
+#### Compilation Tools 🔧✨
 
 The optional `compilationTools` list identifies tool names that will appear in the [game configuration dialog](#game_configuration), allowing the user to associate these names with paths to tool executables. Such a name can be used as a variable in this game's [compilation profiles](#compiling_maps) to represent the associated path.
 
@@ -2869,13 +2909,13 @@ Each element in the list is an object that must have a `name` key and may option
       { "name": "bspc", "description": "Path to your bspc or mbspc executable, which creates .aas files for bot support" }
     ]
 
-# Getting Involved
+# Getting Involved 🤪🧱✨
 
-## Suggesting a Feature
+## Suggesting a Feature 🎛️✨
 
 If you have an idea for a nice feature that you're missing in BrümSchtick, then you can submit a request at the [BrümSchtick issue tracker]. Try to describe your feature, but don't go into too much detail. If it gets picked up, we will hash out the details together.
 
-## Reporting Bugs {#reporting_bugs}
+## Reporting Bugs 🎛️✨ {#reporting_bugs}
 
 You can submit bug reports at the [BrümSchtick issue tracker]. Be sure to include the the following information:
 
@@ -2884,17 +2924,17 @@ You can submit bug reports at the [BrümSchtick issue tracker]. Be sure to inclu
 - *Crash report and the map file*: When BrümSchtick crashes, it saves a crash report and the map file automatically. These files are placed in the folder containing the current map file, or in your documents folder if the current map hasn't been saved yet. For example, if the map file you are editing has the name "rtz_q1.map", the crash report will be named "rtz_q1-crash.txt", and the saved map file will be named "rtz_q1-crash.map". Existing files are not overwritten - BrümSchtick creates new file names by attaching a number at the end. Please choose the files with the highest numbers when reporting a bug.
 - *Exact steps to reproduce*: It is really helpful if you can provide exact info on how to reproduce the problem. Sometimes this can be difficult to describe, so you can attach screenshots or make screencasts if necessary. If you cannot reproduce the problem, please submit a bug report either way. The cause of the problem can often be deduced anyway.
 
-### The Version Information
+### The Version Information 🧩✨
 
 Open the "About BrümSchtick" dialog from the menu. The light gray text on the left gives you some information about which version of BrümSchtick you are currently running, for example "Version 2.0.0 f335082 D". The first three numbers represent the version (2.0.0), the following seven letter string is the build id (f335082), and the final letter indicates the build type ("D" for Debug and "R" for release). You can also find this information in the Welcome window that the editor shows at startup.
 
 *If you click on the version information strings, they will be copied to the clipboard, which is useful for bug reports.*
 
-## Contact
+## Contact 🎛️✨
 
 - [BrümSchtick Discord]
 
-# References and Links {#references_and_links}
+# References and Links 🤪🧱✨ {#references_and_links}
 
 - [BrümSchtick on GitHub] - BrümSchtick's GitHub page
 - [func_msgboard] - Quake Mapping Forum

@@ -136,6 +136,15 @@ auto createGameFileSystem(const GameInfo& gameInfo, Logger& logger)
   return fs;
 }
 
+EntityPropertyConfig makeEntityPropertyConfig(const GameConfig& config)
+{
+  auto entityPropertyConfig =
+    EntityPropertyConfig{config.entityConfig.scaleExpression,
+                         config.entityConfig.setDefaultProperties};
+  entityPropertyConfig.globalExpressionVariables = config.entityConfig.globalExpressionVariables;
+  return entityPropertyConfig;
+}
+
 template <typename Resource>
 auto makeCreateResource(ResourceManager& resourceManager)
 {
@@ -154,8 +163,7 @@ Result<std::unique_ptr<WorldNode>> loadWorldNode(
   kdl::task_manager& taskManager,
   Logger& logger)
 {
-  const auto entityPropertyConfig = EntityPropertyConfig{
-    config.entityConfig.scaleExpression, config.entityConfig.setDefaultProperties};
+  const auto entityPropertyConfig = makeEntityPropertyConfig(config);
 
   auto parserStatus = SimpleParserStatus{logger};
   return fs::Disk::openFile(path) | kdl::and_then([&](auto file) {
@@ -220,8 +228,7 @@ Result<std::unique_ptr<WorldNode>> createWorldNode(
   }
 
   auto worldNode = std::make_unique<WorldNode>(
-    EntityPropertyConfig{
-      config.entityConfig.scaleExpression, config.entityConfig.setDefaultProperties},
+    makeEntityPropertyConfig(config),
     std::move(worldEntity),
     format);
 
@@ -396,18 +403,21 @@ auto makeUnsetEntityDefinitionsVisitor()
 
 auto makeSetEntityModelsVisitor(EntityModelManager& manager, Logger& logger)
 {
-  return kdl::overload(
-    [](auto&& thisLambda, WorldNode* world) { world->visitChildren(thisLambda); },
-    [](auto&& thisLambda, LayerNode* layer) { layer->visitChildren(thisLambda); },
-    [](auto&& thisLambda, GroupNode* group) { group->visitChildren(thisLambda); },
-    [&](EntityNode* entityNode) {
-      const auto modelSpec =
-        safeGetModelSpecification(logger, entityNode->entity().classname(), [&]() {
-          return entityNode->entity().modelSpecification();
-        });
-      const auto* model = manager.model(modelSpec.path);
-      entityNode->setModel(model);
-    },
+    return kdl::overload(
+      [](auto&& thisLambda, WorldNode* world) { world->visitChildren(thisLambda); },
+      [](auto&& thisLambda, LayerNode* layer) { layer->visitChildren(thisLambda); },
+      [](auto&& thisLambda, GroupNode* group) { group->visitChildren(thisLambda); },
+      [&](EntityNode* entityNode) {
+        const auto* worldNode = findContainingWorld(entityNode);
+        const auto* worldEntity = worldNode ? &worldNode->entity() : nullptr;
+        const auto& propertyConfig = entityNode->entityPropertyConfig();
+        const auto modelSpec =
+          safeGetModelSpecification(logger, entityNode->entity().classname(), [&]() {
+            return entityNode->entity().modelSpecification(propertyConfig, worldEntity);
+          });
+        const auto* model = manager.model(modelSpec.path);
+        entityNode->setModel(model);
+      },
     [](BrushNode*) {},
     [](PatchNode*) {});
 }

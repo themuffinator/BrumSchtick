@@ -22,7 +22,9 @@
 #include "el/Exceptions.h"
 #include "el/Value.h"
 #include "mdl/Entity.h"
+#include "mdl/EntityProperties.h"
 
+#include <algorithm>
 #include <string>
 
 namespace tb::mdl
@@ -33,25 +35,84 @@ EntityPropertiesVariableStore::EntityPropertiesVariableStore(const Entity& entit
 {
 }
 
+EntityPropertiesVariableStore::EntityPropertiesVariableStore(
+  const Entity& entity,
+  const Entity* worldEntity,
+  const std::vector<GlobalExpressionVariable>& globalExpressionVariables)
+  : m_entity{entity}
+  , m_worldEntity{worldEntity}
+  , m_globalExpressionVariables{&globalExpressionVariables}
+{
+}
+
 el::VariableStore* EntityPropertiesVariableStore::clone() const
 {
+  if (m_worldEntity && m_globalExpressionVariables)
+  {
+    return new EntityPropertiesVariableStore{
+      m_entity, m_worldEntity, *m_globalExpressionVariables};
+  }
   return new EntityPropertiesVariableStore{m_entity};
 }
 
 size_t EntityPropertiesVariableStore::size() const
 {
-  return m_entity.properties().size();
+  return names().size();
 }
 
 el::Value EntityPropertiesVariableStore::value(const std::string& name) const
 {
-  const auto* value = m_entity.property(name);
-  return value ? el::Value{*value} : el::Value{""};
+  const auto* entityValue = m_entity.property(name);
+
+  if (m_worldEntity && m_globalExpressionVariables)
+  {
+    const auto it = std::ranges::find_if(
+      *m_globalExpressionVariables, [&](const auto& entry) { return entry.key == name; });
+    if (it != m_globalExpressionVariables->end())
+    {
+      const auto* worldValue = m_worldEntity->property(name);
+      if (it->overrideValue)
+      {
+        if (worldValue)
+        {
+          return el::Value{*worldValue};
+        }
+        if (entityValue)
+        {
+          return el::Value{*entityValue};
+        }
+        return el::Value{""};
+      }
+
+      if (entityValue)
+      {
+        return el::Value{*entityValue};
+      }
+      if (worldValue)
+      {
+        return el::Value{*worldValue};
+      }
+      return el::Value{""};
+    }
+  }
+
+  return entityValue ? el::Value{*entityValue} : el::Value{""};
 }
 
 std::vector<std::string> EntityPropertiesVariableStore::names() const
 {
-  return m_entity.propertyKeys();
+  auto names = m_entity.propertyKeys();
+  if (m_worldEntity && m_globalExpressionVariables)
+  {
+    for (const auto& entry : *m_globalExpressionVariables)
+    {
+      if (std::ranges::find(names, entry.key) == names.end())
+      {
+        names.push_back(entry.key);
+      }
+    }
+  }
+  return names;
 }
 
 void EntityPropertiesVariableStore::set(const std::string, const el::Value) {}

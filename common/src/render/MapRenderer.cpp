@@ -704,6 +704,23 @@ void MapRenderer::nodesWereRemoved(const std::vector<mdl::Node*>& nodes)
 
 void MapRenderer::nodesDidChange(const std::vector<mdl::Node*>& nodes)
 {
+  auto worldNodeChanged = false;
+  for (auto* node : nodes)
+  {
+    if (dynamic_cast<mdl::WorldNode*>(node) != nullptr)
+    {
+      worldNodeChanged = true;
+      break;
+    }
+  }
+  if (
+    worldNodeChanged
+    && !m_map.worldNode().entityPropertyConfig().globalExpressionVariables.empty())
+  {
+    invalidateRenderers(Renderer::All);
+    invalidateEntityDecalRenderer();
+  }
+
   for (auto* node : mdl::collectNodesAndAncestors(nodes))
   {
     // We update the ancestors along with the nodes, i.e. the world node. So, don't update

@@ -145,11 +145,21 @@ public: // property management
   void setModel(const EntityModel* model);
 
   const EntityModelFrame* modelFrame() const;
+  const EntityModelFrame* modelFrame(
+    const EntityPropertyConfig& config, const Entity* worldEntity) const;
   Result<ModelSpecification> modelSpecification() const;
+  Result<ModelSpecification> modelSpecification(
+    const EntityPropertyConfig& config, const Entity* worldEntity) const;
   const vm::mat4x4d& modelTransformation(
+    const std::optional<el::ExpressionNode>& defaultModelScaleExpression) const;
+  vm::mat4x4d modelTransformation(
+    const EntityPropertyConfig& config,
+    const Entity* worldEntity,
     const std::optional<el::ExpressionNode>& defaultModelScaleExpression) const;
 
   Result<DecalSpecification> decalSpecification() const;
+  Result<DecalSpecification> decalSpecification(
+    const EntityPropertyConfig& config, const Entity* worldEntity) const;
 
   void unsetEntityDefinitionAndModel();
 

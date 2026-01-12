@@ -37,6 +37,7 @@ class BrushNode;
 class EntityNode;
 class LayerNode;
 class EditorContext;
+class WorldNode;
 
 HitType::Type nodeHitType();
 
@@ -47,6 +48,8 @@ std::vector<LayerNode*> collectContainingLayersUserSorted(
 
 GroupNode* findContainingGroup(Node* node);
 const GroupNode* findContainingGroup(const Node* node);
+WorldNode* findContainingWorld(Node* node);
+const WorldNode* findContainingWorld(const Node* node);
 
 /**
  * Searches the ancestor chain of `node` for the outermost closed group and returns

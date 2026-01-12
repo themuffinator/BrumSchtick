@@ -1609,6 +1609,17 @@ void ActionManager::createGroupsMenu()
     },
   }));
   groupsMenu.addItem(addAction(Action{
+    std::filesystem::path{"Menu/Edit/Extract Linked Group Brushes"},
+    QObject::tr("Extract Selected Brushes from Linked Groups"),
+    ActionContext::Any,
+    QKeySequence{},
+    [](auto& context) { extractSelectedBrushesFromLinkedGroups(context.map()); },
+    [](const auto& context) {
+      return context.hasDocument()
+             && canExtractSelectedBrushesFromLinkedGroups(context.map());
+    },
+  }));
+  groupsMenu.addItem(addAction(Action{
     std::filesystem::path{"Menu/Edit/Clear Protected Properties"},
     QObject::tr("Clear Protected Properties"),
     ActionContext::Any,

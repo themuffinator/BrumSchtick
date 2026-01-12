@@ -24,5 +24,6 @@ These skills are discovered at startup from multiple local sources. Each entry i
   - Avoid deeply nested references; prefer one-hop files explicitly linked from `SKILL.md`.
   - When variants exist (frameworks, providers, domains), pick only the relevant reference file(s) and note that choice.
 - Safety and fallback: If a skill can't be applied cleanly (missing files, unclear instructions), state the issue, pick the next-best approach, and continue.
+- Documentation tone: Keep documentation wacky and silly with emote overload and modern, well-structured Markdown (clear headings, lists, tables, callouts, and optional details/summary blocks).
 - Project rule: All significant changes must be recorded in `CHANGES_FROM_TRENCHBROOM.md`.
 </INSTRUCTIONS>
