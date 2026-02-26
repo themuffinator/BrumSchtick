@@ -26,6 +26,7 @@
 #include <QUrl>
 
 #include "io/PathQt.h"
+#include "ui/BorderLine.h"
 #include "ui/DialogHeader.h"
 #include "ui/FormWithSectionsLayout.h"
 #include "ui/GetVersion.h"
@@ -68,8 +69,9 @@ void CrashDialog::createGui(
 
   auto* reportLayout = new FormWithSectionsLayout{};
   reportLayout->setContentsMargins(
-    0, LayoutConstants::MediumVMargin, 0, LayoutConstants::MediumVMargin);
-  reportLayout->setVerticalSpacing(2);
+    0, LayoutConstants::DialogOuterMargin, 0, LayoutConstants::DialogOuterMargin);
+  reportLayout->setHorizontalSpacing(LayoutConstants::WideHMargin);
+  reportLayout->setVerticalSpacing(LayoutConstants::MediumVMargin);
 
   reportLayout->addRow(text1);
 
@@ -93,16 +95,21 @@ void CrashDialog::createGui(
   });
   connect(buttonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
 
+  auto* innerLayout = new QVBoxLayout{};
+  innerLayout->setContentsMargins(0, 0, 0, 0);
+  innerLayout->setSpacing(0);
+  innerLayout->addWidget(header);
+  innerLayout->addWidget(new BorderLine{});
+  innerLayout->addLayout(reportLayout);
+
   auto* outerLayout = new QVBoxLayout{};
   outerLayout->setSizeConstraint(QLayout::SetFixedSize);
   outerLayout->setContentsMargins(0, 0, 0, 0);
-  outerLayout->addWidget(header);
-  outerLayout->addLayout(reportLayout, 1);
+  outerLayout->setSpacing(0);
+  outerLayout->addLayout(innerLayout);
   outerLayout->addLayout(wrapDialogButtonBox(buttonBox));
 
   setLayout(outerLayout);
-
-  // TODO: needs spacing tweaks
 }
 
 } // namespace tb::ui

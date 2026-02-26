@@ -123,15 +123,29 @@ vm::vec2f snapDelta(const UVViewHelper& helper, const vm::vec2f& delta)
   const auto newOriginInUVCoords =
     vm::vec2f{f2tTransform * vm::vec3d{newOriginInFaceCoords}};
 
-  // now snap to the vertices
-  // TODO: this actually doesn't work because we're snapping to the X or Y coordinate of
-  // the vertices instead, we must snap to the edges!
+  // Snap to the face edges in UV space by projecting onto each edge segment.
   auto distanceInUVCoords = vm::vec2f::max();
-  for (const auto* vertex : helper.face()->vertices())
+  for (const auto* edge : helper.face()->edges())
   {
+    const auto edgeSegment = edge->segment();
+    const auto edgeStartInUVCoords = vm::vec2f{w2tTransform * edgeSegment.start()};
+    const auto edgeEndInUVCoords = vm::vec2f{w2tTransform * edgeSegment.end()};
+    if (vm::is_zero(edgeEndInUVCoords - edgeStartInUVCoords, vm::Cf::almost_zero()))
+    {
+      continue;
+    }
+
+    const auto edgeSegmentInUVCoords = vm::segment2f{
+      edgeStartInUVCoords,
+      edgeEndInUVCoords};
+    const auto closestPointDistance =
+      vm::distance(edgeSegmentInUVCoords, newOriginInUVCoords);
+    const auto closestPointInUVCoords =
+      vm::point_at_distance(edgeSegmentInUVCoords, closestPointDistance.position);
+
     distanceInUVCoords = vm::abs_min(
       distanceInUVCoords,
-      vm::vec2f{w2tTransform * vertex->position()} - newOriginInUVCoords);
+      closestPointInUVCoords - newOriginInUVCoords);
   }
 
   // and to the UV grid

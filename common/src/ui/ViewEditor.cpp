@@ -564,11 +564,24 @@ void ViewEditor::refreshGui()
 
 void ViewEditor::refreshEntityDefinitionsPanel()
 {
+  if (!m_entityDefinitionCheckBoxList)
+  {
+    return;
+  }
+
   m_entityDefinitionCheckBoxList->refresh();
 }
 
 void ViewEditor::refreshEntitiesPanel()
 {
+  if (
+    !m_showEntityClassnamesCheckBox || !m_showGroupBoundsCheckBox
+    || !m_showBrushEntityBoundsCheckBox || !m_showPointEntityBoundsCheckBox
+    || !m_showPointEntitiesCheckBox || !m_showPointEntityModelsCheckBox)
+  {
+    return;
+  }
+
   m_showEntityClassnamesCheckBox->setChecked(pref(Preferences::ShowEntityClassnames));
   m_showGroupBoundsCheckBox->setChecked(pref(Preferences::ShowGroupBounds));
   m_showBrushEntityBoundsCheckBox->setChecked(pref(Preferences::ShowBrushEntityBounds));
@@ -579,6 +592,11 @@ void ViewEditor::refreshEntitiesPanel()
 
 void ViewEditor::refreshBrushesPanel()
 {
+  if (!m_showBrushesCheckBox)
+  {
+    return;
+  }
+
   m_showBrushesCheckBox->setChecked(pref(Preferences::ShowBrushes));
 
   const auto& map = m_document.map();
@@ -593,6 +611,14 @@ void ViewEditor::refreshBrushesPanel()
 
 void ViewEditor::refreshRendererPanel()
 {
+  if (
+    !m_renderModeRadioGroup || !m_shadeFacesCheckBox || !m_showFogCheckBox
+    || !m_showEdgesCheckBox || !m_showLightPreviewCheckBox
+    || !m_entityLinkRadioGroup || !m_showSoftBoundsCheckBox)
+  {
+    return;
+  }
+
   checkButtonInGroup(m_renderModeRadioGroup, pref(Preferences::FaceRenderMode), true);
   m_shadeFacesCheckBox->setChecked(pref(Preferences::ShadeFaces));
   m_showFogCheckBox->setChecked(pref(Preferences::ShowFog));

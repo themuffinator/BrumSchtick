@@ -354,7 +354,7 @@ void ControlListBox::addItemRenderer(ControlListBoxItemRenderer* renderer)
   m_listWidget->setItemWidget(widgetItem, wrapper);
   widgetItem->setSizeHint(renderer->minimumSizeHint());
   renderer->updateItem();
-  renderer->setSelected(m_listWidget->currentItem() == widgetItem, m_listWidget);
+  renderer->setSelected(widgetItem->isSelected(), m_listWidget);
 }
 
 void ControlListBox::selectedRowChanged(const int /* index */) {}
@@ -369,9 +369,6 @@ void ControlListBox::listItemSelectionChanged()
   {
     auto* listItem = m_listWidget->item(row);
     auto* renderer = this->renderer(row);
-    // FIXME: this uses QListWidgetItem::isSelected() but addItemRenderer() is doing
-    // it based on QListWidget::currentItem() - should be consistent.
-    // (see: https://github.com/TrenchBroom/TrenchBroom/issues/3104)
     renderer->setSelected(listItem->isSelected(), m_listWidget);
     if (listItem->isSelected())
     {

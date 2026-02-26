@@ -109,6 +109,9 @@
 #include "ui/ViewUtils.h"
 #include "update/Updater.h"
 
+#include <QOffscreenSurface>
+#include <QOpenGLContext>
+
 #include "kd/const_overload.h"
 #include "kd/contracts.h"
 #include "kd/overload.h"
@@ -182,12 +185,35 @@ MapFrame::~MapFrame()
   // Stop the autosave timer
   m_autosaveTimer->stop();
 
-  // Search for a RenderView (QOpenGLWindow subclass) and make it current in order to
-  // allow for calling OpenGL methods in destructors.
+  // Create a shared offscreen GL context so OpenGL-backed resources can still be
+  // destroyed after RenderView widgets have been deleted.
+  auto cleanupContext = std::unique_ptr<QOpenGLContext>{};
+  auto cleanupSurface = std::unique_ptr<QOffscreenSurface>{};
+
+  // Search for a RenderView and make it current so we can create a shared context.
   auto* renderView = findChild<RenderView*>();
   if (renderView)
   {
     renderView->makeCurrent();
+
+    if (auto* sourceContext = renderView->context())
+    {
+      auto candidateSurface = std::make_unique<QOffscreenSurface>();
+      candidateSurface->setFormat(sourceContext->format());
+      candidateSurface->create();
+
+      auto candidateContext = std::make_unique<QOpenGLContext>();
+      candidateContext->setFormat(sourceContext->format());
+      candidateContext->setShareContext(sourceContext);
+
+      if (
+        candidateSurface->isValid() && candidateContext->create()
+        && candidateContext->makeCurrent(candidateSurface.get()))
+      {
+        cleanupSurface = std::move(candidateSurface);
+        cleanupContext = std::move(candidateContext);
+      }
+    }
   }
 
   // The MapDocument's CachingLogger has a pointer to m_console, which
@@ -214,8 +240,17 @@ MapFrame::~MapFrame()
   m_document->setViewEffectsService(nullptr);
   m_document.reset();
 
-  // FIXME: m_contextManager is deleted via smart pointer; it may release openGL resources
-  // in its destructor
+  if (cleanupContext)
+  {
+    cleanupContext->makeCurrent(cleanupSurface.get());
+  }
+
+  m_contextManager.reset();
+
+  if (cleanupContext)
+  {
+    cleanupContext->doneCurrent();
+  }
 }
 
 void MapFrame::positionOnScreen(QWidget* reference)

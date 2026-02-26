@@ -38,9 +38,12 @@
 #include <QStringBuilder>
 #include <QTimer>
 
+#include "FileLogger.h"
 #include "Preferences.h"
+#include "TrenchBroomApp.h"
 #include "io/PathQt.h"
 #include "io/SystemPaths.h"
+#include "ui/MapDocument.h"
 
 #include "kd/contracts.h"
 #include "kd/overload.h"
@@ -78,6 +81,22 @@ bool shouldSaveInstantly()
 #else
   return false;
 #endif
+}
+
+Logger& preferenceLogger()
+{
+  if (qApp != nullptr)
+  {
+    if (auto* app = dynamic_cast<ui::TrenchBroomApp*>(qApp))
+    {
+      if (auto* document = app->topDocument())
+      {
+        return document->logger();
+      }
+    }
+  }
+
+  return FileLogger::instance();
 }
 } // namespace
 
@@ -335,18 +354,20 @@ void AppPreferenceManager::loadPreferenceFromCache(const PreferenceBase& pref)
   const auto jsonValue = it->second;
   if (!pref.loadFromJson(format, jsonValue))
   {
-    // FIXME: Log to TB console
     const auto variantValue = jsonValue.toVariant();
-    qDebug() << "Failed to load preference " << io::pathAsGenericQString(pref.path())
-             << " from JSON value: " << variantValue.toString() << " ("
-             << variantValue.typeName() << ")";
+    preferenceLogger().warn()
+      << "Failed to load preference '" << io::pathAsGenericQString(pref.path()).toStdString()
+      << "' from JSON value '" << variantValue.toString().toStdString() << "' ("
+      << variantValue.typeName() << "); resetting to default";
 
     pref.resetToDefault();
 
     // Replace the invalid value in the cache with the default
     savePreferenceToCache(pref);
-
-    // FIXME: trigger writing to disk
+    if (!m_fileReadWriteDisabled)
+    {
+      m_saveTimer.start(500);
+    }
   }
   pref.setValid(true);
 }

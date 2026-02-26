@@ -38,16 +38,23 @@ Rule: All significant changes must be recorded here. ✅
 - Mouse Move sensitivity now scales 2D view zooming (mouse wheel and alt-drag) to match 3D behavior.
 - Compilation output highlights map line numbers as links; clicking one selects the corresponding map objects.
 - Linked group bounds and labels use a distinct linked-group color and append "(linked)" so linked sets are visible without selection.
+- Fixes a View Options crash when preference changes fire before the view editor UI is constructed.
 - Adds a Groups menu action to extract selected brushes from linked groups into their parent containers, making the brushes unique.
 - Brush and patch tools treat selected groups (and brush entities) as selections of their contained components, allowing vertex/edge/face editing, CSG, clipping, and patch conversion without opening the group.
 - "Select Faces/Select Brushes" from the material browser now matches materials case-insensitively.
 - Adds an Edge Tool chamfer command that clips selected edges with a configurable distance and segment count.
 - Grid size selection persists when opening or reverting maps instead of resetting to 16.
+- UV origin dragging now snaps to nearest face edges in UV space (instead of independently snapping to vertex X/Y components), fixing incorrect origin snaps.
+- Extrude tool now raises a contract failure if drag-handle proposals are updated during an active drag, surfacing controller state bugs early.
+- Control list renderers now use actual item selection state (instead of current-item state) for highlight updates, fixing inconsistent row highlighting.
+- Crash dialog content now uses standard dialog margins/separators, improving section and button-row spacing.
 
 
 ## Rendering 🖼️🔥
 
 - Adds an optional real-time light preview in the 3D camera view that evaluates point and surface lights (including light styles) with occlusion and per-vertex lightmap-style shading.
+- MapFrame teardown now uses a temporary shared offscreen OpenGL context so GLContextManager resources are released safely during window shutdown.
+- Inward extrude now pre-validates linked-group update consistency and aborts cleanly on update/add failures instead of continuing after linked-group errors.
 
 ## Map format support 🗺️🧩
 
@@ -98,10 +105,12 @@ Rule: All significant changes must be recorded here. ✅
 - Preserve UNC path prefixes during normalization so WSL shared paths (for example, `\\wsl.localhost\...`) are resolved correctly for wad loading and texture discovery.
 - Portable mode uses the current working directory for user data/logs instead of the AppImage mount, preventing read-only failures.
 - Preference file locking retries stale locks and avoids lock failures when the preferences file is missing.
+- Invalid persisted preference values are now reset to defaults and written back to `Preferences.json`, so broken entries self-heal instead of lingering in cache only.
 
 ## Logging 🧾🔍
 
 - GameManager and GameFileSystem now take a Logger at construction time and reuse it internally instead of requiring per-call logger parameters.
+- Invalid preference deserialization warnings are now routed to the in-app console when a map is open (with file logger fallback when no document is active).
 
 ## Dependencies 🧩📦
 

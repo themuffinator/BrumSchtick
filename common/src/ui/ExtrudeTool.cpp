@@ -30,6 +30,7 @@
 #include "mdl/HitFilter.h"
 #include "mdl/Map.h"
 #include "mdl/Map_Geometry.h"
+#include "mdl/Map_Groups.h"
 #include "mdl/Map_Nodes.h"
 #include "mdl/Map_Selection.h"
 #include "mdl/NodeContents.h"
@@ -341,10 +342,7 @@ void ExtrudeTool::updateProposedDragHandles(const mdl::PickResult& pickResult)
   auto& map = m_document.map();
   if (m_dragging)
   {
-    // FIXME: this should be turned into an ensure failure, but it's easy to make it
-    // fail currently by spamming drags/modifiers. Indicates a bug in
-    // ExtrudeToolController thinking we are not dragging when we actually still are.
-    map.logger().error() << "updateProposedDragHandles called during a drag";
+    contract_assert(!m_dragging);
     return;
   }
 
@@ -552,18 +550,43 @@ bool splitBrushesInward(
   }
 
   // Apply changes calculated above
+  auto nodesForLinkedGroupCheck = std::vector<mdl::Node*>{};
+  nodesForLinkedGroupCheck.reserve(nodesToUpdate.size() + newNodes.size());
+  for (const auto& [node, contents] : nodesToUpdate)
+  {
+    unused(contents);
+    nodesForLinkedGroupCheck.push_back(node);
+  }
+  for (const auto& [parentNode, nodes] : newNodes)
+  {
+    unused(nodes);
+    nodesForLinkedGroupCheck.push_back(parentNode);
+  }
+  if (!canUpdateLinkedGroups(nodesForLinkedGroupCheck))
+  {
+    map.logger().error() << "Could not extrude inwards: Cannot update linked groups";
+    kdl::map_clear_and_delete(newNodes);
+    return false;
+  }
 
   dragState.currentDragFaces.clear();
   map.rollbackTransaction();
 
-  // FIXME: deal with linked group update failure (needed for #3647)
-  const bool success = updateNodeContents(map, "Resize Brushes", nodesToUpdate);
-  unused(success);
+  if (!updateNodeContents(map, "Resize Brushes", nodesToUpdate))
+  {
+    map.logger().error() << "Could not extrude inwards: Failed to update brush contents";
+    kdl::map_clear_and_delete(newNodes);
+    return false;
+  }
 
   // Add the newly split off brushes and select them (keeping the original brushes
   // selected).
-  // FIXME: deal with linked group update failure (needed for #3647)
   const auto addedNodes = addNodes(map, newNodes);
+  if (!newNodes.empty() && addedNodes.empty())
+  {
+    map.logger().error() << "Could not extrude inwards: Failed to add split brushes";
+    return false;
+  }
   selectNodes(map, addedNodes);
 
   dragState.currentDragFaces = std::move(newDragFaces);
