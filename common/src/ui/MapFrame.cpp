@@ -239,12 +239,14 @@ MapFrame::~MapFrame()
   m_document->triggerAutosave();
 
   m_document->setViewEffectsService(nullptr);
-  m_document.reset();
 
   if (cleanupContext)
   {
     cleanupContext->makeCurrent(cleanupSurface.get());
   }
+  m_document->map().dropResources(cleanupContext != nullptr);
+
+  m_document.reset();
 
   m_contextManager.reset();
 

@@ -152,6 +152,13 @@ void MapDocument::setMap(std::unique_ptr<mdl::Map> map)
 {
   const auto previousGridSize = m_map ? std::optional{m_map->grid().size()} : std::nullopt;
 
+  if (m_map)
+  {
+    m_mapRenderer.reset();
+    m_autosaver.reset();
+    m_map->dropResources(false);
+  }
+
   m_map = std::move(map);
   m_mapRenderer = std::make_unique<render::MapRenderer>(*m_map);
   m_autosaver = std::make_unique<mdl::Autosaver>(*m_map);

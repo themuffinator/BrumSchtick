@@ -46,6 +46,10 @@ This document tracks intentional, significant differences between BrumSchtick an
 - Adds optional real-time light preview in the 3D camera view for point/surface lights, including style and occlusion-aware shading.
 - Patch wire rendering now shows the full tessellated lattice (rows and columns), improving patch readability while editing.
 
+## Performance and asset pipeline ⚡🗂️
+
+- Asset-heavy map loads are faster and smoother: material/shader resolution now avoids repeated hotspot/shader scans, async resource processing uses fair/adaptive batching with relevance-based browser refreshes, entity-model skin loading now safely reuses cached texture resources across models with bounded cache eviction, and load-time diagnostics now report stage counts plus model/cache hit-miss telemetry so slow offenders are easier to identify and fix.
+
 ## Compatibility and data handling 🗺️🧩
 
 - Quake 3 `patchDef3` with control-point normals is supported end-to-end (parse, preserve, emit).

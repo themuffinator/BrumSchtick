@@ -138,8 +138,6 @@ void EntityBrowser::connectObservers()
     m_document.documentWasLoadedNotifier.connect(this, &EntityBrowser::documentDidChange);
   m_notifierConnection +=
     m_document.documentDidChangeNotifier.connect(this, &EntityBrowser::documentDidChange);
-  m_notifierConnection += m_document.resourcesWereProcessedNotifier.connect(
-    this, &EntityBrowser::resourcesWereProcessed);
 
   auto& prefs = PreferenceManager::instance();
   m_notifierConnection +=
@@ -161,11 +159,6 @@ void EntityBrowser::preferenceDidChange(const std::filesystem::path& path)
   {
     m_view->update();
   }
-}
-
-void EntityBrowser::resourcesWereProcessed(const std::vector<mdl::ResourceId>&)
-{
-  reload();
 }
 
 } // namespace tb::ui

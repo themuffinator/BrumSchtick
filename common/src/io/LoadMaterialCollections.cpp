@@ -57,8 +57,10 @@
 #include <format>
 
 #include <algorithm>
+#include <chrono>
 #include <ranges>
 #include <string>
+#include <unordered_map>
 
 namespace tb::io
 {
@@ -109,7 +111,7 @@ std::vector<mdl::HotspotRect> findHotspotRectsForMaterial(
 
 std::vector<mdl::HotspotRect> loadHotspotsForMaterial(
   const fs::FileSystem& fs,
-  const mdl::MaterialConfig& materialConfig,
+  const std::optional<HotspotRectMap>& sharedRects,
   const std::filesystem::path& materialPath,
   const std::string& materialName,
   Logger& logger)
@@ -133,21 +135,44 @@ std::vector<mdl::HotspotRect> loadHotspotsForMaterial(
     return result;
   }
 
-  const auto sharedRectPath = materialConfig.root / "rectangles.rect";
-  if (fs.pathInfo(sharedRectPath) == fs::PathInfo::File)
+  if (sharedRects)
   {
-    auto rectsResult =
-      loadHotspotRectFile(fs, sharedRectPath, std::nullopt)
-        | kdl::or_else([&](const auto& e) {
-            logger.warn() << "Could not read hotspot rects from " << sharedRectPath
-                          << ": " << e.msg;
-            return Result<HotspotRectMap>{HotspotRectMap{}};
-          });
-    const auto rects = rectsResult.value();
-    return findHotspotRectsForMaterial(rects, materialName);
+    return findHotspotRectsForMaterial(*sharedRects, materialName);
   }
 
   return {};
+}
+
+std::optional<HotspotRectMap> loadSharedHotspotRects(
+  const fs::FileSystem& fs, const mdl::MaterialConfig& materialConfig, Logger& logger)
+{
+  const auto sharedRectPath = materialConfig.root / "rectangles.rect";
+  if (fs.pathInfo(sharedRectPath) != fs::PathInfo::File)
+  {
+    return std::nullopt;
+  }
+
+  auto rectsResult = loadHotspotRectFile(fs, sharedRectPath, std::nullopt)
+                     | kdl::or_else([&](const auto& e) {
+                         logger.warn() << "Could not read hotspot rects from "
+                                       << sharedRectPath << ": " << e.msg;
+                         return Result<HotspotRectMap>{HotspotRectMap{}};
+                       });
+  return rectsResult.value();
+}
+
+auto makeShaderPathIndex(const std::vector<mdl::Quake3Shader>& shaders)
+{
+  auto result = std::unordered_map<
+    std::filesystem::path,
+    const mdl::Quake3Shader*,
+    kdl::path_hash>{};
+  result.reserve(shaders.size());
+  for (const auto& shader : shaders)
+  {
+    result.emplace(shader.shaderPath, &shader);
+  }
+  return result;
 }
 
 bool shouldExclude(
@@ -501,22 +526,34 @@ std::vector<mdl::MaterialCollection> groupMaterialsIntoCollections(
 
 } // namespace
 
+MaterialLoadContext createMaterialLoadContext(
+  const fs::FileSystem& fs,
+  const mdl::MaterialConfig& materialConfig,
+  const std::vector<mdl::Quake3Shader>& shaders,
+  Logger& logger)
+{
+  auto context = MaterialLoadContext{};
+  context.shaderPathIndex = makeShaderPathIndex(shaders);
+  context.sharedHotspotRects = loadSharedHotspotRects(fs, materialConfig, logger);
+  return context;
+}
 
-Result<mdl::Material> loadMaterial(
+Result<mdl::Material> loadMaterialWithContext(
   const fs::FileSystem& fs,
   const mdl::MaterialConfig& materialConfig,
   const std::filesystem::path& materialPath,
   const mdl::CreateTextureResource& createResource,
-  const std::vector<mdl::Quake3Shader>& shaders,
+  const std::unordered_map<std::filesystem::path, const mdl::Quake3Shader*, kdl::path_hash>&
+    shaderPathIndex,
   const std::optional<Result<mdl::Palette>>& paletteResult,
+  const std::optional<HotspotRectMap>& sharedHotspotRects,
   Logger& logger)
 {
   const auto materialPathStem = kdl::path_remove_extension(materialPath);
-  const auto iShader = std::ranges::find_if(
-    shaders, [&](const auto& shader) { return shader.shaderPath == materialPathStem; });
+  const auto iShader = shaderPathIndex.find(materialPathStem);
 
-  return (iShader != shaders.end()
-            ? loadShaderMaterial(*iShader, fs, materialConfig, createResource)
+  return (iShader != shaderPathIndex.end()
+            ? loadShaderMaterial(*iShader->second, fs, materialConfig, createResource)
             : loadTextureMaterial(
                 materialPath, fs, materialConfig, createResource, paletteResult))
          | kdl::transform([&](auto material) {
@@ -527,9 +564,53 @@ Result<mdl::Material> loadMaterial(
              material.setCollectionName(
                materialCollectionName(fs, materialConfig, materialPath));
              material.setHotspots(loadHotspotsForMaterial(
-               fs, materialConfig, materialPath, material.name(), logger));
+                fs,
+                sharedHotspotRects,
+                materialPath,
+                material.name(),
+                logger));
              return material;
            });
+}
+
+Result<mdl::Material> loadMaterial(
+  const fs::FileSystem& fs,
+  const mdl::MaterialConfig& materialConfig,
+  const std::filesystem::path& materialPath,
+  const mdl::CreateTextureResource& createResource,
+  const MaterialLoadContext& context,
+  const std::optional<Result<mdl::Palette>>& paletteResult,
+  Logger& logger)
+{
+  return loadMaterialWithContext(
+    fs,
+    materialConfig,
+    materialPath,
+    createResource,
+    context.shaderPathIndex,
+    paletteResult,
+    context.sharedHotspotRects,
+    logger);
+}
+
+Result<mdl::Material> loadMaterial(
+  const fs::FileSystem& fs,
+  const mdl::MaterialConfig& materialConfig,
+  const std::filesystem::path& materialPath,
+  const mdl::CreateTextureResource& createResource,
+  const std::vector<mdl::Quake3Shader>& shaders,
+  const std::optional<Result<mdl::Palette>>& paletteResult,
+  Logger& logger)
+{
+  const auto context = createMaterialLoadContext(fs, materialConfig, shaders, logger);
+  return loadMaterial(
+    fs,
+    materialConfig,
+    materialPath,
+    createResource,
+    context,
+    paletteResult,
+    logger);
 }
 
 Result<std::vector<mdl::MaterialCollection>> loadMaterialCollections(
@@ -539,6 +620,7 @@ Result<std::vector<mdl::MaterialCollection>> loadMaterialCollections(
   kdl::task_manager& taskManager,
   Logger& logger)
 {
+  const auto startTime = std::chrono::steady_clock::now();
   const auto paletteResult = loadPalette(fs, materialConfig);
 
   return loadShaders(fs, materialConfig, taskManager, logger)
@@ -549,6 +631,8 @@ Result<std::vector<mdl::MaterialCollection>> loadMaterialCollections(
                     | kdl::views::as_rvalue | kdl::ranges::to<std::vector>();
            })
          | kdl::and_then([&](auto shaders) {
+             const auto context =
+               createMaterialLoadContext(fs, materialConfig, shaders, logger);
              return findAllMaterialPaths(fs, materialConfig, shaders)
                     | kdl::and_then([&](const auto& materialPaths) {
                         return materialPaths
@@ -558,7 +642,7 @@ Result<std::vector<mdl::MaterialCollection>> loadMaterialCollections(
                                      materialConfig,
                                      materialPath,
                                      createResource,
-                                     shaders,
+                                     context,
                                      paletteResult,
                                      logger);
                                  })
@@ -566,7 +650,16 @@ Result<std::vector<mdl::MaterialCollection>> loadMaterialCollections(
                       });
            })
          | kdl::transform([&](auto materials) {
-             return groupMaterialsIntoCollections(std::move(materials));
+             const auto materialCount = materials.size();
+             auto collections = groupMaterialsIntoCollections(std::move(materials));
+             const auto elapsedMs =
+               std::chrono::duration_cast<std::chrono::milliseconds>(
+                 std::chrono::steady_clock::now() - startTime)
+                 .count();
+             logger.info() << "Loaded " << materialCount << " materials in "
+                           << collections.size() << " collections in " << elapsedMs
+                           << " ms";
+             return collections;
            });
 }
 

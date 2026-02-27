@@ -30,6 +30,7 @@
 
 #include "vm/bbox.h"
 
+#include <chrono>
 #include <filesystem>
 #include <memory>
 #include <optional>
@@ -138,6 +139,12 @@ private:
   Selection m_selection;
   mutable std::optional<vm::bbox3d> m_cachedSelectionBounds;
   std::optional<vm::bbox3d> m_lastSelectionBounds;
+
+  std::vector<ResourceId> m_pendingProcessedResourceIds;
+  std::chrono::steady_clock::time_point m_lastResourceNotificationTime;
+  size_t m_resourceProcessTicksSinceLastLog = 0u;
+  size_t m_resourceStateTransitionsSinceLastLog = 0u;
+  std::chrono::steady_clock::time_point m_lastResourceProcessLogTime;
 
 public: // notification
   Notifier<> mapWasSavedNotifier;
@@ -367,6 +374,12 @@ private: // entity link management
   void clearEntityLinks();
   void addEntityLinks(const std::vector<Node*>& nodes, bool recurse);
   void removeEntityLinks(const std::vector<Node*>& nodes, bool recurse);
+
+private:
+  void flushProcessedResources(bool force);
+
+public:
+  void dropResources(bool glContextAvailable);
 
 public: // resource processing
   void processResourcesSync(const ProcessContext& processContext);

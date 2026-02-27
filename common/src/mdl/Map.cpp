@@ -100,6 +100,7 @@
 #include "mdl/WorldNode.h" // IWYU pragma: keep
 
 #include "kd/contracts.h"
+#include "kd/path_hash.h"
 #include "kd/path_utils.h"
 #include "kd/ranges/to.h"
 #include "kd/string_utils.h"
@@ -112,6 +113,7 @@
 #include <memory>
 #include <ranges>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 
@@ -119,6 +121,32 @@ namespace tb::mdl
 {
 namespace
 {
+
+constexpr auto ResourceNotificationInterval = std::chrono::milliseconds{100};
+constexpr auto ResourceProcessStatsLogInterval = std::chrono::seconds{1};
+constexpr auto ResourceProcessTimeoutDefault = std::chrono::milliseconds{20};
+constexpr auto ResourceProcessTimeoutMedium = std::chrono::milliseconds{40};
+constexpr auto ResourceProcessTimeoutLarge = std::chrono::milliseconds{70};
+
+std::chrono::milliseconds processTimeoutForResourceCount(const size_t resourceCount)
+{
+  if (resourceCount > 2000u)
+  {
+    return ResourceProcessTimeoutLarge;
+  }
+  if (resourceCount > 600u)
+  {
+    return ResourceProcessTimeoutMedium;
+  }
+  return ResourceProcessTimeoutDefault;
+}
+
+long long elapsedMs(
+  const std::chrono::steady_clock::time_point begin,
+  const std::chrono::steady_clock::time_point end)
+{
+  return std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count();
+}
 
 void updateGameFileSystem(
   GameFileSystem& fs,
@@ -401,23 +429,30 @@ auto makeUnsetEntityDefinitionsVisitor()
     [](PatchNode*) {});
 }
 
-auto makeSetEntityModelsVisitor(EntityModelManager& manager, Logger& logger)
+auto makeSetEntityModelsVisitor(
+  EntityModelManager& manager,
+  Logger& logger,
+  std::unordered_set<std::filesystem::path, kdl::path_hash>* usedModelPaths = nullptr)
 {
-    return kdl::overload(
-      [](auto&& thisLambda, WorldNode* world) { world->visitChildren(thisLambda); },
-      [](auto&& thisLambda, LayerNode* layer) { layer->visitChildren(thisLambda); },
-      [](auto&& thisLambda, GroupNode* group) { group->visitChildren(thisLambda); },
-      [&](EntityNode* entityNode) {
-        const auto* worldNode = findContainingWorld(entityNode);
-        const auto* worldEntity = worldNode ? &worldNode->entity() : nullptr;
-        const auto& propertyConfig = entityNode->entityPropertyConfig();
-        const auto modelSpec =
-          safeGetModelSpecification(logger, entityNode->entity().classname(), [&]() {
-            return entityNode->entity().modelSpecification(propertyConfig, worldEntity);
-          });
-        const auto* model = manager.model(modelSpec.path);
-        entityNode->setModel(model);
-      },
+  return kdl::overload(
+    [](auto&& thisLambda, WorldNode* world) { world->visitChildren(thisLambda); },
+    [](auto&& thisLambda, LayerNode* layer) { layer->visitChildren(thisLambda); },
+    [](auto&& thisLambda, GroupNode* group) { group->visitChildren(thisLambda); },
+    [&](EntityNode* entityNode) {
+      const auto* worldNode = findContainingWorld(entityNode);
+      const auto* worldEntity = worldNode ? &worldNode->entity() : nullptr;
+      const auto& propertyConfig = entityNode->entityPropertyConfig();
+      const auto modelSpec =
+        safeGetModelSpecification(logger, entityNode->entity().classname(), [&]() {
+          return entityNode->entity().modelSpecification(propertyConfig, worldEntity);
+        });
+      if (usedModelPaths != nullptr && !modelSpec.path.empty())
+      {
+        usedModelPaths->insert(modelSpec.path);
+      }
+      const auto* model = manager.model(modelSpec.path);
+      entityNode->setModel(model);
+    },
     [](BrushNode*) {},
     [](PatchNode*) {});
 }
@@ -545,6 +580,8 @@ Map::Map(
   , m_commandProcessor{std::make_unique<CommandProcessor>(*this)}
   , m_path{std::move(path)}
   , m_selection{*this}
+  , m_lastResourceNotificationTime{std::chrono::steady_clock::now()}
+  , m_lastResourceProcessLogTime{std::chrono::steady_clock::now()}
 {
   connectObservers();
 
@@ -1072,11 +1109,39 @@ void Map::setIssueHidden(const Issue& issue, const bool hidden)
 
 void Map::loadAssets()
 {
+  const auto startTime = std::chrono::steady_clock::now();
+
   loadEntityDefinitions();
+  const auto afterLoadEntityDefinitions = std::chrono::steady_clock::now();
+
   setEntityDefinitions();
+  const auto afterSetEntityDefinitions = std::chrono::steady_clock::now();
+
   setEntityModels();
+  const auto afterSetEntityModels = std::chrono::steady_clock::now();
+
   loadMaterials();
+  const auto afterLoadMaterials = std::chrono::steady_clock::now();
+
   setMaterials();
+
+  const auto endTime = std::chrono::steady_clock::now();
+  logger().info() << "Asset load stages (ms): entity definitions="
+                  << elapsedMs(startTime, afterLoadEntityDefinitions)
+                  << ", bind definitions="
+                  << elapsedMs(afterLoadEntityDefinitions, afterSetEntityDefinitions)
+                  << ", bind entity models="
+                  << elapsedMs(afterSetEntityDefinitions, afterSetEntityModels)
+                  << ", load materials="
+                  << elapsedMs(afterSetEntityModels, afterLoadMaterials)
+                  << ", bind materials="
+                  << elapsedMs(afterLoadMaterials, endTime)
+                  << ", total=" << elapsedMs(startTime, endTime);
+  logger().info() << "Asset load counts: entity definitions="
+                  << m_entityDefinitionManager->definitions().size()
+                  << ", entity models=" << m_entityModelManager->modelCount()
+                  << ", material collections=" << m_materialManager->collections().size()
+                  << ", materials=" << m_materialManager->materials().size();
 }
 
 void Map::clearAssets()
@@ -1084,6 +1149,23 @@ void Map::clearAssets()
   clearEntityDefinitions();
   clearEntityModels();
   clearMaterials();
+}
+
+void Map::dropResources(const bool glContextAvailable)
+{
+  m_pendingProcessedResourceIds.clear();
+  m_resourceProcessTicksSinceLastLog = 0u;
+  m_resourceStateTransitionsSinceLastLog = 0u;
+  m_lastResourceProcessLogTime = std::chrono::steady_clock::now();
+
+  m_worldNode->accept(makeUnsetMaterialsVisitor());
+  m_worldNode->accept(makeUnsetEntityModelsVisitor());
+  m_worldNode->accept(makeUnsetEntityDefinitionsVisitor());
+
+  m_materialManager->clear();
+  m_entityModelManager->clear();
+  m_entityDefinitionManager->clear();
+  m_resourceManager->clear(glContextAvailable);
 }
 
 void Map::loadEntityDefinitions()
@@ -1230,7 +1312,10 @@ void Map::clearEntityModels()
 
 void Map::setEntityModels()
 {
-  m_worldNode->accept(makeSetEntityModelsVisitor(*m_entityModelManager, logger()));
+  auto usedModelPaths = std::unordered_set<std::filesystem::path, kdl::path_hash>{};
+  m_worldNode->accept(makeSetEntityModelsVisitor(
+    *m_entityModelManager, logger(), &usedModelPaths));
+  m_entityModelManager->retainModels(usedModelPaths);
 }
 
 void Map::setEntityModels(const std::vector<Node*>& nodes)
@@ -1343,9 +1428,30 @@ void Map::removeEntityLinks(const std::vector<Node*>& nodes, const bool recurse)
   }
 }
 
+void Map::flushProcessedResources(const bool force)
+{
+  if (m_pendingProcessedResourceIds.empty())
+  {
+    return;
+  }
+
+  const auto now = std::chrono::steady_clock::now();
+  if (!force && now - m_lastResourceNotificationTime < ResourceNotificationInterval)
+  {
+    return;
+  }
+
+  resourcesWereProcessedNotifier.notify(kdl::vec_sort_and_remove_duplicates(
+    std::move(m_pendingProcessedResourceIds)));
+  m_pendingProcessedResourceIds.clear();
+  m_lastResourceNotificationTime = now;
+}
+
 void Map::processResourcesSync(const ProcessContext& processContext)
 {
-  auto allProcessedResourceIds = std::vector<ResourceId>{};
+  auto allProcessedResourceIds = std::move(m_pendingProcessedResourceIds);
+  m_pendingProcessedResourceIds.clear();
+
   while (m_resourceManager->needsProcessing())
   {
     auto processedResourceIds = m_resourceManager->process(
@@ -1360,25 +1466,103 @@ void Map::processResourcesSync(const ProcessContext& processContext)
       std::move(allProcessedResourceIds), std::move(processedResourceIds));
   }
 
-  if (!allProcessedResourceIds.empty())
-  {
-    resourcesWereProcessedNotifier.notify(
-      kdl::vec_sort_and_remove_duplicates(std::move(allProcessedResourceIds)));
-  }
+  m_pendingProcessedResourceIds = std::move(allProcessedResourceIds);
+  flushProcessedResources(true);
+  m_resourceProcessTicksSinceLastLog = 0u;
+  m_resourceStateTransitionsSinceLastLog = 0u;
+  m_lastResourceProcessLogTime = std::chrono::steady_clock::now();
 }
 
 void Map::processResourcesAsync(const ProcessContext& processContext)
 {
-  using namespace std::chrono_literals;
-
-  const auto processedResourceIds = m_resourceManager->process(
+  const auto timeout = processTimeoutForResourceCount(m_resourceManager->resourceCount());
+  auto processedResourceIds = m_resourceManager->process(
     [&](auto task) { return taskManager().run_task(std::move(task)); },
     processContext,
-    20ms);
+    timeout);
+  const auto processedStateTransitions = processedResourceIds.size();
+  ++m_resourceProcessTicksSinceLastLog;
+  m_resourceStateTransitionsSinceLastLog += processedStateTransitions;
 
   if (!processedResourceIds.empty())
   {
-    resourcesWereProcessedNotifier.notify(processedResourceIds);
+    m_pendingProcessedResourceIds = kdl::vec_concat(
+      std::move(m_pendingProcessedResourceIds), std::move(processedResourceIds));
+  }
+
+  const auto needsMoreProcessing = m_resourceManager->needsProcessing();
+  if (needsMoreProcessing)
+  {
+    flushProcessedResources(false);
+  }
+  else
+  {
+    flushProcessedResources(true);
+  }
+
+  const auto now = std::chrono::steady_clock::now();
+  if (
+    needsMoreProcessing
+    && now - m_lastResourceProcessLogTime >= ResourceProcessStatsLogInterval)
+  {
+    const auto modelLoadStats = m_entityModelManager->modelLoadStats();
+    const auto textureCacheStats = m_entityModelManager->textureCacheStats();
+    const auto avgModelLoadMs =
+      modelLoadStats.loadCount > 0u
+        ? modelLoadStats.totalElapsedMs / static_cast<long long>(modelLoadStats.loadCount)
+        : 0ll;
+    logger().info() << "Resource processing: queue=" << m_resourceManager->resourceCount()
+                    << ", timeout=" << timeout.count()
+                    << " ms, ticks=" << m_resourceProcessTicksSinceLastLog
+                    << ", transitions=" << m_resourceStateTransitionsSinceLastLog
+                    << ", pending-notify=" << m_pendingProcessedResourceIds.size()
+                    << ", model-loads=" << modelLoadStats.loadCount
+                    << ", model-load-failures=" << modelLoadStats.failureCount
+                    << ", model-load-avg=" << avgModelLoadMs
+                    << " ms, model-load-max=" << modelLoadStats.maxElapsedMs
+                    << " ms, slowest-model="
+                    << (modelLoadStats.slowestModelPath.empty()
+                          ? std::filesystem::path{"<none>"}
+                          : modelLoadStats.slowestModelPath)
+                    << ", texture-cache[size=" << textureCacheStats.size
+                    << ", hits=" << textureCacheStats.hits
+                    << ", misses=" << textureCacheStats.misses
+                    << ", late-hits=" << textureCacheStats.lateHits
+                    << ", pruned=" << textureCacheStats.expiredPrunes
+                    << ", evicted=" << textureCacheStats.evictions << "]";
+    m_resourceProcessTicksSinceLastLog = 0u;
+    m_resourceStateTransitionsSinceLastLog = 0u;
+    m_lastResourceProcessLogTime = now;
+  }
+  else if (!needsMoreProcessing && m_resourceProcessTicksSinceLastLog > 0u)
+  {
+    const auto modelLoadStats = m_entityModelManager->modelLoadStats();
+    const auto textureCacheStats = m_entityModelManager->textureCacheStats();
+    const auto avgModelLoadMs =
+      modelLoadStats.loadCount > 0u
+        ? modelLoadStats.totalElapsedMs / static_cast<long long>(modelLoadStats.loadCount)
+        : 0ll;
+    logger().info() << "Resource processing complete: elapsed="
+                    << elapsedMs(m_lastResourceProcessLogTime, now)
+                    << " ms, ticks=" << m_resourceProcessTicksSinceLastLog
+                    << ", transitions=" << m_resourceStateTransitionsSinceLastLog
+                    << ", model-loads=" << modelLoadStats.loadCount
+                    << ", model-load-failures=" << modelLoadStats.failureCount
+                    << ", model-load-avg=" << avgModelLoadMs
+                    << " ms, model-load-max=" << modelLoadStats.maxElapsedMs
+                    << " ms, slowest-model="
+                    << (modelLoadStats.slowestModelPath.empty()
+                          ? std::filesystem::path{"<none>"}
+                          : modelLoadStats.slowestModelPath)
+                    << ", texture-cache[size=" << textureCacheStats.size
+                    << ", hits=" << textureCacheStats.hits
+                    << ", misses=" << textureCacheStats.misses
+                    << ", late-hits=" << textureCacheStats.lateHits
+                    << ", pruned=" << textureCacheStats.expiredPrunes
+                    << ", evicted=" << textureCacheStats.evictions << "]";
+    m_resourceProcessTicksSinceLastLog = 0u;
+    m_resourceStateTransitionsSinceLastLog = 0u;
+    m_lastResourceProcessLogTime = now;
   }
 }
 

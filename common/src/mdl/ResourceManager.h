@@ -26,6 +26,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cstddef>
 #include <memory>
 #include <ranges>
 #include <vector>
@@ -46,6 +47,7 @@ public:
   virtual bool needsProcessing() const = 0;
 
   virtual void drop() = 0;
+  virtual void dropSync(bool glContextAvailable) = 0;
   virtual bool process(TaskRunner taskRunner, const ProcessContext& processContext) = 0;
 };
 
@@ -68,6 +70,10 @@ public:
   bool isDropped() const override { return m_resource->isDropped(); }
   bool needsProcessing() const override { return m_resource->needsProcessing(); }
   void drop() override { m_resource->drop(); }
+  void dropSync(const bool glContextAvailable) override
+  {
+    m_resource->dropSync(glContextAvailable);
+  }
   bool process(TaskRunner taskRunner, const ProcessContext& processContext) override
   {
     return m_resource->process(taskRunner, processContext);
@@ -86,6 +92,7 @@ class ResourceManager
 {
 private:
   std::vector<std::unique_ptr<ResourceWrapperBase>> m_resources;
+  size_t m_nextTimedProcessIndex = 0u;
 
 public:
   bool needsProcessing() const
@@ -108,6 +115,31 @@ public:
   {
     m_resources.push_back(
       std::make_unique<ResourceWrapper<ResourceT>>(std::move(resource)));
+
+    if (m_resources.size() == 1u)
+    {
+      m_nextTimedProcessIndex = 0u;
+    }
+  }
+
+  void dropAllSync(const bool glContextAvailable)
+  {
+    for (auto& resourceWrapper : m_resources)
+    {
+      resourceWrapper->dropSync(glContextAvailable);
+    }
+  }
+
+  void clear(const bool glContextAvailable)
+  {
+    dropAllSync(glContextAvailable);
+    m_resources.clear();
+    m_nextTimedProcessIndex = 0u;
+  }
+
+  size_t resourceCount() const
+  {
+    return m_resources.size();
   }
 
   std::vector<ResourceId> process(
@@ -115,18 +147,58 @@ public:
     const ProcessContext& processContext,
     std::optional<std::chrono::milliseconds> timeout = std::nullopt)
   {
-    const auto checkTimeout =
-      timeout ? std::function{[timeout_ = *timeout,
-                               startTime = std::chrono::steady_clock::now()]() {
-        return std::chrono::steady_clock::now() - startTime < timeout_;
-      }}
-              : std::function{[]() { return true; }};
-
     auto result = std::vector<ResourceId>{};
 
-    for (auto it = m_resources.begin(); it != m_resources.end() && checkTimeout();)
+    if (!timeout)
     {
-      auto& resourceWrapper = *it;
+      for (auto it = m_resources.begin(); it != m_resources.end();)
+      {
+        auto& resourceWrapper = *it;
+        if (resourceWrapper->useCount() == 1 && !resourceWrapper->isDropped())
+        {
+          resourceWrapper->drop();
+        }
+
+        if (resourceWrapper->needsProcessing())
+        {
+          if (resourceWrapper->process(taskRunner, processContext))
+          {
+            result.push_back(resourceWrapper->id());
+          }
+        }
+
+        it = resourceWrapper->useCount() == 1 && resourceWrapper->isDropped()
+               ? m_resources.erase(it)
+               : std::next(it);
+      }
+
+      m_nextTimedProcessIndex = 0u;
+      return result;
+    }
+
+    const auto stopTime = std::chrono::steady_clock::now() + *timeout;
+    if (m_resources.empty())
+    {
+      m_nextTimedProcessIndex = 0u;
+      return result;
+    }
+
+    if (m_nextTimedProcessIndex >= m_resources.size())
+    {
+      m_nextTimedProcessIndex = 0u;
+    }
+
+    // Timed processing keeps scanning fair across large resource sets by continuing from
+    // the last position instead of restarting from index 0 every tick.
+    auto inspected = size_t{0u};
+    auto maxInspections = m_resources.size();
+    while (
+      inspected < maxInspections && !m_resources.empty()
+      && std::chrono::steady_clock::now() < stopTime)
+    {
+      auto index = m_nextTimedProcessIndex;
+      auto& resourceWrapper = m_resources[index];
+
       if (resourceWrapper->useCount() == 1 && !resourceWrapper->isDropped())
       {
         resourceWrapper->drop();
@@ -140,9 +212,28 @@ public:
         }
       }
 
-      it = resourceWrapper->useCount() == 1 && resourceWrapper->isDropped()
-             ? m_resources.erase(it)
-             : std::next(it);
+      if (resourceWrapper->useCount() == 1 && resourceWrapper->isDropped())
+      {
+        m_resources.erase(m_resources.begin() + static_cast<std::ptrdiff_t>(index));
+
+        if (m_resources.empty())
+        {
+          m_nextTimedProcessIndex = 0u;
+          break;
+        }
+
+        maxInspections = std::min(maxInspections, m_resources.size());
+        if (index >= m_resources.size())
+        {
+          index = 0u;
+        }
+        m_nextTimedProcessIndex = index;
+      }
+      else
+      {
+        m_nextTimedProcessIndex = (index + 1u) % m_resources.size();
+        ++inspected;
+      }
     }
 
     return result;

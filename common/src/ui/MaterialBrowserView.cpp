@@ -133,9 +133,14 @@ void MaterialBrowserView::revealMaterial(const mdl::Material* material)
   });
 }
 
-void MaterialBrowserView::resourcesWereProcessed(const std::vector<mdl::ResourceId>&)
+void MaterialBrowserView::resourcesWereProcessed(
+  const std::vector<mdl::ResourceId>& resourceIds)
 {
-  reloadMaterials();
+  if (
+    !m_document.map().materialManager().findMaterialsByTextureResourceId(resourceIds).empty())
+  {
+    reloadMaterials();
+  }
 }
 
 void MaterialBrowserView::reloadMaterials()

@@ -20,12 +20,16 @@
 #pragma once
 
 #include "Result.h"
+#include "io/HotspotRectParser.h"
 #include "mdl/Palette.h"
 #include "mdl/Quake3Shader.h"
 #include "mdl/TextureResource.h"
 
+#include "kd/path_hash.h"
+
 #include <filesystem>
 #include <optional>
+#include <unordered_map>
 #include <vector>
 
 namespace kdl
@@ -51,6 +55,28 @@ struct MaterialConfig;
 
 namespace io
 {
+
+struct MaterialLoadContext
+{
+  std::unordered_map<std::filesystem::path, const mdl::Quake3Shader*, kdl::path_hash>
+    shaderPathIndex;
+  std::optional<HotspotRectMap> sharedHotspotRects;
+};
+
+MaterialLoadContext createMaterialLoadContext(
+  const fs::FileSystem& fs,
+  const mdl::MaterialConfig& materialConfig,
+  const std::vector<mdl::Quake3Shader>& shaders,
+  Logger& logger);
+
+Result<mdl::Material> loadMaterial(
+  const fs::FileSystem& fs,
+  const mdl::MaterialConfig& materialConfig,
+  const std::filesystem::path& materialPath,
+  const mdl::CreateTextureResource& createResource,
+  const MaterialLoadContext& context,
+  const std::optional<Result<mdl::Palette>>& paletteResult,
+  Logger& logger);
 
 Result<mdl::Material> loadMaterial(
   const fs::FileSystem& fs,

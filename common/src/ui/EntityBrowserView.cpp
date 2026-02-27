@@ -181,10 +181,16 @@ QString EntityBrowserView::dndData(const Cell& cell)
   return prefix + name;
 }
 
-void EntityBrowserView::resourcesWereProcessed(const std::vector<mdl::ResourceId>&)
+void EntityBrowserView::resourcesWereProcessed(
+  const std::vector<mdl::ResourceId>& resourceIds)
 {
-  invalidate();
-  update();
+  if (
+    !m_document.map().entityModelManager().findEntityModelsByTextureResourceId(resourceIds)
+       .empty())
+  {
+    invalidate();
+    update();
+  }
 }
 
 void EntityBrowserView::addEntitiesToLayout(

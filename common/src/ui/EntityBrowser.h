@@ -24,7 +24,6 @@
 #include "NotifierConnection.h"
 
 #include <filesystem>
-#include <vector>
 
 class QPushButton;
 class QComboBox;
@@ -36,7 +35,6 @@ namespace tb
 namespace mdl
 {
 class Node;
-class ResourceId;
 } // namespace mdl
 
 namespace ui
@@ -71,7 +69,6 @@ private:
   void connectObservers();
   void documentDidChange();
   void preferenceDidChange(const std::filesystem::path& path);
-  void resourcesWereProcessed(const std::vector<mdl::ResourceId>& resources);
 };
 
 } // namespace ui
