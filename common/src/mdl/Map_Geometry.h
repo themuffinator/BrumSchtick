@@ -35,6 +35,37 @@ namespace tb::mdl
 {
 class Map;
 
+enum class PatchPrefabType
+{
+  Plane,
+  Bevel,
+  EndCap,
+  Cylinder,
+  SquareCylinder,
+  Cone,
+  Sphere,
+  ExactCylinder,
+  ExactSphere,
+  ExactCone,
+};
+
+enum class PatchCapType
+{
+  Bevel,
+  EndCap,
+  InvertedBevel,
+  InvertedEndCap,
+  Cylinder,
+};
+
+enum class PatchThickenAxis
+{
+  X,
+  Y,
+  Z,
+  Normal,
+};
+
 bool transformSelection(
   Map& map, const std::string& commandName, const vm::mat4x4d& transformation);
 
@@ -78,7 +109,37 @@ bool csgConvexMerge(Map& map);
 bool csgSubtract(Map& map);
 bool csgIntersect(Map& map);
 bool csgHollow(Map& map);
+
+bool supportsPatchPrimitives(const Map& map);
+bool createPatchPrefab(
+  Map& map,
+  PatchPrefabType type,
+  vm::axis::type axis,
+  size_t width = 3u,
+  size_t height = 3u,
+  bool redisperse = false);
+bool capSelectedPatches(Map& map, PatchCapType type);
+bool deformPatches(Map& map, int deform, vm::axis::type axis);
+bool thickenPatches(
+  Map& map, double thickness, bool createSideWalls, PatchThickenAxis axis);
+
 bool convertPatchesToConvexBrushes(Map& map);
+bool insertPatchColumns(Map& map, bool first);
+bool insertPatchRows(Map& map, bool first);
+bool deletePatchColumns(Map& map, bool first);
+bool deletePatchRows(Map& map, bool first);
+
+bool invertPatchMatrix(Map& map);
+bool transposePatchMatrix(Map& map);
+bool redispersePatchRows(Map& map);
+bool redispersePatchColumns(Map& map);
+bool smoothPatchRows(Map& map);
+bool smoothPatchColumns(Map& map);
+
+bool resetPatchTexture(Map& map);
+bool naturalizePatchTexture(Map& map);
+bool flipPatchTextureHorizontally(Map& map);
+bool flipPatchTextureVertically(Map& map);
 
 bool extrudeBrushes(
   Map& map, const std::vector<vm::polygon3d>& faces, const vm::vec3d& delta);

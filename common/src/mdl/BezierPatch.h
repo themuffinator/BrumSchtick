@@ -26,6 +26,7 @@
 #include "vm/bbox.h"
 #include "vm/vec.h"
 
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -38,6 +39,11 @@ class BezierPatch
 public:
   using Point = vm::vec<double, 5>;
   using Normal = vm::vec3d;
+  enum class MatrixMajor
+  {
+    Row,
+    Column
+  };
 
 private:
   size_t m_pointRowCount;
@@ -117,8 +123,33 @@ public: // control points:
 
   void transform(const vm::mat4x4d& transformation);
 
+  void invertMatrix();
+  void transposeMatrix();
+  void redisperse(MatrixMajor major);
+  void smooth(MatrixMajor major);
+  void insertRemove(
+    bool insert,
+    bool column,
+    bool first,
+    std::optional<size_t> selectedPosition = std::nullopt);
+
+  void flipTexture(size_t axis);
+  void translateTexture(double s, double t);
+  void scaleTexture(double s, double t);
+  void rotateTexture(double angleDegrees);
+  void setTextureRepeat(double s, double t);
+  void capTexture(size_t textureWidth = 1u, size_t textureHeight = 1u);
+  void naturalTexture(size_t textureWidth = 1u, size_t textureHeight = 1u);
+
   std::vector<Point> evaluate(size_t subdivisionsPerSurface) const;
   std::vector<Normal> evaluateNormals(size_t subdivisionsPerSurface) const;
+
+private:
+  void controlPointsChanged();
+  void insertPoints(
+    MatrixMajor major, bool first, std::optional<size_t> selectedPosition);
+  void removePoints(
+    MatrixMajor major, bool first, std::optional<size_t> selectedPosition);
 };
 
 } // namespace tb::mdl

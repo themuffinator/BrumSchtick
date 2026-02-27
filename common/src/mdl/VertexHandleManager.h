@@ -44,6 +44,7 @@ class Camera;
 namespace mdl
 {
 class Grid;
+class PatchNode;
 
 class VertexHandleManagerBase
 {
@@ -74,6 +75,14 @@ public:
   virtual void addHandles(const BrushNode* brushNode) = 0;
 
   /**
+   * Adds all handles of the given patch to this handle manager.
+   *
+   * The default implementation is a no-op because not all handle managers
+   * operate on patch control points.
+   */
+  virtual void addHandles(const PatchNode*) {}
+
+  /**
    * Removes all handles of the given range of brushes from this handle manager.
    *
    * @tparam R the type of the given range
@@ -94,6 +103,14 @@ public:
    * @param brushNode the brush whose handles to remove
    */
   virtual void removeHandles(const BrushNode* brushNode) = 0;
+
+  /**
+   * Removes all handles of the given patch from this handle manager.
+   *
+   * The default implementation is a no-op because not all handle managers
+   * operate on patch control points.
+   */
+  virtual void removeHandles(const PatchNode*) {}
 };
 
 template <typename H>
@@ -584,7 +601,9 @@ public:
 
 public:
   void addHandles(const BrushNode* brushNode) override;
+  void addHandles(const PatchNode* patchNode) override;
   void removeHandles(const BrushNode* brushNode) override;
+  void removeHandles(const PatchNode* patchNode) override;
 
   HitType::Type hitType() const override;
 

@@ -341,8 +341,45 @@ public:
   void csgIntersect();
   bool canDoCsgIntersect() const;
 
+  bool canCreatePatches() const;
+  void createSimplePatchMesh();
+  void createPatchBevel();
+  void createPatchEndCap();
+  void createPatchCylinder();
+  void createPatchSquareCylinder();
+  void createPatchExactCylinder();
+  void createPatchCone();
+  void createPatchExactCone();
+  void createPatchSphere();
+  void createPatchExactSphere();
+  void capCurrentPatches();
+  void deformPatches();
+  void thickenPatches();
+
   void convertPatchesToConvexBrushes();
   bool canConvertPatchesToConvexBrushes() const;
+  bool canEditPatches() const;
+
+  void insertFirstPatchColumns();
+  void insertLastPatchColumns();
+  void insertFirstPatchRows();
+  void insertLastPatchRows();
+  void deleteFirstPatchColumns();
+  void deleteLastPatchColumns();
+  void deleteFirstPatchRows();
+  void deleteLastPatchRows();
+
+  void invertPatchMatrix();
+  void transposePatchMatrix();
+  void redispersePatchRows();
+  void redispersePatchColumns();
+  void smoothPatchRows();
+  void smoothPatchColumns();
+
+  void resetPatchTexture();
+  void naturalizePatchTexture();
+  void flipPatchTextureHorizontally();
+  void flipPatchTextureVertically();
 
   void snapVerticesToInteger();
   void snapVerticesToGrid();

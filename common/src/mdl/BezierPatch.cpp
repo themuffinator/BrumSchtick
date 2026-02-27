@@ -20,6 +20,7 @@
 #include "BezierPatch.h"
 
 #include "mdl/Material.h"
+#include "mdl/Texture.h"
 
 #include "kd/const_overload.h"
 #include "kd/contracts.h"
@@ -29,6 +30,9 @@
 #include "vm/bezier_surface.h"
 #include "vm/mat_ext.h"
 #include "vm/vec_io.h" // IWYU pragma: keep
+
+#include <algorithm>
+#include <cmath>
 
 namespace tb::mdl
 {
@@ -45,6 +49,83 @@ vm::bbox3d computeBounds(const std::vector<BezierPatch::Point>& points)
     builder.add(point.xyz());
   }
   return builder.bounds();
+}
+
+struct AverageAxes
+{
+  vm::vec3d widthDir;
+  vm::vec3d heightDir;
+};
+
+AverageAxes computeAverageAxes(const BezierPatch& patch)
+{
+  auto widthDir = vm::vec3d{0.0, 0.0, 0.0};
+  auto heightDir = vm::vec3d{0.0, 0.0, 0.0};
+
+  const auto width = patch.pointColumnCount();
+  const auto height = patch.pointRowCount();
+
+  for (size_t row = 0u; row < height; ++row)
+  {
+    widthDir =
+      widthDir + patch.controlPoint(row, width - 1u).xyz() - patch.controlPoint(row, 0u).xyz();
+  }
+  for (size_t col = 0u; col < width; ++col)
+  {
+    heightDir = heightDir + patch.controlPoint(height - 1u, col).xyz()
+                - patch.controlPoint(0u, col).xyz();
+  }
+
+  const auto nearZero = [](const vm::vec3d& dir) {
+    return vm::squared_length(dir)
+           <= vm::constants<double>::almost_zero() * vm::constants<double>::almost_zero();
+  };
+
+  if (nearZero(widthDir))
+  {
+    auto bestLength = 0.0;
+    for (size_t row = 0u; row < height; ++row)
+    {
+      for (size_t col = 0u; col + 1u < width; ++col)
+      {
+        const auto dir =
+          patch.controlPoint(row, col + 1u).xyz() - patch.controlPoint(row, col).xyz();
+        const auto length = vm::length(dir);
+        if (length > bestLength)
+        {
+          bestLength = length;
+          widthDir = dir;
+        }
+      }
+    }
+  }
+
+  if (nearZero(heightDir))
+  {
+    auto bestLength = 0.0;
+    for (size_t col = 0u; col < width; ++col)
+    {
+      for (size_t row = 0u; row + 1u < height; ++row)
+      {
+        const auto dir =
+          patch.controlPoint(row + 1u, col).xyz() - patch.controlPoint(row, col).xyz();
+        const auto length = vm::length(dir);
+        if (length > bestLength)
+        {
+          bestLength = length;
+          heightDir = dir;
+        }
+      }
+    }
+  }
+
+  if (nearZero(vm::cross(widthDir, heightDir)))
+  {
+    widthDir = vm::vec3d{1.0, 0.0, 0.0};
+    heightDir = vm::vec3d{0.0, 1.0, 0.0};
+  }
+
+  return AverageAxes{widthDir, heightDir};
 }
 } // namespace
 
@@ -274,6 +355,550 @@ void BezierPatch::transform(const vm::mat4x4d& transformation)
       }
     }
   }
+}
+
+void BezierPatch::invertMatrix()
+{
+  using std::swap;
+
+  for (size_t row = 0u; row < m_pointRowCount / 2u; ++row)
+  {
+    const auto otherRow = m_pointRowCount - row - 1u;
+    for (size_t col = 0u; col < m_pointColumnCount; ++col)
+    {
+      swap(controlPoint(row, col), controlPoint(otherRow, col));
+      if (!m_controlNormals.empty())
+      {
+        swap(controlNormal(row, col), controlNormal(otherRow, col));
+      }
+    }
+  }
+
+  controlPointsChanged();
+}
+
+void BezierPatch::transposeMatrix()
+{
+  const auto oldRowCount = m_pointRowCount;
+  const auto oldColumnCount = m_pointColumnCount;
+
+  auto transposedPoints = std::vector<Point>{};
+  transposedPoints.resize(oldRowCount * oldColumnCount);
+
+  for (size_t row = 0u; row < oldRowCount; ++row)
+  {
+    for (size_t col = 0u; col < oldColumnCount; ++col)
+    {
+      transposedPoints[col * oldRowCount + row] = controlPoint(row, col);
+    }
+  }
+
+  auto transposedNormals = std::vector<Normal>{};
+  if (!m_controlNormals.empty())
+  {
+    transposedNormals.resize(oldRowCount * oldColumnCount);
+    for (size_t row = 0u; row < oldRowCount; ++row)
+    {
+      for (size_t col = 0u; col < oldColumnCount; ++col)
+      {
+        transposedNormals[col * oldRowCount + row] = controlNormal(row, col);
+      }
+    }
+  }
+
+  m_pointRowCount = oldColumnCount;
+  m_pointColumnCount = oldRowCount;
+  m_controlPoints = std::move(transposedPoints);
+  m_controlNormals = std::move(transposedNormals);
+
+  controlPointsChanged();
+}
+
+void BezierPatch::redisperse(const MatrixMajor major)
+{
+  const auto width = major == MatrixMajor::Column ? (m_pointColumnCount - 1u) / 2u
+                                                   : (m_pointRowCount - 1u) / 2u;
+  const auto height = major == MatrixMajor::Column ? m_pointRowCount : m_pointColumnCount;
+
+  const auto pointAt = [&](const size_t w, const size_t h) -> Point& {
+    return major == MatrixMajor::Column ? controlPoint(w, h) : controlPoint(h, w);
+  };
+
+  for (size_t h = 0u; h < height; ++h)
+  {
+    for (size_t w = 0u; w < width; ++w)
+    {
+      auto& p1 = pointAt(2u * w, h);
+      auto& p2 = pointAt(2u * w + 1u, h);
+      auto& p3 = pointAt(2u * w + 2u, h);
+      p2 = Point{(p1.xyz() + p3.xyz()) / 2.0, p2[3], p2[4]};
+    }
+  }
+
+  // Control normals would be stale after changing control point positions.
+  m_controlNormals.clear();
+  controlPointsChanged();
+}
+
+void BezierPatch::smooth(const MatrixMajor major)
+{
+  const auto width = major == MatrixMajor::Column ? (m_pointColumnCount - 1u) / 2u
+                                                   : (m_pointRowCount - 1u) / 2u;
+  const auto height = major == MatrixMajor::Column ? m_pointRowCount : m_pointColumnCount;
+
+  const auto pointAt = [&](const size_t w, const size_t h) -> Point& {
+    return major == MatrixMajor::Column ? controlPoint(w, h) : controlPoint(h, w);
+  };
+
+  auto wrap = true;
+  for (size_t h = 0u; h < height; ++h)
+  {
+    if (vm::squared_distance(pointAt(0u, h).xyz(), pointAt(2u * width, h).xyz()) > 1.0)
+    {
+      wrap = false;
+      break;
+    }
+  }
+
+  for (size_t h = 0u; h < height; ++h)
+  {
+    for (size_t w = 0u; w + 1u < width; ++w)
+    {
+      auto& p1 = pointAt(2u * w + 1u, h);
+      auto& p2 = pointAt(2u * w + 2u, h);
+      auto& p3 = pointAt(2u * w + 3u, h);
+      p2 = Point{(p1.xyz() + p3.xyz()) / 2.0, p2[3], p2[4]};
+    }
+
+    if (wrap)
+    {
+      auto& p1 = pointAt(2u * width - 1u, h);
+      auto& p2 = pointAt(0u, h);
+      auto& p2b = pointAt(2u * width, h);
+      auto& p3 = pointAt(1u, h);
+      const auto wrapped = (p1.xyz() + p3.xyz()) / 2.0;
+      p2 = Point{wrapped, p2[3], p2[4]};
+      p2b = Point{wrapped, p2b[3], p2b[4]};
+    }
+  }
+
+  // Control normals would be stale after changing control point positions.
+  m_controlNormals.clear();
+  controlPointsChanged();
+}
+
+void BezierPatch::insertRemove(
+  const bool insert,
+  const bool column,
+  const bool first,
+  const std::optional<size_t> selectedPosition)
+{
+  if (insert)
+  {
+    insertPoints(column ? MatrixMajor::Column : MatrixMajor::Row, first, selectedPosition);
+  }
+  else
+  {
+    removePoints(column ? MatrixMajor::Column : MatrixMajor::Row, first, selectedPosition);
+  }
+}
+
+void BezierPatch::insertPoints(
+  const MatrixMajor major, const bool first, const std::optional<size_t> selectedPosition)
+{
+  auto width = major == MatrixMajor::Row ? m_pointColumnCount : m_pointRowCount;
+  auto height = major == MatrixMajor::Row ? m_pointRowCount : m_pointColumnCount;
+
+  auto pos = selectedPosition.value_or(0u);
+  const auto hasSelectedPosition = selectedPosition && *selectedPosition < height;
+  if (!hasSelectedPosition)
+  {
+    pos = first ? 2u : height - 1u;
+  }
+
+  if (pos >= height)
+  {
+    pos = first ? 2u : height - 1u;
+  }
+  else if (pos == 0u)
+  {
+    pos = 2u;
+  }
+  else if (pos % 2u == 1u)
+  {
+    ++pos;
+  }
+
+  const auto oldColumnCount = m_pointColumnCount;
+  const auto oldPoints = m_controlPoints;
+
+  const auto newRowCount =
+    major == MatrixMajor::Row ? m_pointRowCount + 2u : m_pointRowCount;
+  const auto newColumnCount =
+    major == MatrixMajor::Column ? m_pointColumnCount + 2u : m_pointColumnCount;
+
+  auto newPoints = std::vector<Point>{};
+  newPoints.resize(newRowCount * newColumnCount);
+
+  const auto oldPointAt = [&](const size_t w, const size_t h) -> const Point& {
+    return major == MatrixMajor::Row
+             ? oldPoints[h * oldColumnCount + w]
+             : oldPoints[w * oldColumnCount + h];
+  };
+
+  const auto newPointAt = [&](const size_t w, const size_t h) -> Point& {
+    return major == MatrixMajor::Row
+             ? newPoints[h * newColumnCount + w]
+             : newPoints[w * newColumnCount + h];
+  };
+
+  for (size_t w = 0u; w < width; ++w)
+  {
+    auto h2 = 0u;
+    for (size_t h = 0u; h < height; ++h, ++h2)
+    {
+      if (h == pos)
+      {
+        h2 += 2u;
+      }
+      newPointAt(w, h2) = oldPointAt(w, h);
+    }
+
+    const auto& p1 = oldPointAt(w, pos);
+    auto& p2 = newPointAt(w, pos);
+    auto& r2a = newPointAt(w, pos + 1u);
+    auto& r2b = newPointAt(w, pos - 1u);
+    const auto& c2a = oldPointAt(w, pos - 2u);
+    const auto& c2b = oldPointAt(w, pos - 1u);
+
+    newPointAt(w, pos + 2u) = p1;
+    r2a = c2b;
+
+    r2a = Point{
+      (c2b.xyz() + p1.xyz()) / 2.0, (c2b[3] + p1[3]) * 0.5, (c2b[4] + p1[4]) * 0.5};
+    r2b = Point{
+      (c2a.xyz() + c2b.xyz()) / 2.0, (c2a[3] + c2b[3]) * 0.5, (c2a[4] + c2b[4]) * 0.5};
+    p2 = Point{
+      (r2a.xyz() + r2b.xyz()) / 2.0, (r2a[3] + r2b[3]) * 0.5, (r2a[4] + r2b[4]) * 0.5};
+  }
+
+  m_pointRowCount = newRowCount;
+  m_pointColumnCount = newColumnCount;
+  m_controlPoints = std::move(newPoints);
+  m_controlNormals.clear();
+  controlPointsChanged();
+}
+
+void BezierPatch::removePoints(
+  const MatrixMajor major, const bool first, const std::optional<size_t> selectedPosition)
+{
+  auto width = major == MatrixMajor::Row ? m_pointColumnCount : m_pointRowCount;
+  auto height = major == MatrixMajor::Row ? m_pointRowCount : m_pointColumnCount;
+
+  auto pos = selectedPosition.value_or(0u);
+  const auto hasSelectedPosition = selectedPosition && *selectedPosition < height;
+  if (!hasSelectedPosition)
+  {
+    pos = first ? 2u : height - 3u;
+  }
+
+  if (pos >= height)
+  {
+    pos = first ? 2u : height - 3u;
+  }
+  else if (pos == 0u)
+  {
+    pos = 2u;
+  }
+  else if (pos > height - 3u)
+  {
+    pos = height - 3u;
+  }
+  else if (pos % 2u == 1u)
+  {
+    ++pos;
+  }
+
+  const auto oldColumnCount = m_pointColumnCount;
+  const auto oldPoints = m_controlPoints;
+
+  const auto newRowCount =
+    major == MatrixMajor::Row ? m_pointRowCount - 2u : m_pointRowCount;
+  const auto newColumnCount =
+    major == MatrixMajor::Column ? m_pointColumnCount - 2u : m_pointColumnCount;
+
+  auto newPoints = std::vector<Point>{};
+  newPoints.resize(newRowCount * newColumnCount);
+
+  const auto oldPointAt = [&](const size_t w, const size_t h) -> const Point& {
+    return major == MatrixMajor::Row
+             ? oldPoints[h * oldColumnCount + w]
+             : oldPoints[w * oldColumnCount + h];
+  };
+
+  const auto newPointAt = [&](const size_t w, const size_t h) -> Point& {
+    return major == MatrixMajor::Row
+             ? newPoints[h * newColumnCount + w]
+             : newPoints[w * newColumnCount + h];
+  };
+
+  for (size_t w = 0u; w < width; ++w)
+  {
+    auto h2 = 0u;
+    for (size_t h = 0u; h < height; ++h)
+    {
+      if (h == pos)
+      {
+        h += 2u;
+      }
+      if (h >= height)
+      {
+        break;
+      }
+
+      newPointAt(w, h2++) = oldPointAt(w, h);
+    }
+
+    const auto& removed = oldPointAt(w, pos);
+    const auto& before2 = oldPointAt(w, pos - 2u);
+    const auto& after2 = oldPointAt(w, pos + 2u);
+    auto& target = newPointAt(w, pos - 1u);
+
+    const auto midpoint = Point{
+      (after2.xyz() + before2.xyz()) / 2.0,
+      (after2[3] + before2[3]) * 0.5,
+      (after2[4] + before2[4]) * 0.5};
+
+    target = Point{
+      2.0 * removed.xyz() - midpoint.xyz(),
+      2.0 * removed[3] - midpoint[3],
+      2.0 * removed[4] - midpoint[4]};
+  }
+
+  m_pointRowCount = newRowCount;
+  m_pointColumnCount = newColumnCount;
+  m_controlPoints = std::move(newPoints);
+  m_controlNormals.clear();
+  controlPointsChanged();
+}
+
+void BezierPatch::flipTexture(const size_t axis)
+{
+  contract_pre(axis < 2u);
+
+  const auto component = axis == 0u ? 3u : 4u;
+  for (auto& controlPoint : m_controlPoints)
+  {
+    controlPoint[component] = -controlPoint[component];
+  }
+}
+
+void BezierPatch::translateTexture(const double s, const double t)
+{
+  const auto texture = material();
+  const auto textureWidth =
+    texture && texture->texture() ? std::max<size_t>(1u, texture->texture()->width()) : 1u;
+  const auto textureHeight =
+    texture && texture->texture() ? std::max<size_t>(1u, texture->texture()->height()) : 1u;
+
+  const auto uShift = -s / static_cast<double>(textureWidth);
+  const auto vShift = t / static_cast<double>(textureHeight);
+
+  for (auto& controlPoint : m_controlPoints)
+  {
+    controlPoint[3] += uShift;
+    controlPoint[4] += vShift;
+  }
+}
+
+void BezierPatch::scaleTexture(const double s, const double t)
+{
+  for (auto& controlPoint : m_controlPoints)
+  {
+    controlPoint[3] *= s;
+    controlPoint[4] *= t;
+  }
+}
+
+void BezierPatch::rotateTexture(const double angleDegrees)
+{
+  const auto radians = vm::to_radians(angleDegrees);
+  const auto sine = std::sin(radians);
+  const auto cosine = std::cos(radians);
+
+  for (auto& controlPoint : m_controlPoints)
+  {
+    const auto u = controlPoint[3];
+    const auto v = controlPoint[4];
+    controlPoint[3] = u * cosine - v * sine;
+    controlPoint[4] = v * cosine + u * sine;
+  }
+}
+
+void BezierPatch::setTextureRepeat(double s, double t)
+{
+  const auto sIncrement = (s == 0.0 ? 1.0 : s) / double(m_pointColumnCount - 1u);
+  const auto tIncrement = (t == 0.0 ? 1.0 : t) / double(m_pointRowCount - 1u);
+
+  auto texT = 0.0;
+  for (size_t row = 0u; row < m_pointRowCount; ++row)
+  {
+    auto texS = 0.0;
+    for (size_t col = 0u; col < m_pointColumnCount; ++col)
+    {
+      auto& point = controlPoint(row, col);
+      point[3] = texS;
+      point[4] = texT;
+      texS += sIncrement;
+    }
+    texT += tIncrement;
+  }
+}
+
+void BezierPatch::capTexture(size_t textureWidth, size_t textureHeight)
+{
+  textureWidth = std::max<size_t>(1u, textureWidth);
+  textureHeight = std::max<size_t>(1u, textureHeight);
+
+  const auto axes = computeAverageAxes(*this);
+
+  auto normal = vm::cross(axes.widthDir, axes.heightDir);
+  const auto nearZero = [](const vm::vec3d& dir) {
+    return vm::squared_length(dir)
+           <= vm::constants<double>::almost_zero() * vm::constants<double>::almost_zero();
+  };
+  if (nearZero(normal))
+  {
+    normal = vm::vec3d{0.0, 0.0, 1.0};
+  }
+  else
+  {
+    normal = vm::normalize(normal);
+  }
+
+  const auto projectOntoPlane = [&](const vm::vec3d& dir) {
+    return dir - vm::dot(dir, normal) * normal;
+  };
+
+  auto uAxis = projectOntoPlane(axes.widthDir);
+  if (nearZero(uAxis))
+  {
+    const auto reference =
+      std::abs(normal.z()) < 0.999 ? vm::vec3d{0.0, 0.0, 1.0} : vm::vec3d{0.0, 1.0, 0.0};
+    uAxis = vm::cross(reference, normal);
+  }
+  if (nearZero(uAxis))
+  {
+    uAxis = vm::vec3d{1.0, 0.0, 0.0};
+  }
+  uAxis = vm::normalize(uAxis);
+
+  auto vAxis = vm::cross(normal, uAxis);
+  if (nearZero(vAxis))
+  {
+    vAxis = projectOntoPlane(axes.heightDir);
+  }
+  if (nearZero(vAxis))
+  {
+    vAxis = vm::vec3d{0.0, 1.0, 0.0};
+  }
+  vAxis = vm::normalize(vAxis);
+
+  if (vm::dot(uAxis, axes.widthDir) < 0.0)
+  {
+    uAxis = -uAxis;
+  }
+  if (vm::dot(vAxis, axes.heightDir) < 0.0)
+  {
+    vAxis = -vAxis;
+  }
+
+  const auto invTextureWidth = 1.0 / static_cast<double>(textureWidth);
+  const auto invTextureHeight = 1.0 / static_cast<double>(textureHeight);
+
+  for (auto& controlPoint : m_controlPoints)
+  {
+    const auto& position = controlPoint.xyz();
+    controlPoint[3] = vm::dot(position, uAxis) * invTextureWidth;
+    controlPoint[4] = -vm::dot(position, vAxis) * invTextureHeight;
+  }
+}
+
+void BezierPatch::naturalTexture(size_t textureWidth, size_t textureHeight)
+{
+  textureWidth = std::max<size_t>(1u, textureWidth);
+  textureHeight = std::max<size_t>(1u, textureHeight);
+
+  {
+    const auto texSize = static_cast<double>(textureWidth);
+
+    auto texBest = 0.0;
+    auto tex = 0.0;
+    for (size_t col = 0u; col < m_pointColumnCount; ++col)
+    {
+      for (size_t row = 0u; row < m_pointRowCount; ++row)
+      {
+        controlPoint(row, col)[3] = tex;
+      }
+
+      if (col + 1u == m_pointColumnCount)
+      {
+        break;
+      }
+
+      for (size_t row = 0u; row < m_pointRowCount; ++row)
+      {
+        const auto length = tex
+                            + vm::length(controlPoint(row, col).xyz()
+                                         - controlPoint(row, col + 1u).xyz())
+                                / texSize;
+        if (std::abs(length) > std::abs(texBest))
+        {
+          texBest = length;
+        }
+      }
+
+      tex = texBest;
+    }
+  }
+
+  {
+    const auto texSize = -static_cast<double>(textureHeight);
+
+    auto texBest = 0.0;
+    auto tex = 0.0;
+    for (size_t row = 0u; row < m_pointRowCount; ++row)
+    {
+      for (size_t col = 0u; col < m_pointColumnCount; ++col)
+      {
+        controlPoint(row, col)[4] = tex;
+      }
+
+      if (row + 1u == m_pointRowCount)
+      {
+        break;
+      }
+
+      for (size_t col = 0u; col < m_pointColumnCount; ++col)
+      {
+        const auto length = tex
+                            + vm::length(controlPoint(row, col).xyz()
+                                         - controlPoint(row + 1u, col).xyz())
+                                / texSize;
+        if (std::abs(length) > std::abs(texBest))
+        {
+          texBest = length;
+        }
+      }
+
+      tex = texBest;
+    }
+  }
+}
+
+void BezierPatch::controlPointsChanged()
+{
+  m_bounds = computeBounds(m_controlPoints);
 }
 
 template <typename Vec>

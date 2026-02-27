@@ -20,6 +20,7 @@
 #include "BrushVertexCommands.h"
 
 #include "mdl/BrushNode.h"
+#include "mdl/PatchNode.h"
 
 #include "kd/ranges/to.h"
 
@@ -37,6 +38,17 @@ std::vector<BrushNode*> collectBrushNodes(
          })
          | std::views::transform(
            [](const auto& pair) { return static_cast<BrushNode*>(pair.first); })
+         | kdl::ranges::to<std::vector>();
+}
+
+std::vector<PatchNode*> collectPatchNodes(
+  const std::vector<std::pair<Node*, NodeContents>>& nodes)
+{
+  return nodes | std::views::filter([](const auto& pair) {
+           return dynamic_cast<PatchNode*>(pair.first) != nullptr;
+         })
+         | std::views::transform(
+           [](const auto& pair) { return static_cast<PatchNode*>(pair.first); })
          | kdl::ranges::to<std::vector>();
 }
 

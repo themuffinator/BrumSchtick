@@ -78,7 +78,13 @@ TEST_CASE("AseLoader")
 
     const auto loadMaterial = [&](const auto& materialPath) {
       return io::loadMaterial(
-               fs, materialConfig, materialPath, createResource, shaders, std::nullopt)
+               fs,
+               materialConfig,
+               materialPath,
+               createResource,
+               shaders,
+               std::nullopt,
+               logger)
              | kdl::or_else(io::makeReadMaterialErrorHandler(fs, logger)) | kdl::value();
     };
 
@@ -120,7 +126,13 @@ TEST_CASE("AseLoader")
 
     const auto loadMaterial = [&](const auto& materialPath) {
       return io::loadMaterial(
-               fs, materialConfig, materialPath, createResource, shaders, std::nullopt)
+               fs,
+               materialConfig,
+               materialPath,
+               createResource,
+               shaders,
+               std::nullopt,
+               logger)
              | kdl::or_else(io::makeReadMaterialErrorHandler(fs, logger)) | kdl::value();
     };
 
@@ -151,7 +163,13 @@ TEST_CASE("AseLoader")
 
     const auto loadMaterial = [&](const auto& materialPath) {
       return io::loadMaterial(
-               fs, materialConfig, materialPath, createResource, shaders, std::nullopt)
+               fs,
+               materialConfig,
+               materialPath,
+               createResource,
+               shaders,
+               std::nullopt,
+               logger)
              | kdl::or_else(io::makeReadMaterialErrorHandler(fs, logger)) | kdl::value();
     };
 
@@ -208,7 +226,13 @@ TEST_CASE("AseLoader (Regression)", "[regression]")
 
     const auto loadMaterial = [&](const auto& materialPath) {
       return io::loadMaterial(
-               fs, materialConfig, materialPath, createResource, shaders, std::nullopt)
+               fs,
+               materialConfig,
+               materialPath,
+               createResource,
+               shaders,
+               std::nullopt,
+               logger)
              | kdl::or_else(io::makeReadMaterialErrorHandler(fs, logger)) | kdl::value();
     };
 
@@ -234,7 +258,13 @@ TEST_CASE("AseLoader (Regression)", "[regression]")
 
     const auto loadMaterial = [&](const auto& materialPath) {
       return io::loadMaterial(
-               fs, materialConfig, materialPath, createResource, shaders, std::nullopt)
+               fs,
+               materialConfig,
+               materialPath,
+               createResource,
+               shaders,
+               std::nullopt,
+               logger)
              | kdl::or_else(io::makeReadMaterialErrorHandler(fs, logger)) | kdl::value();
     };
 
@@ -260,7 +290,13 @@ TEST_CASE("AseLoader (Regression)", "[regression]")
 
     const auto loadMaterial = [&](const auto& materialPath) {
       return io::loadMaterial(
-               fs, materialConfig, materialPath, createResource, shaders, std::nullopt)
+               fs,
+               materialConfig,
+               materialPath,
+               createResource,
+               shaders,
+               std::nullopt,
+               logger)
              | kdl::or_else(io::makeReadMaterialErrorHandler(fs, logger)) | kdl::value();
     };
 

@@ -108,6 +108,7 @@
 #include "ui/VertexTool.h"
 #include "ui/ViewUtils.h"
 #include "update/Updater.h"
+#include "render/Camera.h"
 
 #include <QOffscreenSurface>
 #include <QOpenGLContext>
@@ -2103,7 +2104,7 @@ void MapFrame::toggleVertexTool()
 
 bool MapFrame::canToggleVertexTool() const
 {
-  return m_mapView->canToggleVertexTools();
+  return m_mapView->canToggleVertexTool();
 }
 
 bool MapFrame::vertexToolActive() const
@@ -2121,7 +2122,7 @@ void MapFrame::toggleEdgeTool()
 
 bool MapFrame::canToggleEdgeTool() const
 {
-  return m_mapView->canToggleVertexTools();
+  return m_mapView->canToggleEdgeTool();
 }
 
 bool MapFrame::edgeToolActive() const
@@ -2139,7 +2140,7 @@ void MapFrame::toggleFaceTool()
 
 bool MapFrame::canToggleFaceTool() const
 {
-  return m_mapView->canToggleVertexTools();
+  return m_mapView->canToggleFaceTool();
 }
 
 bool MapFrame::faceToolActive() const
@@ -2227,6 +2228,363 @@ bool MapFrame::canDoCsgIntersect() const
   return selection.hasOnlyBrushes() && selection.allBrushes().size() > 1;
 }
 
+namespace
+{
+
+vm::axis::type patchCreationAxis(MapViewBase* mapView)
+{
+  if (mapView == nullptr)
+  {
+    return vm::axis::z;
+  }
+
+  const auto direction = vm::vec3d{mapView->camera().direction()};
+  return vm::find_abs_max_component(direction);
+}
+
+std::optional<std::tuple<size_t, size_t, bool>> getPatchDensity(
+  QWidget* parent,
+  const QString& title,
+  const QString& message,
+  const size_t defaultWidth,
+  const size_t defaultHeight,
+  const bool askRedisperse)
+{
+  auto ok = false;
+  const auto input = QInputDialog::getText(
+    parent,
+    title,
+    message,
+    QLineEdit::Normal,
+    QString{"%1 %2"}.arg(defaultWidth).arg(defaultHeight),
+    &ok);
+  if (!ok)
+  {
+    return std::nullopt;
+  }
+
+  const auto values = parse<int, 2>(input);
+  if (!values)
+  {
+    QMessageBox::warning(parent, "Error", QObject::tr("Invalid patch size: '%1'").arg(input));
+    return std::nullopt;
+  }
+
+  const auto width = values->x();
+  const auto height = values->y();
+  if (width < 3 || height < 3 || width % 2 == 0 || height % 2 == 0)
+  {
+    QMessageBox::warning(
+      parent,
+      "Error",
+      QObject::tr("Patch size must be odd and at least 3 (got %1 x %2).")
+        .arg(width)
+        .arg(height));
+    return std::nullopt;
+  }
+
+  auto redisperse = false;
+  if (askRedisperse)
+  {
+    redisperse = QMessageBox::question(
+                   parent,
+                   title,
+                   QObject::tr("Redisperse rows/columns (square)?"),
+                   QMessageBox::Yes | QMessageBox::No,
+                   QMessageBox::No)
+                 == QMessageBox::Yes;
+  }
+
+  return std::make_tuple(
+    static_cast<size_t>(width), static_cast<size_t>(height), redisperse);
+}
+
+} // namespace
+
+bool MapFrame::canCreatePatches() const
+{
+  return mdl::supportsPatchPrimitives(m_document->map());
+}
+
+void MapFrame::createSimplePatchMesh()
+{
+  if (!canCreatePatches())
+  {
+    return;
+  }
+
+  if (const auto density = getPatchDensity(
+        this, "Simple Patch Mesh", "Enter width and height: W H", 3u, 3u, false))
+  {
+    const auto [width, height, redisperse] = *density;
+    mdl::createPatchPrefab(
+      m_document->map(),
+      mdl::PatchPrefabType::Plane,
+      patchCreationAxis(currentMapViewBase()),
+      width,
+      height,
+      redisperse);
+  }
+}
+
+void MapFrame::createPatchBevel()
+{
+  if (canCreatePatches())
+  {
+    mdl::createPatchPrefab(
+      m_document->map(),
+      mdl::PatchPrefabType::Bevel,
+      patchCreationAxis(currentMapViewBase()));
+  }
+}
+
+void MapFrame::createPatchEndCap()
+{
+  if (canCreatePatches())
+  {
+    mdl::createPatchPrefab(
+      m_document->map(),
+      mdl::PatchPrefabType::EndCap,
+      patchCreationAxis(currentMapViewBase()));
+  }
+}
+
+void MapFrame::createPatchCylinder()
+{
+  if (canCreatePatches())
+  {
+    mdl::createPatchPrefab(
+      m_document->map(),
+      mdl::PatchPrefabType::Cylinder,
+      patchCreationAxis(currentMapViewBase()));
+  }
+}
+
+void MapFrame::createPatchSquareCylinder()
+{
+  if (canCreatePatches())
+  {
+    mdl::createPatchPrefab(
+      m_document->map(),
+      mdl::PatchPrefabType::SquareCylinder,
+      patchCreationAxis(currentMapViewBase()));
+  }
+}
+
+void MapFrame::createPatchExactCylinder()
+{
+  if (!canCreatePatches())
+  {
+    return;
+  }
+
+  if (const auto density = getPatchDensity(
+        this, "Exact Cylinder", "Enter width and height: W H", 13u, 3u, true))
+  {
+    const auto [width, height, redisperse] = *density;
+    mdl::createPatchPrefab(
+      m_document->map(),
+      mdl::PatchPrefabType::ExactCylinder,
+      patchCreationAxis(currentMapViewBase()),
+      width,
+      height,
+      redisperse);
+  }
+}
+
+void MapFrame::createPatchCone()
+{
+  if (canCreatePatches())
+  {
+    mdl::createPatchPrefab(
+      m_document->map(),
+      mdl::PatchPrefabType::Cone,
+      patchCreationAxis(currentMapViewBase()));
+  }
+}
+
+void MapFrame::createPatchExactCone()
+{
+  if (!canCreatePatches())
+  {
+    return;
+  }
+
+  if (const auto density = getPatchDensity(
+        this, "Exact Cone", "Enter width and height: W H", 13u, 3u, true))
+  {
+    const auto [width, height, redisperse] = *density;
+    mdl::createPatchPrefab(
+      m_document->map(),
+      mdl::PatchPrefabType::ExactCone,
+      patchCreationAxis(currentMapViewBase()),
+      width,
+      height,
+      redisperse);
+  }
+}
+
+void MapFrame::createPatchSphere()
+{
+  if (canCreatePatches())
+  {
+    mdl::createPatchPrefab(
+      m_document->map(),
+      mdl::PatchPrefabType::Sphere,
+      patchCreationAxis(currentMapViewBase()));
+  }
+}
+
+void MapFrame::createPatchExactSphere()
+{
+  if (!canCreatePatches())
+  {
+    return;
+  }
+
+  if (const auto density = getPatchDensity(
+        this, "Exact Sphere", "Enter width and height: W H", 13u, 7u, true))
+  {
+    const auto [width, height, redisperse] = *density;
+    mdl::createPatchPrefab(
+      m_document->map(),
+      mdl::PatchPrefabType::ExactSphere,
+      patchCreationAxis(currentMapViewBase()),
+      width,
+      height,
+      redisperse);
+  }
+}
+
+void MapFrame::capCurrentPatches()
+{
+  if (!canEditPatches())
+  {
+    return;
+  }
+
+  const auto options = QStringList{
+    "Bevel", "End cap", "Inverted Bevel", "Inverted End cap", "Cylinder"};
+  auto ok = false;
+  const auto choice = QInputDialog::getItem(
+    this, "Cap Patches", "Cap type:", options, 0, false, &ok);
+  if (!ok)
+  {
+    return;
+  }
+
+  auto type = mdl::PatchCapType::Bevel;
+  if (choice == "End cap")
+  {
+    type = mdl::PatchCapType::EndCap;
+  }
+  else if (choice == "Inverted Bevel")
+  {
+    type = mdl::PatchCapType::InvertedBevel;
+  }
+  else if (choice == "Inverted End cap")
+  {
+    type = mdl::PatchCapType::InvertedEndCap;
+  }
+  else if (choice == "Cylinder")
+  {
+    type = mdl::PatchCapType::Cylinder;
+  }
+
+  mdl::capSelectedPatches(m_document->map(), type);
+}
+
+void MapFrame::deformPatches()
+{
+  if (!canEditPatches())
+  {
+    return;
+  }
+
+  auto ok = false;
+  const auto deform = QInputDialog::getInt(
+    this, "Patch Deform", "Max deform:", int(m_document->map().grid().actualSize()), -9999, 9999, 1, &ok);
+  if (!ok)
+  {
+    return;
+  }
+
+  const auto axes = QStringList{"X", "Y", "Z"};
+  const auto axisChoice = QInputDialog::getItem(
+    this, "Patch Deform", "Axis:", axes, 2, false, &ok);
+  if (!ok)
+  {
+    return;
+  }
+
+  auto axis = vm::axis::z;
+  if (axisChoice == "X")
+  {
+    axis = vm::axis::x;
+  }
+  else if (axisChoice == "Y")
+  {
+    axis = vm::axis::y;
+  }
+
+  mdl::deformPatches(m_document->map(), deform, axis);
+}
+
+void MapFrame::thickenPatches()
+{
+  if (!canEditPatches())
+  {
+    return;
+  }
+
+  auto ok = false;
+  const auto thickness = QInputDialog::getDouble(
+    this,
+    "Patch Thicken",
+    "Thickness:",
+    m_document->map().grid().actualSize(),
+    -9999.0,
+    9999.0,
+    3,
+    &ok);
+  if (!ok)
+  {
+    return;
+  }
+
+  const auto axisItems = QStringList{"X", "Y", "Z", "Normal"};
+  const auto axisChoice = QInputDialog::getItem(
+    this, "Patch Thicken", "Extrude along:", axisItems, 3, false, &ok);
+  if (!ok)
+  {
+    return;
+  }
+
+  const auto sideWalls = QMessageBox::question(
+                          this,
+                          "Patch Thicken",
+                          tr("Create side walls?"),
+                          QMessageBox::Yes | QMessageBox::No,
+                          QMessageBox::Yes)
+                        == QMessageBox::Yes;
+
+  auto axis = mdl::PatchThickenAxis::Normal;
+  if (axisChoice == "X")
+  {
+    axis = mdl::PatchThickenAxis::X;
+  }
+  else if (axisChoice == "Y")
+  {
+    axis = mdl::PatchThickenAxis::Y;
+  }
+  else if (axisChoice == "Z")
+  {
+    axis = mdl::PatchThickenAxis::Z;
+  }
+
+  mdl::thickenPatches(m_document->map(), thickness, sideWalls, axis);
+}
+
 void MapFrame::convertPatchesToConvexBrushes()
 {
   if (canConvertPatchesToConvexBrushes())
@@ -2239,7 +2597,158 @@ bool MapFrame::canConvertPatchesToConvexBrushes() const
 {
   const auto& map = m_document->map();
   const auto& selection = map.selection();
-  return selection.hasOnlyPatches() && !selection.allPatches().empty();
+  return selection.hasPatches();
+}
+
+bool MapFrame::canEditPatches() const
+{
+  const auto& map = m_document->map();
+  const auto& selection = map.selection();
+  return selection.hasPatches();
+}
+
+void MapFrame::insertFirstPatchColumns()
+{
+  if (canEditPatches())
+  {
+    mdl::insertPatchColumns(m_document->map(), true);
+  }
+}
+
+void MapFrame::insertLastPatchColumns()
+{
+  if (canEditPatches())
+  {
+    mdl::insertPatchColumns(m_document->map(), false);
+  }
+}
+
+void MapFrame::insertFirstPatchRows()
+{
+  if (canEditPatches())
+  {
+    mdl::insertPatchRows(m_document->map(), true);
+  }
+}
+
+void MapFrame::insertLastPatchRows()
+{
+  if (canEditPatches())
+  {
+    mdl::insertPatchRows(m_document->map(), false);
+  }
+}
+
+void MapFrame::deleteFirstPatchColumns()
+{
+  if (canEditPatches())
+  {
+    mdl::deletePatchColumns(m_document->map(), true);
+  }
+}
+
+void MapFrame::deleteLastPatchColumns()
+{
+  if (canEditPatches())
+  {
+    mdl::deletePatchColumns(m_document->map(), false);
+  }
+}
+
+void MapFrame::deleteFirstPatchRows()
+{
+  if (canEditPatches())
+  {
+    mdl::deletePatchRows(m_document->map(), true);
+  }
+}
+
+void MapFrame::deleteLastPatchRows()
+{
+  if (canEditPatches())
+  {
+    mdl::deletePatchRows(m_document->map(), false);
+  }
+}
+
+void MapFrame::invertPatchMatrix()
+{
+  if (canEditPatches())
+  {
+    mdl::invertPatchMatrix(m_document->map());
+  }
+}
+
+void MapFrame::transposePatchMatrix()
+{
+  if (canEditPatches())
+  {
+    mdl::transposePatchMatrix(m_document->map());
+  }
+}
+
+void MapFrame::redispersePatchRows()
+{
+  if (canEditPatches())
+  {
+    mdl::redispersePatchRows(m_document->map());
+  }
+}
+
+void MapFrame::redispersePatchColumns()
+{
+  if (canEditPatches())
+  {
+    mdl::redispersePatchColumns(m_document->map());
+  }
+}
+
+void MapFrame::smoothPatchRows()
+{
+  if (canEditPatches())
+  {
+    mdl::smoothPatchRows(m_document->map());
+  }
+}
+
+void MapFrame::smoothPatchColumns()
+{
+  if (canEditPatches())
+  {
+    mdl::smoothPatchColumns(m_document->map());
+  }
+}
+
+void MapFrame::resetPatchTexture()
+{
+  if (canEditPatches())
+  {
+    mdl::resetPatchTexture(m_document->map());
+  }
+}
+
+void MapFrame::naturalizePatchTexture()
+{
+  if (canEditPatches())
+  {
+    mdl::naturalizePatchTexture(m_document->map());
+  }
+}
+
+void MapFrame::flipPatchTextureHorizontally()
+{
+  if (canEditPatches())
+  {
+    mdl::flipPatchTextureHorizontally(m_document->map());
+  }
+}
+
+void MapFrame::flipPatchTextureVertically()
+{
+  if (canEditPatches())
+  {
+    mdl::flipPatchTextureVertically(m_document->map());
+  }
 }
 
 void MapFrame::snapVerticesToInteger()

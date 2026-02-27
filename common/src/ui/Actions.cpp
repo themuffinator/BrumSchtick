@@ -1393,6 +1393,349 @@ void ActionManager::createEditMenu()
     },
   }));
 
+  auto& patchesMenu = editMenu.addMenu("Patches");
+  patchesMenu.addItem(addAction(Action{
+    "Menu/Edit/Patches/Simple Patch Mesh",
+    QObject::tr("Simple Patch Mesh..."),
+    ActionContext::Any,
+    QKeySequence{Qt::SHIFT | Qt::Key_P},
+    [](auto& context) { context.frame().createSimplePatchMesh(); },
+    [](const auto& context) {
+      return context.hasDocument() && context.frame().canCreatePatches();
+    },
+  }));
+  patchesMenu.addItem(addAction(Action{
+    "Menu/Edit/Patches/Bevel",
+    QObject::tr("Bevel"),
+    ActionContext::Any,
+    QKeySequence{},
+    [](auto& context) { context.frame().createPatchBevel(); },
+    [](const auto& context) {
+      return context.hasDocument() && context.frame().canCreatePatches();
+    },
+  }));
+  patchesMenu.addItem(addAction(Action{
+    "Menu/Edit/Patches/End Cap",
+    QObject::tr("End Cap"),
+    ActionContext::Any,
+    QKeySequence{},
+    [](auto& context) { context.frame().createPatchEndCap(); },
+    [](const auto& context) {
+      return context.hasDocument() && context.frame().canCreatePatches();
+    },
+  }));
+  patchesMenu.addItem(addAction(Action{
+    "Menu/Edit/Patches/Cylinder",
+    QObject::tr("Cylinder (9x3)"),
+    ActionContext::Any,
+    QKeySequence{},
+    [](auto& context) { context.frame().createPatchCylinder(); },
+    [](const auto& context) {
+      return context.hasDocument() && context.frame().canCreatePatches();
+    },
+  }));
+  patchesMenu.addItem(addAction(Action{
+    "Menu/Edit/Patches/Square Cylinder",
+    QObject::tr("Square Cylinder (9x3)"),
+    ActionContext::Any,
+    QKeySequence{},
+    [](auto& context) { context.frame().createPatchSquareCylinder(); },
+    [](const auto& context) {
+      return context.hasDocument() && context.frame().canCreatePatches();
+    },
+  }));
+  patchesMenu.addItem(addAction(Action{
+    "Menu/Edit/Patches/Exact Cylinder",
+    QObject::tr("Exact Cylinder..."),
+    ActionContext::Any,
+    QKeySequence{},
+    [](auto& context) { context.frame().createPatchExactCylinder(); },
+    [](const auto& context) {
+      return context.hasDocument() && context.frame().canCreatePatches();
+    },
+  }));
+  patchesMenu.addItem(addAction(Action{
+    "Menu/Edit/Patches/Cone",
+    QObject::tr("Cone (9x3)"),
+    ActionContext::Any,
+    QKeySequence{},
+    [](auto& context) { context.frame().createPatchCone(); },
+    [](const auto& context) {
+      return context.hasDocument() && context.frame().canCreatePatches();
+    },
+  }));
+  patchesMenu.addItem(addAction(Action{
+    "Menu/Edit/Patches/Exact Cone",
+    QObject::tr("Exact Cone..."),
+    ActionContext::Any,
+    QKeySequence{},
+    [](auto& context) { context.frame().createPatchExactCone(); },
+    [](const auto& context) {
+      return context.hasDocument() && context.frame().canCreatePatches();
+    },
+  }));
+  patchesMenu.addItem(addAction(Action{
+    "Menu/Edit/Patches/Sphere",
+    QObject::tr("Sphere (9x5)"),
+    ActionContext::Any,
+    QKeySequence{},
+    [](auto& context) { context.frame().createPatchSphere(); },
+    [](const auto& context) {
+      return context.hasDocument() && context.frame().canCreatePatches();
+    },
+  }));
+  patchesMenu.addItem(addAction(Action{
+    "Menu/Edit/Patches/Exact Sphere",
+    QObject::tr("Exact Sphere..."),
+    ActionContext::Any,
+    QKeySequence{},
+    [](auto& context) { context.frame().createPatchExactSphere(); },
+    [](const auto& context) {
+      return context.hasDocument() && context.frame().canCreatePatches();
+    },
+  }));
+  patchesMenu.addSeparator();
+  patchesMenu.addItem(addAction(Action{
+    "Menu/Edit/Patches/Cap Selection",
+    QObject::tr("Cap Selection"),
+    ActionContext::Any,
+    QKeySequence{},
+    [](auto& context) { context.frame().capCurrentPatches(); },
+    [](const auto& context) {
+      return context.hasDocument() && context.frame().canEditPatches();
+    },
+  }));
+  patchesMenu.addSeparator();
+  {
+    auto& insertDeleteMenu = patchesMenu.addMenu("Insert/Delete");
+    insertDeleteMenu.addItem(addAction(Action{
+      "Menu/Edit/Patches/Insert First Columns",
+      QObject::tr("Insert (2) First Columns"),
+      ActionContext::Any,
+      QKeySequence{},
+      [](auto& context) { context.frame().insertFirstPatchColumns(); },
+      [](const auto& context) {
+        return context.hasDocument() && context.frame().canEditPatches();
+      },
+    }));
+    insertDeleteMenu.addItem(addAction(Action{
+      "Menu/Edit/Patches/Insert Last Columns",
+      QObject::tr("Insert (2) Last Columns"),
+      ActionContext::Any,
+      QKeySequence{},
+      [](auto& context) { context.frame().insertLastPatchColumns(); },
+      [](const auto& context) {
+        return context.hasDocument() && context.frame().canEditPatches();
+      },
+    }));
+    insertDeleteMenu.addSeparator();
+    insertDeleteMenu.addItem(addAction(Action{
+      "Menu/Edit/Patches/Insert First Rows",
+      QObject::tr("Insert (2) First Rows"),
+      ActionContext::Any,
+      QKeySequence{},
+      [](auto& context) { context.frame().insertFirstPatchRows(); },
+      [](const auto& context) {
+        return context.hasDocument() && context.frame().canEditPatches();
+      },
+    }));
+    insertDeleteMenu.addItem(addAction(Action{
+      "Menu/Edit/Patches/Insert Last Rows",
+      QObject::tr("Insert (2) Last Rows"),
+      ActionContext::Any,
+      QKeySequence{},
+      [](auto& context) { context.frame().insertLastPatchRows(); },
+      [](const auto& context) {
+        return context.hasDocument() && context.frame().canEditPatches();
+      },
+    }));
+    insertDeleteMenu.addSeparator();
+    insertDeleteMenu.addItem(addAction(Action{
+      "Menu/Edit/Patches/Delete First Columns",
+      QObject::tr("Del First (2) Columns"),
+      ActionContext::Any,
+      QKeySequence{},
+      [](auto& context) { context.frame().deleteFirstPatchColumns(); },
+      [](const auto& context) {
+        return context.hasDocument() && context.frame().canEditPatches();
+      },
+    }));
+    insertDeleteMenu.addItem(addAction(Action{
+      "Menu/Edit/Patches/Delete Last Columns",
+      QObject::tr("Del Last (2) Columns"),
+      ActionContext::Any,
+      QKeySequence{},
+      [](auto& context) { context.frame().deleteLastPatchColumns(); },
+      [](const auto& context) {
+        return context.hasDocument() && context.frame().canEditPatches();
+      },
+    }));
+    insertDeleteMenu.addSeparator();
+    insertDeleteMenu.addItem(addAction(Action{
+      "Menu/Edit/Patches/Delete First Rows",
+      QObject::tr("Del First (2) Rows"),
+      ActionContext::Any,
+      QKeySequence{},
+      [](auto& context) { context.frame().deleteFirstPatchRows(); },
+      [](const auto& context) {
+        return context.hasDocument() && context.frame().canEditPatches();
+      },
+    }));
+    insertDeleteMenu.addItem(addAction(Action{
+      "Menu/Edit/Patches/Delete Last Rows",
+      QObject::tr("Del Last (2) Rows"),
+      ActionContext::Any,
+      QKeySequence{},
+      [](auto& context) { context.frame().deleteLastPatchRows(); },
+      [](const auto& context) {
+        return context.hasDocument() && context.frame().canEditPatches();
+      },
+    }));
+  }
+
+  {
+    auto& matrixMenu = patchesMenu.addMenu("Matrix");
+    matrixMenu.addItem(addAction(Action{
+      "Menu/Edit/Patches/Matrix/Invert",
+      QObject::tr("Invert"),
+      ActionContext::Any,
+      QKeySequence{},
+      [](auto& context) { context.frame().invertPatchMatrix(); },
+      [](const auto& context) {
+        return context.hasDocument() && context.frame().canEditPatches();
+      },
+    }));
+    matrixMenu.addItem(addAction(Action{
+      "Menu/Edit/Patches/Matrix/Transpose",
+      QObject::tr("Transpose"),
+      ActionContext::Any,
+      QKeySequence{},
+      [](auto& context) { context.frame().transposePatchMatrix(); },
+      [](const auto& context) {
+        return context.hasDocument() && context.frame().canEditPatches();
+      },
+    }));
+    matrixMenu.addSeparator();
+    matrixMenu.addItem(addAction(Action{
+      "Menu/Edit/Patches/Matrix/Redisperse Rows",
+      QObject::tr("Redisperse Rows"),
+      ActionContext::Any,
+      QKeySequence{},
+      [](auto& context) { context.frame().redispersePatchRows(); },
+      [](const auto& context) {
+        return context.hasDocument() && context.frame().canEditPatches();
+      },
+    }));
+    matrixMenu.addItem(addAction(Action{
+      "Menu/Edit/Patches/Matrix/Redisperse Columns",
+      QObject::tr("Redisperse Columns"),
+      ActionContext::Any,
+      QKeySequence{},
+      [](auto& context) { context.frame().redispersePatchColumns(); },
+      [](const auto& context) {
+        return context.hasDocument() && context.frame().canEditPatches();
+      },
+    }));
+    matrixMenu.addSeparator();
+    matrixMenu.addItem(addAction(Action{
+      "Menu/Edit/Patches/Matrix/Smooth Rows",
+      QObject::tr("Smooth Rows"),
+      ActionContext::Any,
+      QKeySequence{},
+      [](auto& context) { context.frame().smoothPatchRows(); },
+      [](const auto& context) {
+        return context.hasDocument() && context.frame().canEditPatches();
+      },
+    }));
+    matrixMenu.addItem(addAction(Action{
+      "Menu/Edit/Patches/Matrix/Smooth Columns",
+      QObject::tr("Smooth Columns"),
+      ActionContext::Any,
+      QKeySequence{},
+      [](auto& context) { context.frame().smoothPatchColumns(); },
+      [](const auto& context) {
+        return context.hasDocument() && context.frame().canEditPatches();
+      },
+    }));
+  }
+
+  {
+    auto& patchTextureMenu = patchesMenu.addMenu("Texture");
+    patchTextureMenu.addItem(addAction(Action{
+      "Menu/Edit/Patches/Texture/Reset",
+      QObject::tr("Reset Texture"),
+      ActionContext::Any,
+      QKeySequence{},
+      [](auto& context) { context.frame().resetPatchTexture(); },
+      [](const auto& context) {
+        return context.hasDocument() && context.frame().canEditPatches();
+      },
+    }));
+    patchTextureMenu.addItem(addAction(Action{
+      "Menu/Edit/Patches/Texture/Naturalize",
+      QObject::tr("Naturalize"),
+      ActionContext::Any,
+      QKeySequence{},
+      [](auto& context) { context.frame().naturalizePatchTexture(); },
+      [](const auto& context) {
+        return context.hasDocument() && context.frame().canEditPatches();
+      },
+    }));
+    patchTextureMenu.addItem(addAction(Action{
+      "Menu/Edit/Patches/Texture/Flip Horizontally",
+      QObject::tr("Flip Horizontally"),
+      ActionContext::Any,
+      QKeySequence{},
+      [](auto& context) { context.frame().flipPatchTextureHorizontally(); },
+      [](const auto& context) {
+        return context.hasDocument() && context.frame().canEditPatches();
+      },
+    }));
+    patchTextureMenu.addItem(addAction(Action{
+      "Menu/Edit/Patches/Texture/Flip Vertically",
+      QObject::tr("Flip Vertically"),
+      ActionContext::Any,
+      QKeySequence{},
+      [](auto& context) { context.frame().flipPatchTextureVertically(); },
+      [](const auto& context) {
+        return context.hasDocument() && context.frame().canEditPatches();
+      },
+    }));
+  }
+
+  patchesMenu.addSeparator();
+  patchesMenu.addItem(addAction(Action{
+    "Menu/Edit/Patches/Deform",
+    QObject::tr("Deform..."),
+    ActionContext::Any,
+    QKeySequence{},
+    [](auto& context) { context.frame().deformPatches(); },
+    [](const auto& context) {
+      return context.hasDocument() && context.frame().canEditPatches();
+    },
+  }));
+  patchesMenu.addItem(addAction(Action{
+    "Menu/Edit/Patches/Thicken",
+    QObject::tr("Thicken..."),
+    ActionContext::Any,
+    QKeySequence{},
+    [](auto& context) { context.frame().thickenPatches(); },
+    [](const auto& context) {
+      return context.hasDocument() && context.frame().canEditPatches();
+    },
+  }));
+  patchesMenu.addItem(addAction(Action{
+    "Menu/Edit/Patches/Patch Mesh to Convex Brushes",
+    QObject::tr("Patch Mesh to Convex Brushes"),
+    ActionContext::Any,
+    QKeySequence{},
+    [](auto& context) { context.frame().convertPatchesToConvexBrushes(); },
+    [](const auto& context) {
+      return context.hasDocument()
+             && context.frame().canConvertPatchesToConvexBrushes();
+    },
+  }));
+
   auto& vertexEditingMenu = editMenu.addMenu("Vertices");
   vertexEditingMenu.addItem(addAction(Action{
     "Menu/Edit/Snap Vertices to Integer",

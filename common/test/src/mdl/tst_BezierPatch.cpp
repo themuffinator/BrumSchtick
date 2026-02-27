@@ -116,6 +116,90 @@ TEST_CASE("BezierPatch")
       CHECK(patch.controlPoints() == expectedPoints);
     }
   }
+
+  SECTION("transposeMatrix")
+  {
+    // clang-format off
+    auto patch = BezierPatch{3, 5, {
+      {0, 0, 0}, {1, 0, 0}, {2, 0, 0}, {3, 0, 0}, {4, 0, 0},
+      {0, 1, 0}, {1, 1, 0}, {2, 1, 0}, {3, 1, 0}, {4, 1, 0},
+      {0, 2, 0}, {1, 2, 0}, {2, 2, 0}, {3, 2, 0}, {4, 2, 0},
+    }, ""};
+    // clang-format on
+
+    patch.transposeMatrix();
+
+    CHECK(patch.pointRowCount() == 5u);
+    CHECK(patch.pointColumnCount() == 3u);
+    CHECK(patch.controlPoint(0, 0).xyz() == vm::vec3d{0, 0, 0});
+    CHECK(patch.controlPoint(1, 2).xyz() == vm::vec3d{1, 2, 0});
+    CHECK(patch.controlPoint(4, 2).xyz() == vm::vec3d{4, 2, 0});
+  }
+
+  SECTION("insertRemove")
+  {
+    // clang-format off
+    auto patch = BezierPatch{3, 3, {
+      {0, 0, 0}, {1, 0, 0}, {2, 0, 0},
+      {0, 1, 0}, {1, 1, 0}, {2, 1, 0},
+      {0, 2, 0}, {1, 2, 0}, {2, 2, 0},
+    }, ""};
+    // clang-format on
+
+    patch.insertRemove(true, true, true);
+    CHECK(patch.pointRowCount() == 3u);
+    CHECK(patch.pointColumnCount() == 5u);
+
+    patch.insertRemove(false, true, true);
+    CHECK(patch.pointRowCount() == 3u);
+    CHECK(patch.pointColumnCount() == 3u);
+
+    patch.insertRemove(true, false, false, 1u);
+    CHECK(patch.pointRowCount() == 5u);
+    CHECK(patch.pointColumnCount() == 3u);
+  }
+
+  SECTION("naturalTexture")
+  {
+    // clang-format off
+    auto patch = BezierPatch{3, 3, {
+      {  0,   0, 0, 0, 0}, { 64,   0, 0, 0, 0}, {128,   0, 0, 0, 0},
+      {  0,  64, 0, 0, 0}, { 64,  64, 0, 0, 0}, {128,  64, 0, 0, 0},
+      {  0, 128, 0, 0, 0}, { 64, 128, 0, 0, 0}, {128, 128, 0, 0, 0},
+    }, ""};
+    // clang-format on
+
+    patch.naturalTexture(64u, 64u);
+
+    CHECK(patch.controlPoint(0, 0)[3] == 0.0);
+    CHECK(patch.controlPoint(0, 1)[3] == 1.0);
+    CHECK(patch.controlPoint(0, 2)[3] == 2.0);
+
+    CHECK(patch.controlPoint(0, 0)[4] == 0.0);
+    CHECK(patch.controlPoint(1, 0)[4] == -1.0);
+    CHECK(patch.controlPoint(2, 0)[4] == -2.0);
+  }
+
+  SECTION("capTexture")
+  {
+    // clang-format off
+    auto patch = BezierPatch{3, 3, {
+      {  0,   0, 0, 0, 0}, { 64,   0, 0, 0, 0}, {128,   0, 0, 0, 0},
+      {  0,  64, 0, 0, 0}, { 64,  64, 0, 0, 0}, {128,  64, 0, 0, 0},
+      {  0, 128, 0, 0, 0}, { 64, 128, 0, 0, 0}, {128, 128, 0, 0, 0},
+    }, ""};
+    // clang-format on
+
+    patch.capTexture(64u, 64u);
+
+    CHECK(patch.controlPoint(0, 0)[3] == 0.0);
+    CHECK(patch.controlPoint(0, 1)[3] == 1.0);
+    CHECK(patch.controlPoint(0, 2)[3] == 2.0);
+
+    CHECK(patch.controlPoint(0, 0)[4] == 0.0);
+    CHECK(patch.controlPoint(1, 0)[4] == -1.0);
+    CHECK(patch.controlPoint(2, 0)[4] == -2.0);
+  }
 }
 
 } // namespace tb::mdl

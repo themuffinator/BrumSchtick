@@ -26,6 +26,7 @@
 #include "mdl/BrushBuilder.h"
 #include "mdl/BrushFace.h"
 #include "mdl/BrushNode.h"
+#include "mdl/BezierPatch.h"
 #include "mdl/EditorContext.h"
 #include "mdl/Entity.h"
 #include "mdl/EntityNode.h"
@@ -38,6 +39,8 @@
 #include "mdl/Map_Groups.h"
 #include "mdl/Map_Nodes.h"
 #include "mdl/Map_Selection.h"
+#include "mdl/NodeQueries.h"
+#include "mdl/PatchNode.h"
 #include "mdl/ParallelUVCoordSystem.h"
 #include "mdl/VertexHandleManager.h"
 #include "mdl/WorldNode.h"
@@ -737,6 +740,37 @@ TEST_CASE("Map_Geometry")
       CHECK(brushNode->brush().hasVertex({32, -32, -32}));
       CHECK(brushNode->brush().hasVertex({32, 32, -32}));
     }
+
+    SECTION("patch control points move")
+    {
+      auto* patchNode = createPatchNode();
+      addNodes(map, {{parentForNodes(map), {patchNode}}});
+
+      deselectAll(map);
+      selectNodes(map, {patchNode});
+
+      const auto originalCenter = patchNode->patch().controlPoint(1, 1).xyz();
+      const auto originalCorner = patchNode->patch().controlPoint(0, 0).xyz();
+      const auto delta = vm::vec3d{0, 0, 16};
+
+      REQUIRE(
+        transformVertices(map, {originalCenter}, vm::translation_matrix(delta))
+        == TransformVerticesResult{true, true});
+
+      CHECK(patchNode->patch().controlPoint(1, 1).xyz() == originalCenter + delta);
+      CHECK(patchNode->patch().controlPoint(0, 0).xyz() == originalCorner);
+
+      SECTION("undo and redo")
+      {
+        map.undoCommand();
+        CHECK(patchNode->patch().controlPoint(1, 1).xyz() == originalCenter);
+        CHECK(patchNode->patch().controlPoint(0, 0).xyz() == originalCorner);
+
+        map.redoCommand();
+        CHECK(patchNode->patch().controlPoint(1, 1).xyz() == originalCenter + delta);
+        CHECK(patchNode->patch().controlPoint(0, 0).xyz() == originalCorner);
+      }
+    }
   }
 
   SECTION("transformEdges")
@@ -1394,6 +1428,247 @@ TEST_CASE("Map_Geometry")
       CHECK(!csgHollow(map));
       CHECK(map.editorContext().currentLayer()->childCount() == 2);
       CHECK(!map.modified());
+    }
+  }
+
+  SECTION("patchOperations")
+  {
+    auto& map = fixture.create();
+
+    // clang-format off
+    auto* patchNode = new PatchNode{BezierPatch{3, 3, {
+      {0, 0, 0, 0, 0}, {64, 0, 0, 0, 0}, {128, 0, 0, 0, 0},
+      {0, 64, 0, 0, 0}, {64, 64, 0, 0, 0}, {128, 64, 0, 0, 0},
+      {0, 128, 0, 0, 0}, {64, 128, 0, 0, 0}, {128, 128, 0, 0, 0},
+    }, "material"}};
+    // clang-format on
+
+    addNodes(map, {{parentForNodes(map), {patchNode}}});
+    selectNodes(map, {patchNode});
+
+    SECTION("insert and delete columns")
+    {
+      REQUIRE(insertPatchColumns(map, true));
+      CHECK(patchNode->patch().pointColumnCount() == 5u);
+      CHECK(patchNode->patch().pointRowCount() == 3u);
+
+      map.undoCommand();
+      CHECK(patchNode->patch().pointColumnCount() == 3u);
+      CHECK(patchNode->patch().pointRowCount() == 3u);
+
+      map.redoCommand();
+      CHECK(patchNode->patch().pointColumnCount() == 5u);
+
+      REQUIRE(deletePatchColumns(map, true));
+      CHECK(patchNode->patch().pointColumnCount() == 3u);
+      CHECK(patchNode->patch().pointRowCount() == 3u);
+    }
+
+    SECTION("insert and delete rows")
+    {
+      REQUIRE(insertPatchRows(map, false));
+      CHECK(patchNode->patch().pointRowCount() == 5u);
+      CHECK(patchNode->patch().pointColumnCount() == 3u);
+
+      REQUIRE(deletePatchRows(map, false));
+      CHECK(patchNode->patch().pointRowCount() == 3u);
+      CHECK(patchNode->patch().pointColumnCount() == 3u);
+    }
+
+    SECTION("invert and transpose matrix")
+    {
+      const auto originalTopLeft = patchNode->patch().controlPoint(0, 0).xyz();
+      const auto originalBottomLeft = patchNode->patch().controlPoint(2, 0).xyz();
+
+      REQUIRE(invertPatchMatrix(map));
+      CHECK(patchNode->patch().controlPoint(0, 0).xyz() == originalBottomLeft);
+      CHECK(patchNode->patch().controlPoint(2, 0).xyz() == originalTopLeft);
+
+      REQUIRE(transposePatchMatrix(map));
+      CHECK(patchNode->patch().pointRowCount() == 3u);
+      CHECK(patchNode->patch().pointColumnCount() == 3u);
+      CHECK(patchNode->patch().controlPoint(0, 2).xyz() == originalBottomLeft);
+    }
+
+    SECTION("patch texture operations")
+    {
+      REQUIRE(resetPatchTexture(map));
+      CHECK(patchNode->patch().controlPoint(0, 1)[3] != 0.0);
+      CHECK(patchNode->patch().controlPoint(1, 0)[4] != 0.0);
+
+      REQUIRE(naturalizePatchTexture(map));
+      const auto beforeFlip = patchNode->patch().controlPoint(0, 1)[3];
+      CHECK(beforeFlip != 0.0);
+
+      REQUIRE(flipPatchTextureHorizontally(map));
+      CHECK(patchNode->patch().controlPoint(0, 1)[3] == -beforeFlip);
+
+      const auto beforeVerticalFlip = patchNode->patch().controlPoint(1, 0)[4];
+      REQUIRE(flipPatchTextureVertically(map));
+      CHECK(patchNode->patch().controlPoint(1, 0)[4] == -beforeVerticalFlip);
+    }
+  }
+
+  SECTION("advancedPatchOperations")
+  {
+    SECTION("createPatchPrefab")
+    {
+      auto& map = fixture.create({.mapFormat = MapFormat::Quake3_Legacy});
+      REQUIRE(supportsPatchPrimitives(map));
+
+      REQUIRE(createPatchPrefab(
+        map, PatchPrefabType::Plane, vm::axis::z, 5u, 7u, false));
+      REQUIRE(map.selection().hasOnlyPatches());
+      REQUIRE(map.selection().allPatches().size() == 1u);
+
+      const auto* patchNode = map.selection().allPatches().front();
+      CHECK(patchNode->patch().pointColumnCount() == 5u);
+      CHECK(patchNode->patch().pointRowCount() == 7u);
+    }
+
+    SECTION("capSelectedPatches")
+    {
+      auto& map = fixture.create({.mapFormat = MapFormat::Quake3_Legacy});
+
+      // clang-format off
+      auto* patchNode = new PatchNode{BezierPatch{3, 5, {
+        {-64,   0, 0, 0, 0}, {-32,   0, 0, 0, 0}, {0,   0, 0, 0, 0}, {32,   0, 0, 0, 0}, {64,   0, 0, 0, 0},
+        {-64,  32, 0, 0, 0}, {-32,  64, 0, 0, 0}, {0,  64, 0, 0, 0}, {32,  64, 0, 0, 0}, {64,  32, 0, 0, 0},
+        {-64, 128, 0, 0, 0}, {-32, 128, 0, 0, 0}, {0, 128, 0, 0, 0}, {32, 128, 0, 0, 0}, {64, 128, 0, 0, 0},
+      }, "material"}};
+      // clang-format on
+
+      addNodes(map, {{parentForNodes(map), {patchNode}}});
+      selectNodes(map, {patchNode});
+
+      REQUIRE(capSelectedPatches(map, PatchCapType::EndCap));
+      CHECK(map.selection().hasOnlyPatches());
+      CHECK(map.selection().allPatches().size() == 3u);
+    }
+
+    SECTION("capSelectedPatches with mixed selection")
+    {
+      auto& map = fixture.create({.mapFormat = MapFormat::Quake3_Legacy});
+      const auto builder = BrushBuilder{map.worldNode().mapFormat(), map.worldBounds()};
+
+      // clang-format off
+      auto* patchNode = new PatchNode{BezierPatch{3, 5, {
+        {-64,   0, 0, 0, 0}, {-32,   0, 0, 0, 0}, {0,   0, 0, 0, 0}, {32,   0, 0, 0, 0}, {64,   0, 0, 0, 0},
+        {-64,  32, 0, 0, 0}, {-32,  64, 0, 0, 0}, {0,  64, 0, 0, 0}, {32,  64, 0, 0, 0}, {64,  32, 0, 0, 0},
+        {-64, 128, 0, 0, 0}, {-32, 128, 0, 0, 0}, {0, 128, 0, 0, 0}, {32, 128, 0, 0, 0}, {64, 128, 0, 0, 0},
+      }, "material"}};
+      // clang-format on
+      auto* brushNode = new BrushNode{
+        builder.createCuboid(vm::bbox3d{{-16, -16, -16}, {16, 16, 16}}, "material")
+        | kdl::value()};
+
+      addNodes(map, {{parentForNodes(map), {patchNode, brushNode}}});
+      selectNodes(map, {patchNode, brushNode});
+
+      REQUIRE(capSelectedPatches(map, PatchCapType::EndCap));
+      CHECK(map.selection().hasPatches());
+      CHECK_FALSE(map.selection().hasOnlyPatches());
+      CHECK(map.selection().allPatches().size() == 3u);
+    }
+
+    SECTION("deformPatches")
+    {
+      auto& map = fixture.create({.mapFormat = MapFormat::Quake3_Legacy});
+      auto* patchNode = createPatchNode();
+      addNodes(map, {{parentForNodes(map), {patchNode}}});
+      selectNodes(map, {patchNode});
+
+      const auto before = patchNode->patch().controlPoints();
+      REQUIRE(deformPatches(map, 32, vm::axis::z));
+      CHECK(patchNode->patch().controlPoints() != before);
+    }
+
+    SECTION("thickenPatches")
+    {
+      auto& map = fixture.create({.mapFormat = MapFormat::Quake3_Legacy});
+
+      // clang-format off
+      auto* patchNode = new PatchNode{BezierPatch{3, 3, {
+        {0,   0, 0, 0, 0}, {64,   0, 0, 0, 0}, {128,   0, 0, 0, 0},
+        {0,  64, 0, 0, 0}, {64,  96, 0, 0, 0}, {128,  64, 0, 0, 0},
+        {0, 128, 0, 0, 0}, {64, 128, 0, 0, 0}, {128, 128, 0, 0, 0},
+      }, "material"}};
+      // clang-format on
+
+      addNodes(map, {{parentForNodes(map), {patchNode}}});
+      selectNodes(map, {patchNode});
+
+      REQUIRE(thickenPatches(map, 32.0, true, PatchThickenAxis::Normal));
+      CHECK(map.selection().hasOnlyPatches());
+      CHECK(map.selection().allPatches().size() >= 2u);
+    }
+
+    SECTION("thickenPatches with mixed selection")
+    {
+      auto& map = fixture.create({.mapFormat = MapFormat::Quake3_Legacy});
+      const auto builder = BrushBuilder{map.worldNode().mapFormat(), map.worldBounds()};
+
+      // clang-format off
+      auto* patchNode = new PatchNode{BezierPatch{3, 3, {
+        {0,   0, 0, 0, 0}, {64,   0, 0, 0, 0}, {128,   0, 0, 0, 0},
+        {0,  64, 0, 0, 0}, {64,  96, 0, 0, 0}, {128,  64, 0, 0, 0},
+        {0, 128, 0, 0, 0}, {64, 128, 0, 0, 0}, {128, 128, 0, 0, 0},
+      }, "material"}};
+      // clang-format on
+      auto* brushNode = new BrushNode{
+        builder.createCuboid(vm::bbox3d{{-16, -16, -16}, {16, 16, 16}}, "material")
+        | kdl::value()};
+
+      addNodes(map, {{parentForNodes(map), {patchNode, brushNode}}});
+      selectNodes(map, {patchNode, brushNode});
+
+      REQUIRE(thickenPatches(map, 32.0, true, PatchThickenAxis::Normal));
+      CHECK(map.selection().hasPatches());
+      CHECK_FALSE(map.selection().hasOnlyPatches());
+      CHECK(map.selection().allPatches().size() >= 2u);
+    }
+
+    SECTION("convertPatchesToConvexBrushes with mixed selection")
+    {
+      auto& map = fixture.create({.mapFormat = MapFormat::Quake3_Legacy});
+      const auto builder = BrushBuilder{map.worldNode().mapFormat(), map.worldBounds()};
+
+      // clang-format off
+      auto* patchNode = new PatchNode{BezierPatch{3, 3, {
+        {0,   0, 0, 0, 0}, {64,   0, 0, 0, 0}, {128,   0, 0, 0, 0},
+        {0,  64, 0, 0, 0}, {64,  96, 0, 0, 0}, {128,  64, 0, 0, 0},
+        {0, 128, 0, 0, 0}, {64, 128, 0, 0, 0}, {128, 128, 0, 0, 0},
+      }, "material"}};
+      // clang-format on
+      auto* brushNode = new BrushNode{
+        builder.createCuboid(vm::bbox3d{{-16, -16, -16}, {16, 16, 16}}, "material")
+        | kdl::value()};
+
+      addNodes(map, {{parentForNodes(map), {patchNode, brushNode}}});
+      selectNodes(map, {patchNode, brushNode});
+
+      const auto patchCountBefore = collectDescendants(
+        std::vector<Node*>{&map.worldNode()},
+        [](const PatchNode*) { return true; })
+                                      .size();
+      const auto brushCountBefore = collectDescendants(
+        std::vector<Node*>{&map.worldNode()},
+        [](const BrushNode*) { return true; })
+                                      .size();
+
+      REQUIRE(convertPatchesToConvexBrushes(map));
+
+      const auto patchCountAfter = collectDescendants(
+        std::vector<Node*>{&map.worldNode()},
+        [](const PatchNode*) { return true; })
+                                     .size();
+      const auto brushCountAfter = collectDescendants(
+        std::vector<Node*>{&map.worldNode()},
+        [](const BrushNode*) { return true; })
+                                     .size();
+
+      CHECK(patchCountAfter + 1u == patchCountBefore);
+      CHECK(brushCountAfter == brushCountBefore + 1u);
     }
   }
 

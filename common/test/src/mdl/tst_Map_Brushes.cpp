@@ -36,6 +36,8 @@
 
 #include "catch/CatchConfig.h"
 
+#include "vm/approx.h"
+
 #include <catch2/catch_test_macros.hpp>
 
 namespace tb::mdl
@@ -408,7 +410,7 @@ TEST_CASE("Map_Brushes")
     const auto faceIndex = brushNode->brush().findFace(vm::vec3d{0, 1, 0});
     REQUIRE(faceIndex.has_value());
 
-    brushNode->brush().face(*faceIndex).setMaterial(&material);
+    brushNode->setFaceMaterial(*faceIndex, &material);
 
     deselectAll(map);
     selectBrushFaces(map, {{brushNode, *faceIndex}});

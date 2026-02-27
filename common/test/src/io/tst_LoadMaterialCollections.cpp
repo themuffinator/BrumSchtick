@@ -151,12 +151,14 @@ TEST_CASE("loadMaterial")
   };
 
   CHECK(
-    loadMaterial(fs, materialConfig, "material.jpg", createResource, {}, std::nullopt));
+    loadMaterial(
+      fs, materialConfig, "material.jpg", createResource, {}, std::nullopt, logger));
 
   SECTION("find alternative file extensions")
   {
     CHECK(
-      loadMaterial(fs, materialConfig, "material.png", createResource, {}, std::nullopt));
+      loadMaterial(
+        fs, materialConfig, "material.png", createResource, {}, std::nullopt, logger));
   }
 }
 

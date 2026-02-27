@@ -29,6 +29,7 @@
 #include "mdl/PickResult.h"
 #include "mdl/TagVisitor.h"
 #include "mdl/Validator.h"
+#include "mdl/WorldNode.h"
 
 #include "kd/overload.h"
 

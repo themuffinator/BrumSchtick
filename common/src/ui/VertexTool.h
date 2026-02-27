@@ -19,9 +19,11 @@
 
 #pragma once
 
+#include "mdl/HitType.h"
 #include "render/PointGuideRenderer.h"
 #include "ui/VertexToolBase.h"
 
+#include <cstddef>
 #include <string>
 #include <vector>
 
@@ -29,6 +31,7 @@ namespace tb
 {
 namespace mdl
 {
+class PatchNode;
 class PickResult;
 } // namespace mdl
 
@@ -47,12 +50,32 @@ class MapDocument;
 
 class VertexTool : public VertexToolBase<vm::vec3d>
 {
+public:
+  struct PatchRowHitData
+  {
+    const mdl::PatchNode* patchNode;
+    size_t row;
+    vm::vec3d position;
+  };
+
+  struct PatchColumnHitData
+  {
+    const mdl::PatchNode* patchNode;
+    size_t column;
+    vm::vec3d position;
+  };
+
+  static const mdl::HitType::Type PatchRowHitType;
+  static const mdl::HitType::Type PatchColumnHitType;
+
 private:
   enum class Mode
   {
     Move,
     SplitEdge,
-    SplitFace
+    SplitFace,
+    MovePatchRow,
+    MovePatchColumn
   };
 
   Mode m_mode;
@@ -117,6 +140,14 @@ private:
   void removeHandles(mdl::BrushVertexCommandT<vm::vec3d>& command) override;
 
 private: // General helper methods
+  void pickPatchRowsAndColumns(
+    const vm::ray3d& pickRay,
+    const render::Camera& camera,
+    mdl::PickResult& pickResult) const;
+
+  void selectPatchRow(const PatchRowHitData& hitData);
+  void selectPatchColumn(const PatchColumnHitData& hitData);
+
   void resetModeAfterDeselection();
 };
 

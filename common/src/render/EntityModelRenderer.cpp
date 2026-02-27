@@ -29,6 +29,7 @@
 #include "mdl/EntityModelManager.h"
 #include "mdl/EntityNode.h"
 #include "mdl/ModelUtils.h"
+#include "mdl/WorldNode.h"
 #include "render/ActiveShader.h"
 #include "render/Camera.h"
 #include "render/MaterialIndexRangeRenderer.h"

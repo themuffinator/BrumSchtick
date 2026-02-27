@@ -50,7 +50,8 @@ mdl::Hit VertexToolController::findHandleHit(
     inputState.modifierKeysDown(ModifierKeys::Shift) && !inputState.pickResult().empty())
   {
     if (const auto& anyHit = inputState.pickResult().all().front(); anyHit.hasType(
-          mdl::EdgeHandleManager::HandleHitType | mdl::FaceHandleManager::HandleHitType))
+          mdl::EdgeHandleManager::HandleHitType | mdl::FaceHandleManager::HandleHitType
+          | VertexTool::PatchRowHitType | VertexTool::PatchColumnHitType))
     {
       return anyHit;
     }
@@ -91,6 +92,24 @@ std::vector<mdl::Hit> VertexToolController::findHandleHits(
           !faceHits.empty())
       {
         return faceHits;
+      }
+    }
+    else if (anyHit.hasType(VertexTool::PatchRowHitType))
+    {
+      if (const auto rowHits =
+            inputState.pickResult().all(type(VertexTool::PatchRowHitType));
+          !rowHits.empty())
+      {
+        return rowHits;
+      }
+    }
+    else if (anyHit.hasType(VertexTool::PatchColumnHitType))
+    {
+      if (const auto columnHits =
+            inputState.pickResult().all(type(VertexTool::PatchColumnHitType));
+          !columnHits.empty())
+      {
+        return columnHits;
       }
     }
   }
@@ -186,7 +205,8 @@ private:
     {
       if (const auto hit = findDraggableHandle(inputState); hit.hasType(
             mdl::EdgeHandleManager::HandleHitType
-            | mdl::FaceHandleManager::HandleHitType))
+            | mdl::FaceHandleManager::HandleHitType | VertexTool::PatchRowHitType
+            | VertexTool::PatchColumnHitType))
       {
         const auto handle = m_tool.getHandlePosition(hit);
         if (inputState.mouseButtonsPressed(MouseButtons::Left))

@@ -6,6 +6,6 @@ add_library(TbBaseTestUtilsLib STATIC
 target_include_directories(TbBaseTestUtilsLib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 target_link_libraries(TbBaseTestUtilsLib PRIVATE CompilerConfig PrecompileStdHeaders)
-target_link_libraries(TbBaseTestUtilsLib PUBLIC TbBaseLib)
+target_link_libraries(TbBaseTestUtilsLib PUBLIC Catch2::Catch2 TbBaseLib)
 
 add_subdirectory(test)

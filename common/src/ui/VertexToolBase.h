@@ -475,7 +475,7 @@ protected: // Tool interface
     connectObservers();
 
     handleManager().clear();
-    handleManager().addHandles(selectedBrushes());
+    addHandles(m_document.map().selection().nodes);
 
     return true;
   }
@@ -624,7 +624,7 @@ protected:
           entityNode->visitChildren(thisLambda);
         },
         [&](const mdl::BrushNode* brush) { handleManager.addHandles(brush); },
-        [](const mdl::PatchNode*) {}));
+        [&](const mdl::PatchNode* patch) { handleManager.addHandles(patch); }));
     }
   }
 
@@ -645,7 +645,7 @@ protected:
           entityNode->visitChildren(thisLambda);
         },
         [&](const mdl::BrushNode* brush) { handleManager.removeHandles(brush); },
-        [](const mdl::PatchNode*) {}));
+        [&](const mdl::PatchNode* patch) { handleManager.removeHandles(patch); }));
     }
   }
 

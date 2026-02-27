@@ -78,6 +78,7 @@ const std::string LayerHiddenValue = "1";
 const std::string LayerOmitFromExportValue = "1";
 } // namespace EntityPropertyValues
 
+kdl_reflect_impl(GlobalExpressionVariable);
 kdl_reflect_impl(EntityPropertyConfig);
 
 bool isNumberedProperty(std::string_view prefix, std::string_view key)

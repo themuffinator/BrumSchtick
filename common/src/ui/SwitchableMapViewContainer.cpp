@@ -241,11 +241,23 @@ void SwitchableMapViewContainer::toggleShearTool()
   m_toolBox->toggleShearTool();
 }
 
-bool SwitchableMapViewContainer::canToggleVertexTools() const
+bool SwitchableMapViewContainer::canToggleVertexTool() const
 {
   const auto& map = m_document.map();
-  return vertexToolActive() || edgeToolActive() || faceToolActive()
-         || map.selection().hasOnlyBrushes();
+  return vertexToolActive() || map.selection().hasOnlyBrushes()
+         || map.selection().hasOnlyPatches();
+}
+
+bool SwitchableMapViewContainer::canToggleEdgeTool() const
+{
+  const auto& map = m_document.map();
+  return edgeToolActive() || map.selection().hasOnlyBrushes();
+}
+
+bool SwitchableMapViewContainer::canToggleFaceTool() const
+{
+  const auto& map = m_document.map();
+  return faceToolActive() || map.selection().hasOnlyBrushes();
 }
 
 bool SwitchableMapViewContainer::anyVertexToolActive() const
@@ -270,21 +282,21 @@ bool SwitchableMapViewContainer::faceToolActive() const
 
 void SwitchableMapViewContainer::toggleVertexTool()
 {
-  contract_pre(canToggleVertexTools());
+  contract_pre(canToggleVertexTool());
 
   m_toolBox->toggleVertexTool();
 }
 
 void SwitchableMapViewContainer::toggleEdgeTool()
 {
-  contract_pre(canToggleVertexTools());
+  contract_pre(canToggleEdgeTool());
 
   m_toolBox->toggleEdgeTool();
 }
 
 void SwitchableMapViewContainer::toggleFaceTool()
 {
-  contract_pre(canToggleVertexTools());
+  contract_pre(canToggleFaceTool());
 
   m_toolBox->toggleFaceTool();
 }

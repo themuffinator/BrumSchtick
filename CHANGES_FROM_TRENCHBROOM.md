@@ -1,119 +1,68 @@
 # Changes From TrenchBroom 🤪🧱✨
 
+This document tracks intentional, significant differences between BrumSchtick and upstream TrenchBroom.
 
+## Scope and curation rules 🎯
 
-This document tracks intentional differences between BrümSchtick and upstream TrenchBroom. Update it whenever BrümSchtick diverges.
+- Record major, user-facing differences: new capabilities, meaningful workflow improvements, important compatibility changes, and high-impact stability fixes.
+- Merge closely related changes into a single outcome-focused bullet instead of listing implementation fragments.
+- Exclude low-signal details such as minor UI polish, internal refactors, debug-only assertions, and routine dependency/tooling churn.
+- Write for end users first: clear behavior changes and practical impact, not internal code mechanics.
 
-Rule: All significant changes must be recorded here. ✅
+## Branding and distribution 🧱📦
 
+- BrumSchtick is fully rebranded across app UI, icons/splash assets, installer/package names, user-data paths, logs, and website assets.
+- Release and update flow is standardized around tagged GitHub Releases, with `version.txt` as the canonical fallback version source for local/CI builds.
+- Updater asset matching supports both calendar and semantic version tags and handles Windows `x86_64`/`AMD64` naming variants.
 
-## Branding and packaging 🧱📦
+## Editing workflow and map management 🖱️🧭
 
-- Application name, window titles, menu labels, and dialogs use BrümSchtick.
-- Update packages and installers use BrumSchtick naming (for example, BrumSchtick-Win64-AMD64-vYYYY.M-Release.zip).
-- Default resource and user data directories use BrumSchtick names (for example, <prefix>/share/BrumSchtick and ~/.BrumSchtick on Linux).
-- Crash reports and logs default to BrumSchtick names (for example, brumschtick-crash.txt and BrumSchtick.log).
-- Replaced legacy TrenchBroom iconography with BrumSchtick splash and icon assets across app resources, platform icons, documentation, and the website.
+- Double-click selection is safer and context-aware: top-level brush double-click no longer causes accidental layer-wide selection.
+- Map navigation adds a dedicated search/filter bar (`key=value` and `key:value`) plus "Find Usages in Map" actions from material/entity browsers.
+- Compile/launch gets quick toolbar actions with profile dropdowns for faster test loops.
+- Group workflows are expanded: linked groups are visually distinct, selected linked brushes can be extracted to unique brushes, and brush/patch tools operate on grouped selections without forcing group-open steps.
+- Entity property editing now preserves duplicate keys as separate editable rows (instead of silently merging values).
+- Compilation output line references are clickable and jump directly to matching map objects.
+- Grid size and zoom interaction are more consistent across sessions and views (grid persistence and 2D zoom sensitivity alignment).
 
+## Geometry and patch authoring 🚧🕸️
 
-## Release and updates 🚀🔄
+- Adds a Brush Builder pipeline for procedural convex brush creation with staged transforms and live preview.
+- Draw Shape gains stairs and circular-stairs generators with configurable orientation and step controls.
+- Edge Tool adds chamfer support with configurable distance and segment count.
+- Patch editing is significantly expanded toward VibeRadiant-style workflows: patch control-point editing in Vertex Tool, row/column selection and insertion/deletion, matrix operations, texture operations, prefab/cap/deform/thicken tools, and improved mixed-selection behavior.
+- Adds patch-to-convex conversion for selected patches while preserving patch UV projection semantics where possible.
 
-- Adds `version.txt` as the canonical release tag for local builds and CI fallbacks.
-- GitHub Actions publishes tag builds as releases with platform zip assets, enabling the built-in updater to consume GitHub releases.
-- Update asset matching accepts calendar or semantic version tags and Windows x86_64/AMD64 asset variants.
+## Texturing and UV workflows 🎨📐
 
+- Face attributes gain edge-driven align/fit/rotate controls with axis toggles and repeat controls.
+- Hotspot texturing is supported via material `.rect` definitions when doing material-only transfer (`Alt+Ctrl`).
+- UV origin snapping now aligns to nearest face-edge logic in UV space, reducing incorrect snap results.
+- Material usage selection actions are now case-insensitive for more reliable matches.
+- Map export strips TrenchBroom `_tb_` helper properties (for example `_tb_textures`) to avoid compiler-hostile payloads.
 
-## Interaction changes 🖱️✨
-- Double click selection is context-aware for top-level brushes: double click selects all faces on that brush instead of selecting every object in the layer, avoiding accidental map-wide selection on large maps.
-- Double click still selects siblings for brushes that belong to groups or brush entities; Shift+double click still selects all faces (and Ctrl adds to the current selection).
-- The map view bar includes a search field that filters visible map objects by entity properties or textures (supports key=value or key:value syntax).
-- Material and entity browsers provide a "Find Usages in Map" context menu entry that populates the map search filter with texture=... or classname=... matches.
-- Adds a Brush Builder tool for drawing convex 2D shapes and sweeping them through multi-step transforms (translation/rotation/scale/matrix/expression) with live brush previews, snapping controls, and per-step subdivision.
-- Adds Draw Shape tool entries for stairs and circular stairs with configurable step height, orientation, and spiral parameters.
-- Adds face attribute editor controls to align, fit, or rotate textures to a selected face edge, including per-axis fit toggles and repeat counts with edge cycling.
-- Adds hotspot texturing support for materials via `.rect` definitions, used when transferring material-only with Alt+Ctrl to align hotspots at the click point.
-- Adds a patch mesh to convex brushes converter command for selected patches, carrying over patch UV projection and using `common/caulk` on faces without a patch reference.
-- Adds quick toolbar buttons for compile/launch with dropdowns that pick existing profiles and trigger the selected action.
-- Entity property editing shows duplicate keys as separate rows for single-entity selections and edits/removes the specific entry instead of merging values.
-- Mouse Move sensitivity now scales 2D view zooming (mouse wheel and alt-drag) to match 3D behavior.
-- Compilation output highlights map line numbers as links; clicking one selects the corresponding map objects.
-- Linked group bounds and labels use a distinct linked-group color and append "(linked)" so linked sets are visible without selection.
-- Fixes a View Options crash when preference changes fire before the view editor UI is constructed.
-- Adds a Groups menu action to extract selected brushes from linked groups into their parent containers, making the brushes unique.
-- Brush and patch tools treat selected groups (and brush entities) as selections of their contained components, allowing vertex/edge/face editing, CSG, clipping, and patch conversion without opening the group.
-- "Select Faces/Select Brushes" from the material browser now matches materials case-insensitively.
-- Adds an Edge Tool chamfer command that clips selected edges with a configurable distance and segment count.
-- Grid size selection persists when opening or reverting maps instead of resetting to 16.
-- UV origin dragging now snaps to nearest face edges in UV space (instead of independently snapping to vertex X/Y components), fixing incorrect origin snaps.
-- Extrude tool now raises a contract failure if drag-handle proposals are updated during an active drag, surfacing controller state bugs early.
-- Control list renderers now use actual item selection state (instead of current-item state) for highlight updates, fixing inconsistent row highlighting.
-- Crash dialog content now uses standard dialog margins/separators, improving section and button-row spacing.
+## Rendering and visual feedback 🖼️🔥
 
+- Adds optional real-time light preview in the 3D camera view for point/surface lights, including style and occlusion-aware shading.
+- Patch wire rendering now shows the full tessellated lattice (rows and columns), improving patch readability while editing.
 
-## Rendering 🖼️🔥
+## Compatibility and data handling 🗺️🧩
 
-- Adds an optional real-time light preview in the 3D camera view that evaluates point and surface lights (including light styles) with occlusion and per-vertex lightmap-style shading.
-- MapFrame teardown now uses a temporary shared offscreen OpenGL context so GLContextManager resources are released safely during window shutdown.
-- Inward extrude now pre-validates linked-group update consistency and aborts cleanly on update/add failures instead of continuing after linked-group errors.
+- Quake 3 `patchDef3` with control-point normals is supported end-to-end (parse, preserve, emit).
+- Map parsing preserves duplicate entity keys.
+- Game/config parsing is stricter (unexpected-key rejection, optional-field validation), adds global expression variables support, and uses deterministic duplicate-classname resolution.
+- Assimp model texture resolution is more robust (root-relative lookup and extension fallback when references are missing), improving problematic model imports such as RTCW/WolfET MDC cases.
 
-## Map format support 🗺️🧩
+## Stability, filesystem, and localization 🌍🛡️
 
-- Quake 3 patches support `patchDef3` with explicit control point normals; `patchDef3` is parsed, preserved, and emitted (GtkRadiant/Q3Map2 flavor: `x y z nx ny nz u v`).
-- Map parsing preserves duplicate entity keys instead of dropping later occurrences.
-
-## Model loading 📦🧠
-
-- Assimp model textures resolve root-relative paths and fall back to same-name images with supported extensions when the referenced file is missing; embedded texture failures now fall back to filesystem textures (fixes RTCW/WolfET MDC models).
-
-## Export behavior 📤🧼
-
-- Map exports strip TrenchBroom `_tb_` entity properties (such as `_tb_textures`) to avoid long compiler-unfriendly strings.
-
+- Fixes a View Options crash caused by preference notifications firing before UI construction.
+- GL resource shutdown and linked-group extrude/update failure paths are hardened to fail safely instead of cascading.
+- Filesystem handling improves for UNC/WSL paths and portable-mode data locations.
+- Preference persistence is more resilient (stale-lock retries and automatic reset/writeback for invalid persisted values).
+- Application localization adds language preference support, system auto-detect, and 20 bundled translations with English fallback.
 
 ## Documentation and website 📚🌐
 
-- README, build instructions, and the manual are rebranded to BrümSchtick with updated links.
-- README includes a direct link to the upstream TrenchBroom repository.
-- README now features a branded banner image sourced from the website image assets. ✨🧃
-- Refreshed README to highlight BrumSchtick purpose and feature highlights, and renamed Build.md to BUILDING.md with expanded Qt setup and build steps.
-- Website metadata and download links point to BrumSchtick releases.
-- Added release/versioning and auto-updater documentation (RELEASES.md, AUTO_UPDATER.md).
-- Rejigged core project documentation into a playful, emoji-rich vibe with modern Markdown formatting.
-- Added a localization doc section explaining language packs and listing bundled languages. 🌍📝
-
-## Developer tooling 🧰🛠️
-
-- Fixes Windows build breakages by reconciling missing includes, notifier wiring, optional handling, and material-loading signatures.
-
-- Adds VS Code build and debug tasks for configuring, building, cleaning, and launching BrümSchtick.
-
-- Fixes VS Code build/debug tasks to target the BrumSchtick executable name.
-
-## Configuration parsing 🧪🧾
-
-- Game configuration parsing rejects unexpected keys and validates optional fields like `modelformats`, rather than silently ignoring them.
-- Entity definition parsing uses last-definition-wins when duplicate classnames appear.
-- Game configs can declare global expression variables (such as worldspawn keys) for model/decal expressions, with optional worldspawn override priority.
-
-
-## Localization 🌍🗣️
-
-- Adds application localization support with a language preference, system auto-detect, and bundled translations for 20 languages (fallback to English when unsupported).
-
-## Filesystem handling 🗂️🧰
-
-- Preserve UNC path prefixes during normalization so WSL shared paths (for example, `\\wsl.localhost\...`) are resolved correctly for wad loading and texture discovery.
-- Portable mode uses the current working directory for user data/logs instead of the AppImage mount, preventing read-only failures.
-- Preference file locking retries stale locks and avoids lock failures when the preferences file is missing.
-- Invalid persisted preference values are now reset to defaults and written back to `Preferences.json`, so broken entries self-heal instead of lingering in cache only.
-
-## Logging 🧾🔍
-
-- GameManager and GameFileSystem now take a Logger at construction time and reuse it internally instead of requiring per-call logger parameters.
-- Invalid preference deserialization warnings are now routed to the in-app console when a map is open (with file logger fallback when no document is active).
-
-## Dependencies 🧩📦
-
-- Replace fmt formatting with `std::format`, add tuple support to `kdl::str_join`, and drop the fmt build dependency.
-
-
+- Core docs are rebranded and reorganized for BrumSchtick, including refreshed README positioning and a dedicated `BUILDING.md`.
+- Website metadata/download links now target BrumSchtick releases.
+- Release/update documentation was added (`RELEASES.md`, `AUTO_UPDATER.md`), along with localization coverage documentation.

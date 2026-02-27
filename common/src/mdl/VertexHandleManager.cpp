@@ -23,6 +23,7 @@
 #include "Preferences.h"
 #include "mdl/BrushFace.h"
 #include "mdl/Grid.h"
+#include "mdl/PatchNode.h"
 #include "mdl/Polyhedron.h"
 
 #include "vm/distance.h"
@@ -68,6 +69,24 @@ void VertexHandleManager::removeHandles(const BrushNode* brushNode)
   for (const auto* vertex : brush.vertices())
   {
     assertResult(remove(vertex->position()));
+  }
+}
+
+void VertexHandleManager::addHandles(const PatchNode* patchNode)
+{
+  const auto& patch = patchNode->patch();
+  for (const auto& controlPoint : patch.controlPoints())
+  {
+    add(controlPoint.xyz());
+  }
+}
+
+void VertexHandleManager::removeHandles(const PatchNode* patchNode)
+{
+  const auto& patch = patchNode->patch();
+  for (const auto& controlPoint : patch.controlPoints())
+  {
+    assertResult(remove(controlPoint.xyz()));
   }
 }
 

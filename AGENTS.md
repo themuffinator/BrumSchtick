@@ -26,4 +26,11 @@ These skills are discovered at startup from multiple local sources. Each entry i
 - Safety and fallback: If a skill can't be applied cleanly (missing files, unclear instructions), state the issue, pick the next-best approach, and continue.
 - Documentation tone: Keep documentation wacky and silly with emote overload and modern, well-structured Markdown (clear headings, lists, tables, callouts, and optional details/summary blocks).
 - Project rule: All significant changes must be recorded in `CHANGES_FROM_TRENCHBROOM.md`.
+- `CHANGES_FROM_TRENCHBROOM.md` purpose:
+  - It is the canonical "how BrumSchtick differs from upstream TrenchBroom" document for users and contributors.
+  - It should read like high-level release notes, not like commit-by-commit engineering notes.
+  - Every entry must describe end-user or workflow impact (new feature, meaningful behavior change, major compatibility improvement, or high-impact fix).
+  - Closely related items must be merged into one concise bullet focused on outcome.
+  - Do not include insignificant churn (micro UI polish, minor refactors, internal logging/plumbing changes, debug-only assertions, routine dependency updates) unless user-facing impact is clear and substantial.
+  - Organize entries by capability area (editing, rendering, compatibility, platform, docs/release) so readers can quickly scan what changed.
 </INSTRUCTIONS>

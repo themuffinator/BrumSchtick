@@ -542,15 +542,31 @@ void MapViewBase::flipUV(const vm::direction direction)
 void MapViewBase::resetUV()
 {
   auto& map = m_document.map();
-  setBrushFaceAttributes(
-    map, mdl::resetAll(map.gameInfo().gameConfig.faceAttribsConfig.defaults));
+  if (map.selection().hasPatches())
+  {
+    mdl::resetPatchTexture(map);
+  }
+
+  if (map.selection().hasBrushFaces())
+  {
+    setBrushFaceAttributes(
+      map, mdl::resetAll(map.gameInfo().gameConfig.faceAttribsConfig.defaults));
+  }
 }
 
 void MapViewBase::resetUVToWorld()
 {
   auto& map = m_document.map();
-  setBrushFaceAttributes(
-    map, mdl::resetAllToParaxial(map.gameInfo().gameConfig.faceAttribsConfig.defaults));
+  if (map.selection().hasPatches())
+  {
+    mdl::resetPatchTexture(map);
+  }
+
+  if (map.selection().hasBrushFaces())
+  {
+    setBrushFaceAttributes(
+      map, mdl::resetAllToParaxial(map.gameInfo().gameConfig.faceAttribsConfig.defaults));
+  }
 }
 
 void MapViewBase::assembleBrush()

@@ -32,11 +32,14 @@
 namespace tb::mdl
 {
 class BrushNode;
+class PatchNode;
 
 namespace detail
 {
 
 std::vector<BrushNode*> collectBrushNodes(
+  const std::vector<std::pair<Node*, NodeContents>>& nodes);
+std::vector<PatchNode*> collectPatchNodes(
   const std::vector<std::pair<Node*, NodeContents>>& nodes);
 
 } // namespace detail
@@ -69,15 +72,15 @@ public:
   template <typename HT>
   void removeHandles(VertexHandleManagerBaseT<HT>& manager)
   {
-    const auto nodes = detail::collectBrushNodes(m_nodes);
-    manager.removeHandles(nodes);
+    manager.removeHandles(detail::collectBrushNodes(m_nodes));
+    manager.removeHandles(detail::collectPatchNodes(m_nodes));
   }
 
   template <typename HT>
   void addHandles(VertexHandleManagerBaseT<HT>& manager)
   {
-    const auto nodes = detail::collectBrushNodes(m_nodes);
-    manager.addHandles(nodes);
+    manager.addHandles(detail::collectBrushNodes(m_nodes));
+    manager.addHandles(detail::collectPatchNodes(m_nodes));
   }
 
   template <typename HT>

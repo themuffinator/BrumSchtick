@@ -259,9 +259,11 @@ static DirectEdgeRenderer buildEdgeRenderer(
   {
     if (editorContext.visible(*patchNode))
     {
-      vertexCount +=
-        (patchNode->grid().pointRowCount + patchNode->grid().pointColumnCount - 2u) * 2u;
-      indexRangeMapSize.inc(PrimType::LineLoop, vertexCount);
+      const auto& grid = patchNode->grid();
+
+      // Render full lattice (all sampled rows + columns), not only the outer boundary.
+      vertexCount += grid.pointRowCount * grid.pointColumnCount * 2u;
+      indexRangeMapSize.inc(PrimType::LineStrip, grid.pointRowCount + grid.pointColumnCount);
     }
   }
 
@@ -274,45 +276,31 @@ static DirectEdgeRenderer buildEdgeRenderer(
     {
       const auto& grid = patchNode->grid();
 
-      auto edgeLoopVertices = std::vector<GLVertexTypes::P3::Vertex>{};
-      edgeLoopVertices.reserve((grid.pointRowCount + grid.pointColumnCount - 2u) * 2u);
+      auto stripVertices = std::vector<GLVertexTypes::P3::Vertex>{};
 
-      // walk around the patch to collect the edge vertices
-      // for each side, collect the first vertex up to but not including the last vertex
-
-      const auto t = 0u;
-      const auto b = grid.pointRowCount - 1u;
-      const auto l = 0u;
-      const auto r = grid.pointColumnCount - 1u;
-
-      auto row = t;
-      auto col = l;
-
-      while (col < r)
+      // Row strips.
+      stripVertices.reserve(grid.pointColumnCount);
+      for (size_t row = 0u; row < grid.pointRowCount; ++row)
       {
-        edgeLoopVertices.emplace_back(vm::vec3f{grid.point(row, col++).position});
+        stripVertices.clear();
+        for (size_t col = 0u; col < grid.pointColumnCount; ++col)
+        {
+          stripVertices.emplace_back(vm::vec3f{grid.point(row, col).position});
+        }
+        indexRangeMapBuilder.addLineStrip(stripVertices);
       }
-      contract_assert(row == t && col == r);
 
-      while (row < b)
+      // Column strips.
+      stripVertices.reserve(grid.pointRowCount);
+      for (size_t col = 0u; col < grid.pointColumnCount; ++col)
       {
-        edgeLoopVertices.emplace_back(vm::vec3f{grid.point(row++, col).position});
+        stripVertices.clear();
+        for (size_t row = 0u; row < grid.pointRowCount; ++row)
+        {
+          stripVertices.emplace_back(vm::vec3f{grid.point(row, col).position});
+        }
+        indexRangeMapBuilder.addLineStrip(stripVertices);
       }
-      contract_assert(row == b && col == r);
-
-      while (col > l)
-      {
-        edgeLoopVertices.emplace_back(vm::vec3f{grid.point(row, col--).position});
-      }
-      contract_assert(row == b && col == l);
-
-      while (row > t)
-      {
-        edgeLoopVertices.emplace_back(vm::vec3f{grid.point(row--, col).position});
-      }
-      contract_assert(row == t && col == l);
-
-      indexRangeMapBuilder.addLineLoop(edgeLoopVertices);
     }
   }
 

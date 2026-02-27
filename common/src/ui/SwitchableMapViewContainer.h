@@ -95,7 +95,9 @@ public:
   bool canToggleShearTool() const;
   void toggleShearTool();
 
-  bool canToggleVertexTools() const;
+  bool canToggleVertexTool() const;
+  bool canToggleEdgeTool() const;
+  bool canToggleFaceTool() const;
   bool anyVertexToolActive() const;
   bool vertexToolActive() const;
   bool edgeToolActive() const;
