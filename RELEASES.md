@@ -9,6 +9,7 @@ BrumSchtick uses tag-based versions.
 | 🔣 Pattern | ✅ Example | 🧠 Notes |
 | --- | --- | --- |
 | Calendar style | `v2026.1` | Preferred for calendar releases |
+| Nightly prerelease | `v2026.2-RC7` | Auto-generated nightlies for the next release line |
 | Semantic style | `v1.2.3` | Allowed when needed |
 | Release candidates | `v2026.1-RC1` | Pre-release tags |
 
@@ -83,6 +84,17 @@ The workflow in `.github/workflows/ci.yml` runs on tags and builds all supported
 
 The same workflow also publishes the compiled manual from the Linux job when tags are built (see the `Upload compiled manual` step in the workflow).
 
+## Nightly automation flow 🌙⚙️
+Nightly tags are created by `.github/workflows/nightly.yml` (schedule + manual dispatch), using `scripts/nightly_version.py`.
+
+How it works:
+1. Determine the next nightly tag in `vYYYY.N-RCk` format.
+2. Skip when there are no meaningful commits since the previous nightly (unless forced).
+3. Push the nightly tag.
+4. Build and publish cross-platform prerelease artifacts in `.github/workflows/nightly.yml` using the same platform build scripts as regular CI (`CI-windows.bat`, `CI-macos.sh`, `CI-linux.sh`).
+
+This keeps nightly packaging and stable packaging on the exact same build/release path.
+
 ## Release process (maintainers) ✅🚀
 1. Update `version.txt` and commit the change.
 2. Tag the release using the version file:
@@ -99,7 +111,10 @@ The same workflow also publishes the compiled manual from the Linux job when tag
 
 GitHub Actions will build, package, and publish the release automatically. 🎉
 
+For nightly testing builds, run `.github/workflows/nightly.yml` manually (or wait for schedule). Those tags/releases are prereleases and are intended for users who opt into prerelease updates.
+
 ## Troubleshooting 🧯😵
 - 🕵️ If the build shows `unknown` as the version, ensure tags are available and that `version.txt` matches a valid version format.
 - 📦 If the release assets are missing, verify that the tag build completed and that the `release` job ran after all platform jobs.
 - 🔍 The auto-updater expects asset names to follow the ZIP naming pattern above.
+- 🌙 If nightly didn't publish, check `.github/workflows/nightly.yml` output (`should_release`, `tag`, and commit count) and ensure the tag push succeeded.

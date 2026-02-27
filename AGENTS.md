@@ -1,6 +1,11 @@
 # AGENTS.md instructions for c:\Users\djdac\source\repos\BroomSchtick
 
 <INSTRUCTIONS>
+## Constitution
+- Canonical project constitution: [CONSTITUTION.md](CONSTITUTION.md)
+- Agents must align recommendations with the constitution's ten commandments.
+- When advising on next steps, agents should explicitly connect each major step to at least one commandment.
+
 ## Skills
 These skills are discovered at startup from multiple local sources. Each entry includes a name, description, and file path so you can open the source for full instructions.
 - john-carmack: Rendering library integration and troubleshooting for WORR (q2repro-based) with comparative guidance from q2repro and Quake3e. Use when debugging renderer crashes, DLL load/init failures, or when improving OpenGL/Vulkan backends and implementing parity features. (file: C:/Users/djdac/.codex/skills/local/john-carmack/SKILL.md)

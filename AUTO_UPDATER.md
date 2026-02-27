@@ -34,6 +34,15 @@ Open Preferences and go to the Updates section. There you can:
 
 If an update is available, an "Update available" link appears. Clicking it opens the update dialog and lets you download and install the new version. ✨
 
+## Nightly channel flow 🌙🧪
+BrumSchtick nightly builds are published as GitHub prereleases (tags like `vYYYY.N-RCk`).
+
+To receive nightly updates:
+- Enable **Include pre-releases** in update preferences.
+- Keep using official packaged builds so updater asset matching works.
+
+If **Include pre-releases** is disabled, updater checks stable releases only.
+
 ## Installing an update 🧰✨
 After downloading, the updater prepares the update and shows a dialog with two options:
 

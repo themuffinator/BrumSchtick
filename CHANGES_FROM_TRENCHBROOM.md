@@ -63,6 +63,8 @@ This document tracks intentional, significant differences between BrumSchtick an
 
 ## Documentation and website 📚🌐
 
+- Adds a formal project constitution (`CONSTITUTION.md`) defining BrumSchtick's mission, non-goals, and ten guiding commandments (unification, utility, ease-of-use, broader game support, modernization, agentic acceleration, innovation, seamless workflows, compatibility, and community-driven development).
+- Adds a dedicated nightly release automation flow (`.github/workflows/nightly.yml` + `scripts/nightly_version.py`) that computes/pushes prerelease tags and builds/publishes nightly assets across Windows, macOS, and Linux, aligning distribution with in-app prerelease updater behavior.
 - Core docs are rebranded and reorganized for BrumSchtick, including refreshed README positioning and a dedicated `BUILDING.md`.
 - Website metadata/download links now target BrumSchtick releases.
 - Release/update documentation was added (`RELEASES.md`, `AUTO_UPDATER.md`), along with localization coverage documentation.
